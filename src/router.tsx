@@ -22,29 +22,38 @@ type RouteProps = {
 
 const navigate = (path: string) => (event: MouseEvent<HTMLAnchorElement>) => {
   event.preventDefault()
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   navigateTo(path)
 }
 
 const navigateTo = (path: string) => {
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   window.history.pushState({}, '', path)
   window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
+function DebugErrorPage() {
+  if (import.meta.env.DEV) throw new Error('Intentional error-boundary preview')
+  return <p className="state-message">Debug route is available in development only.</p>
 }
 
 export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, onLogin }: RouteProps) {
   const normalizedPath = path.length > 1 ? path.replace(/\/+$/, '') : path
   switch (normalizedPath) {
+    case '/debug-error':
+      return <DebugErrorPage />
     case '/bag':
       return <BagPage storefront={storefront} onNavigate={navigate} />
     case '/checkout':
-      return isAuthenticated ? <PaymentPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" onNavigate={navigate} onLogin={onLogin} />
+      return isAuthenticated ? <PaymentPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/track-order':
       return <TrackOrderPage storefront={storefront} onNavigate={navigate} />
     case '/login':
-      return isAuthenticated ? <HomePage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" onNavigate={navigate} onLogin={onLogin} />
+      return isAuthenticated ? <HomePage storefront={storefront} onNavigate={navigate} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/signup':
-      return isAuthenticated ? <HomePage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="signup" onNavigate={navigate} onLogin={onLogin} />
+      return isAuthenticated ? <HomePage storefront={storefront} onNavigate={navigate} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} /> : <AuthPage mode="signup" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/orders':
-      return isAuthenticated ? <OrdersPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" onNavigate={navigate} onLogin={onLogin} />
+      return isAuthenticated ? <OrdersPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/privacy':
       return <PolicyPage storefront={storefront} policy="privacy" onNavigate={navigate} />
     case '/returns':
@@ -54,8 +63,8 @@ export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, onLo
     case '/support':
       return <SupportPage storefront={storefront} />
     default:
-      if (normalizedPath.startsWith('/orders/')) return isAuthenticated ? <OrderDetailPage storefront={storefront} orderId={decodeURIComponent(normalizedPath.slice('/orders/'.length))} onNavigate={navigate} /> : <AuthPage mode="login" onNavigate={navigate} onLogin={onLogin} />
+      if (normalizedPath.startsWith('/orders/')) return isAuthenticated ? <OrderDetailPage storefront={storefront} orderId={decodeURIComponent(normalizedPath.slice('/orders/'.length))} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
       if (normalizedPath.startsWith('/product/')) return <ProductDetailPage key={normalizedPath} storefront={storefront} productId={decodeURIComponent(normalizedPath.slice('/product/'.length))} onAdd={onAdd} onNavigate={navigate} />
-      return <HomePage storefront={storefront} onNavigate={navigate} />
+      return <HomePage storefront={storefront} onNavigate={navigate} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} />
   }
 }

@@ -15,18 +15,23 @@ export function SiteLayout({ storefront, cartCount, children, isAuthenticated, o
   const { content, identity, contact } = storefront
   const [showStickyHeader, setShowStickyHeader] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
+  const [currentPath, setCurrentPath] = useState(window.location.pathname)
   useEffect(() => {
     const onScroll = () => { setShowStickyHeader(window.scrollY > 180); setShowBackToTop(window.scrollY > 600) }
     window.addEventListener('scroll', onScroll, { passive: true })
+    const onRouteChange = () => setCurrentPath(window.location.pathname)
+    window.addEventListener('popstate', onRouteChange)
     onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('popstate', onRouteChange) }
   }, [])
   const navigate = (path: string) => (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault()
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
     window.history.pushState({}, '', path)
     window.dispatchEvent(new PopStateEvent('popstate'))
   }
   const openBag = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
     window.history.pushState({}, '', '/bag')
     window.dispatchEvent(new PopStateEvent('popstate'))
   }
@@ -38,9 +43,10 @@ export function SiteLayout({ storefront, cartCount, children, isAuthenticated, o
           <span className="brand-mark">{identity.mark}</span><span>{identity.businessName}</span>
         </a>
         <nav aria-label="Primary navigation">
-          <a href="/shop" onClick={navigate('/shop')}>{content.navigation.shop}</a>
-          <a href="/support" onClick={navigate('/support')}>{content.navigation.support}</a>
-          {isAuthenticated ? <button className="header-link-button" type="button" onClick={() => { onLogout(); window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Log out</button> : <a href="/login" onClick={navigate('/login')}>Sign in</a>}
+          <a className={currentPath==='/'?'is-active':''} href="/" onClick={navigate('/')}>{content.ui.homeLabel}</a>
+          <a className={currentPath==='/shop'||currentPath.startsWith('/product/')?'is-active':''} href="/shop" onClick={navigate('/shop')}>{content.navigation.shop}</a>
+          <a className={currentPath==='/support'?'is-active':''} href="/support" onClick={navigate('/support')}>{content.navigation.support}</a>
+          {isAuthenticated ? <button className="header-link-button" type="button" onClick={() => { onLogout(); window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Log out</button> : <a className={currentPath==='/login'||currentPath==='/signup'?'is-active':''} href="/login" onClick={navigate('/login')}>Sign in</a>}
         </nav>
         <div className="header-actions">
           <button className="cart-button" type="button" onClick={openBag} aria-label={`${content.ui.bagLabel}, ${cartCount} ${content.ui.bagItemLabel}`}>

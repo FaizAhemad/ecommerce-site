@@ -15,6 +15,8 @@ export type StorefrontApiResponse = {
   categories: typeof appConfig.categories
   facets: { categories: readonly string[]; colors: readonly string[]; ratings: readonly number[]; price: { min: number; max: number } }
   content: {
+    errors: { unavailable: string; retryLabel: string; routeLabel: string }
+    auth: { loginEyebrow: string; signupEyebrow: string; loginTitle: string; signupTitle: string; loginDescription: string; signupDescription: string; googleLabel: string; emailDivider: string; fullNameLabel: string; mobileLabel: string; addressLabel: string; emailLabel: string; passwordLabel: string; passwordPlaceholder: string; loginAction: string; signupAction: string; loginSuccess: string; signupSuccess: string; googleSuccess: string; loginSwitch: string; signupSwitch: string; signupLink: string; loginLink: string; securityNote: string }
     ui: {
       loadingLabel: string
       unavailableLabel: string
@@ -113,6 +115,8 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
     ...appConfig,
     facets: { categories: [...new Set(products.map((product) => product.category))], colors: [...new Set(products.flatMap((product) => (product as CatalogProduct).colors ?? []))], ratings: [5, 4, 3, 2, 1], price: { min: Math.min(...products.map((product) => product.price)), max: Math.max(...products.map((product) => product.price)) } },
     content: {
+      errors: { unavailable: 'We could not load the storefront.', retryLabel: 'Try again', routeLabel: 'Something went wrong on this page.' },
+      auth: { loginEyebrow: 'Welcome back', signupEyebrow: 'Join Field & Form', loginTitle: 'Sign in', signupTitle: 'Create your account', loginDescription: 'Access your orders, saved details, and bag.', signupDescription: 'Save your details for a faster checkout.', googleLabel: 'Continue with Google', emailDivider: 'Or use email', fullNameLabel: 'Full name', mobileLabel: 'Mobile number', addressLabel: 'Delivery address', emailLabel: 'Email address', passwordLabel: 'Password', passwordPlaceholder: 'At least 8 characters', loginAction: 'Sign in', signupAction: 'Create account', loginSuccess: 'Signed in in demo mode.', signupSuccess: 'Account created in demo mode.', googleSuccess: 'Google sign-in completed in demo mode.', loginSwitch: 'New here?', signupSwitch: 'Already registered?', signupLink: 'Create an account', loginLink: 'Sign in', securityNote: 'Demo session only. Production must use HTTPS, hashed passwords, OAuth verification, and secure server sessions.' },
       ui: {
         loadingLabel: 'Loading storefront',
         unavailableLabel: 'Storefront unavailable',

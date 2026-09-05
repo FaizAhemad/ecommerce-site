@@ -6,6 +6,21 @@ Last reviewed: 2026-09-05
 
 This repository is a **frontend foundation** for a reusable, white-label commerce platform. It is not yet a production commerce system. The application currently uses local TypeScript configuration and a mock API-shaped adapter; it has no backend, database, authentication, payment provider, or persistent cart.
 
+## Implementation sequence
+
+- [x] Frontend route and responsive UI foundation.
+- [x] Initial loading retry state and protected-route demo behavior.
+- [~] Localized auth copy through the typed storefront content contract; remaining pages still need migration.
+- [~] Global rendering fallback and storefront retry are in place; per-form/API error handling remains.
+- [ ] Add Node.js/TypeScript API foundation on Vercel.
+- [ ] Add Prisma schema and PostgreSQL connection.
+- [ ] Add secure authentication and protected sessions.
+- [ ] Add products, cart, orders, reviews, and media APIs.
+- [ ] Add Razorpay order creation, verification, and webhooks.
+- [ ] Connect frontend to production APIs and deploy.
+- [ ] Add realtime shipment/map tracking after order infrastructure is stable.
+- [~] Added a home newsletter subscription UI and Vercel Resend subscription endpoint. Configure `RESEND_API_KEY`, `RESEND_AUDIENCE_ID`, and optional `RESEND_FROM_EMAIL`; transactional order/auth emails remain backend work.
+
 ## Done
 
 - Vite, React, and TypeScript storefront application scaffold.
@@ -24,6 +39,7 @@ This repository is a **frontend foundation** for a reusable, white-label commerc
 - Added a `/track-order` customer page with order-number lookup, demo delivery timeline, and footer navigation. Live tracking events still require an order/shipping backend.
 - Added `/login` and `/signup` screens with email/password and Google sign-in entry points. Authentication is UI-only until a secure backend provides OAuth verification, password hashing, HTTPS, and session handling.
 - Added an `/orders` page with recent order cards, delivery statuses, totals, track-order links, and customer-care support. It currently uses demo data until authenticated order APIs are available.
+- Added an initial localized error-content contract and a retryable storefront loading state. Remaining hardcoded page copy should be migrated into the content contract as backend/locales are finalized.
 - Virtualized product-grid rendering with a local volume fixture (currently reduced for visual review; expandable to 1,000 items) to validate catalog performance without changing the card layout.
 - API-derived catalog facets for categories and colors, plus rating filtering and product color swatches.
 - Full-height, sticky desktop filter rail with mobile collapse/expand behavior and clear-filters support.

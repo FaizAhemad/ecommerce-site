@@ -10,16 +10,18 @@ type VirtualizedProductGridProps = {
   reviewsLabel: string
   onAdd: () => void
   onOpenProduct: (id: string) => void
+  virtualize?: boolean
 }
 
 const overscanRows = 2
 
-export function VirtualizedProductGrid({ products, currency, addToBagLabel, ratingLabel, reviewsLabel, onAdd, onOpenProduct }: VirtualizedProductGridProps) {
+export function VirtualizedProductGrid({ products, currency, addToBagLabel, ratingLabel, reviewsLabel, onAdd, onOpenProduct, virtualize = true }: VirtualizedProductGridProps) {
   const [columns, setColumns] = useState(() => window.matchMedia('(max-width: 760px)').matches ? 2 : 4)
   const [scrollY, setScrollY] = useState(() => window.scrollY)
   const [containerTop, setContainerTop] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  const rowHeight = columns === 2 ? 470 : 460
+  // Start with a safe estimate, then measure a rendered card below.
+  const [rowHeight, setRowHeight] = useState(() => columns === 2 ? 500 : 500)
   const rows = Math.ceil(products.length / columns)
 
   useEffect(() => {
@@ -31,10 +33,25 @@ export function VirtualizedProductGrid({ products, currency, addToBagLabel, rati
     return () => { media.removeEventListener('change', onMediaChange); window.removeEventListener('scroll', onScroll) }
   }, [])
 
+  useEffect(() => {
+    setRowHeight(columns === 2 ? 500 : 500)
+  }, [columns])
+
+  useEffect(() => {
+    const firstCard = containerRef.current?.querySelector<HTMLElement>('.product-card')
+    if (!firstCard || typeof ResizeObserver === 'undefined') return
+    const measure = () => setRowHeight(Math.max(460, Math.ceil(firstCard.getBoundingClientRect().height + 32)))
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(firstCard)
+    return () => observer.disconnect()
+  }, [products, columns])
+
   const relativeScroll = Math.max(0, scrollY - containerTop)
   const firstRow = Math.max(0, Math.floor(relativeScroll / rowHeight) - overscanRows)
   const visibleRows = Math.min(rows, firstRow + Math.ceil((window.innerHeight + 1000) / rowHeight) + overscanRows)
   const visibleProducts = useMemo(() => products.slice(firstRow * columns, visibleRows * columns), [products, firstRow, visibleRows, columns])
 
+  if (!virtualize) return <div className="product-grid product-grid-static">{products.map((product) => <ProductCard key={product.id} product={product} currency={currency} addToBagLabel={addToBagLabel} ratingLabel={ratingLabel} reviewsLabel={reviewsLabel} onAdd={onAdd} onOpen={() => onOpenProduct(product.id)} />)}</div>
   return <div className="virtualized-grid" ref={containerRef} style={{ height: rows * rowHeight }}><div className="product-grid" style={{ transform: `translateY(${firstRow * rowHeight}px)` }}>{visibleProducts.map((product) => <ProductCard key={product.id} product={product} currency={currency} addToBagLabel={addToBagLabel} ratingLabel={ratingLabel} reviewsLabel={reviewsLabel} onAdd={onAdd} onOpen={() => onOpenProduct(product.id)} />)}</div></div>
 }
