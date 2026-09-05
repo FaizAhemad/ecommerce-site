@@ -16,6 +16,8 @@ type RouteProps = {
   path: string
   storefront: StorefrontApiResponse
   onAdd: () => void
+  isAuthenticated: boolean
+  onLogin: () => void
 }
 
 const navigate = (path: string) => (event: MouseEvent<HTMLAnchorElement>) => {
@@ -28,21 +30,21 @@ const navigateTo = (path: string) => {
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
-export function StorefrontRoute({ path, storefront, onAdd }: RouteProps) {
+export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, onLogin }: RouteProps) {
   const normalizedPath = path.length > 1 ? path.replace(/\/+$/, '') : path
   switch (normalizedPath) {
     case '/bag':
       return <BagPage storefront={storefront} onNavigate={navigate} />
     case '/checkout':
-      return <PaymentPage storefront={storefront} onNavigate={navigate} />
+      return isAuthenticated ? <PaymentPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" onNavigate={navigate} onLogin={onLogin} />
     case '/track-order':
       return <TrackOrderPage storefront={storefront} onNavigate={navigate} />
     case '/login':
-      return <AuthPage mode="login" onNavigate={navigate} />
+      return isAuthenticated ? <HomePage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" onNavigate={navigate} onLogin={onLogin} />
     case '/signup':
-      return <AuthPage mode="signup" onNavigate={navigate} />
+      return isAuthenticated ? <HomePage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="signup" onNavigate={navigate} onLogin={onLogin} />
     case '/orders':
-      return <OrdersPage storefront={storefront} onNavigate={navigate} />
+      return isAuthenticated ? <OrdersPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" onNavigate={navigate} onLogin={onLogin} />
     case '/privacy':
       return <PolicyPage storefront={storefront} policy="privacy" onNavigate={navigate} />
     case '/returns':
@@ -52,7 +54,7 @@ export function StorefrontRoute({ path, storefront, onAdd }: RouteProps) {
     case '/support':
       return <SupportPage storefront={storefront} />
     default:
-      if (normalizedPath.startsWith('/orders/')) return <OrderDetailPage storefront={storefront} orderId={decodeURIComponent(normalizedPath.slice('/orders/'.length))} onNavigate={navigate} />
+      if (normalizedPath.startsWith('/orders/')) return isAuthenticated ? <OrderDetailPage storefront={storefront} orderId={decodeURIComponent(normalizedPath.slice('/orders/'.length))} onNavigate={navigate} /> : <AuthPage mode="login" onNavigate={navigate} onLogin={onLogin} />
       if (normalizedPath.startsWith('/product/')) return <ProductDetailPage key={normalizedPath} storefront={storefront} productId={decodeURIComponent(normalizedPath.slice('/product/'.length))} onAdd={onAdd} onNavigate={navigate} />
       return <HomePage storefront={storefront} onNavigate={navigate} />
   }

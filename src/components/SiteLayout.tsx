@@ -6,10 +6,12 @@ import { SocialLinks } from './SocialLinks'
 type SiteLayoutProps = {
   storefront: StorefrontApiResponse
   cartCount: number
+  isAuthenticated: boolean
+  onLogout: () => void
   children: ReactNode
 }
 
-export function SiteLayout({ storefront, cartCount, children }: SiteLayoutProps) {
+export function SiteLayout({ storefront, cartCount, children, isAuthenticated, onLogout }: SiteLayoutProps) {
   const { content, identity, contact } = storefront
   const [showStickyHeader, setShowStickyHeader] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
@@ -38,7 +40,7 @@ export function SiteLayout({ storefront, cartCount, children }: SiteLayoutProps)
         <nav aria-label="Primary navigation">
           <a href="/shop" onClick={navigate('/shop')}>{content.navigation.shop}</a>
           <a href="/support" onClick={navigate('/support')}>{content.navigation.support}</a>
-          <a href="/login" onClick={navigate('/login')}>Sign in</a>
+          {isAuthenticated ? <button className="header-link-button" type="button" onClick={() => { onLogout(); window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Log out</button> : <a href="/login" onClick={navigate('/login')}>Sign in</a>}
         </nav>
         <div className="header-actions">
           <button className="cart-button" type="button" onClick={openBag} aria-label={`${content.ui.bagLabel}, ${cartCount} ${content.ui.bagItemLabel}`}>

@@ -9,6 +9,7 @@ function App() {
   const [requestFailed, setRequestFailed] = useState(false)
   const [path, setPath] = useState(window.location.pathname)
   const [cartCount, setCartCount] = useState(0)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     getStorefront().then(setStorefront).catch(() => setRequestFailed(true))
@@ -26,7 +27,7 @@ function App() {
   if (requestFailed) return <p className="state-message">Storefront unavailable</p>
   if (!storefront) return <p className="state-message">Loading storefront</p>
 
-  return <SiteLayout storefront={storefront} cartCount={cartCount}><StorefrontRoute path={path} storefront={storefront} onAdd={() => setCartCount((count) => count + 1)} /></SiteLayout>
+  return <SiteLayout storefront={storefront} cartCount={cartCount} isAuthenticated={isAuthenticated} onLogout={() => setIsAuthenticated(false)}><StorefrontRoute path={path} storefront={storefront} onAdd={() => setCartCount((count) => count + 1)} isAuthenticated={isAuthenticated} onLogin={() => setIsAuthenticated(true)} /></SiteLayout>
 }
 
 export default App
