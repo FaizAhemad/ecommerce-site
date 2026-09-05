@@ -19,12 +19,18 @@ This repository is a **frontend foundation** for a reusable, white-label commerc
 - Privacy and return-policy placeholder pages that explicitly request approved business content.
 - Local cart-count interaction for visual prototyping.
 - Virtualized product-grid rendering with a 1,000-item local fixture to validate catalog performance without changing the card layout.
+- API-derived catalog facets for categories and colors, plus rating filtering and product color swatches.
+- Full-height, sticky desktop filter rail with mobile collapse/expand behavior and clear-filters support.
+- Scroll-aware compact sticky header and floating back-to-top control.
+- Refined footer spacing, borders, responsive columns, and link wrapping.
+- Configurable Instagram, YouTube, and WhatsApp links with brand-colored fixed social rail, hover rotation, and footer placement.
 - Source requirement documents: `REQUIREMENTS.md`, `TARGET.md`, and the original `requirement.md` brief.
 
 ## In progress / prototype limitations
 
 - `getStorefront`, `getProducts`, and `getProduct` are local in-memory adapters, not HTTP/API calls.
 - Catalog filtering and sorting work only on the small local catalog. Cursor pagination is typed but not implemented.
+- The current facet values are derived by the local adapter from fixture data; production facets should be returned by the catalog API.
 - The bag stores only a count in React state; it has no line items, quantities, persistence, pricing, or checkout.
 - Product media, product details, ratings, and review submission are presentation/prototype data only.
 - Routing is a lightweight `history` implementation, not a router library with route-level loading/error handling.

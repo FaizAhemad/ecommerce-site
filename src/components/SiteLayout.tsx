@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
+import { SocialLinks } from './SocialLinks'
 
 type SiteLayoutProps = {
   storefront: StorefrontApiResponse
@@ -45,11 +46,12 @@ export function SiteLayout({ storefront, cartCount, children }: SiteLayoutProps)
         </div>
       </header>
       <main>{children}</main>
-      <footer className="site-footer" id="footer">
+      <SocialLinks storefront={storefront} placement="rail" /><footer className="site-footer" id="footer">
         <div><span className="brand-mark">{identity.mark}</span><p>{identity.businessName}<br />{identity.tagline}</p></div>
         <div><p className="footer-label">{content.footer.customerCareLabel}</p><a href={`mailto:${contact.supportEmail}`}>{contact.supportEmail}</a><a href={`tel:${contact.phone}`}>{contact.phone}</a></div>
         <div><p className="footer-label">{content.footer.policiesLabel}</p><a href="/privacy" onClick={navigate('/privacy')}>{content.footer.privacyLabel}</a><a href="/returns" onClick={navigate('/returns')}>{content.footer.returnsLabel}</a></div>
         <p className="copyright">{content.ui.copyrightPrefix} {content.footer.copyrightYear} {identity.businessName}</p>
+        <SocialLinks storefront={storefront} placement="footer" />
       </footer>
       {showBackToTop && <button className="back-to-top" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top"><span aria-hidden="true">↑</span></button>}
     </div>

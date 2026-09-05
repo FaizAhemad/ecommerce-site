@@ -1,0 +1,10 @@
+import type { StorefrontApiResponse } from '../api/storefront'
+
+type SocialLinksProps = { storefront: StorefrontApiResponse; placement: 'rail' | 'footer' }
+const icons = { instagram: <><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none" /></>, youtube: <><path d="M21 8.2a2.7 2.7 0 0 0-1.9-1.9C17.4 5.8 12 5.8 12 5.8s-5.4 0-7.1.5A2.7 2.7 0 0 0 3 8.2 28 28 0 0 0 2.6 12 28 28 0 0 0 3 15.8a2.7 2.7 0 0 0 1.9 1.9c1.7.5 7.1.5 7.1.5s5.4 0 7.1-.5a2.7 2.7 0 0 0 1.9-1.9 28 28 0 0 0 .4-3.8 28 28 0 0 0-.4-3.8Z" /><path d="m10 15 5-3-5-3v6Z" fill="currentColor" stroke="none" /></>, whatsapp: <><path d="M20.5 3.5A11.8 11.8 0 0 0 12.1 0 11.9 11.9 0 0 0 1.8 17.8L.1 24l6.4-1.7a12 12 0 0 0 5.7 1.5h.1A11.9 11.9 0 0 0 20.5 3.5Z" /><path d="M8.2 6.6c.2-.3.4-.3.7-.3h.6c.2 0 .4.1.5.4l.8 1.9c.1.3.1.5-.1.7l-.5.7c-.2.2-.1.4 0 .6.4.7 1 1.4 1.7 1.9.7.5 1.5.9 2.3 1.1.3.1.5 0 .7-.2l.8-.9c.2-.2.4-.2.7-.1l1.8.8c.3.1.4.3.3.6-.1.9-.5 1.6-1.2 1.9-.7.4-1.6.4-2.4.1-1.8-.5-3.4-1.5-4.7-2.8-1.3-1.3-2.4-2.8-3-4.5-.3-.8-.3-1.7 0-2.4Z" fill="currentColor" stroke="none" /></> }
+const extraIcons = { twitter: <path d="M18.9 2.5h3.7l-8.1 9.3 9.5 9.7h-7.4l-5.8-6-5.2 6H2l7.8-8.9L.7 2.5h7.6l5.2 5.5 5.4-5.5Zm-1.3 17.3h2L7.8 4.1H5.7l11.9 15.7Z" fill="currentColor" stroke="none" />, facebook: <path d="M14 21v-8h2.7l.4-3H14V8.1c0-.9.3-1.5 1.6-1.5h1.7V4a21 21 0 0 0-2.5-.1c-2.5 0-4.2 1.5-4.2 4.3V10H8v3h2.6v8H14Z" transform="translate(0 1.2)" fill="currentColor" stroke="none" /> }
+
+export function SocialLinks({ storefront, placement }: SocialLinksProps) {
+  const links = storefront.contact.social
+  return <div className={`social-links social-links-${placement}`} aria-label="Social media links">{(Object.keys(links) as Array<keyof typeof links>).map((name) => <a className={`social-link social-${name}`} href={links[name]} target="_blank" rel="noreferrer" key={name} aria-label={name}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">{name in extraIcons ? extraIcons[name as keyof typeof extraIcons] : icons[name as keyof typeof icons]}</svg></a>)}</div>
+}

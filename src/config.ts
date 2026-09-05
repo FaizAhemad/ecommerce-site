@@ -8,6 +8,7 @@ export const appConfig = {
   contact: {
     supportEmail: 'support@example.com',
     phone: '+1 (000) 000-0000',
+    social: { instagram: 'https://instagram.com', youtube: 'https://youtube.com', whatsapp: 'https://wa.me/10000000000', twitter: 'https://twitter.com', facebook: 'https://facebook.com' },
   },
   localization: {
     locale: 'en-IN',
