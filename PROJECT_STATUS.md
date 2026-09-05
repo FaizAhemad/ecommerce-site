@@ -21,6 +21,9 @@ This repository is a **frontend foundation** for a reusable, white-label commerc
 - Enhanced bag page with item quantities, totals, and checkout navigation; added a responsive demo payment page with card, UPI, and cash-on-delivery options. Live payment processing is not connected.
 - Cart rows now use compact quantity stepper controls and no longer render empty media placeholder boxes.
 - Checkout now presents Razorpay and pay-on-delivery choices, including cash or card at the doorstep, with delivery details, method-specific messaging, and demo order feedback. Razorpay order creation/signature verification and COD eligibility remain backend work.
+- Added a `/track-order` customer page with order-number lookup, demo delivery timeline, and footer navigation. Live tracking events still require an order/shipping backend.
+- Added `/login` and `/signup` screens with email/password and Google sign-in entry points. Authentication is UI-only until a secure backend provides OAuth verification, password hashing, HTTPS, and session handling.
+- Added an `/orders` page with recent order cards, delivery statuses, totals, track-order links, and customer-care support. It currently uses demo data until authenticated order APIs are available.
 - Virtualized product-grid rendering with a local volume fixture (currently reduced for visual review; expandable to 1,000 items) to validate catalog performance without changing the card layout.
 - API-derived catalog facets for categories and colors, plus rating filtering and product color swatches.
 - Full-height, sticky desktop filter rail with mobile collapse/expand behavior and clear-filters support.
