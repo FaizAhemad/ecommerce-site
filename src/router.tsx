@@ -6,6 +6,7 @@ import { SupportPage } from './pages/SupportPage'
 import { ProductDetailPage } from './pages/ProductDetailPage'
 import { BagPage } from './pages/BagPage'
 import { PolicyPage } from './pages/PolicyPage'
+import { PaymentPage } from './pages/PaymentPage'
 
 type RouteProps = {
   path: string
@@ -28,6 +29,8 @@ export function StorefrontRoute({ path, storefront, onAdd }: RouteProps) {
   switch (normalizedPath) {
     case '/bag':
       return <BagPage storefront={storefront} onNavigate={navigate} />
+    case '/checkout':
+      return <PaymentPage storefront={storefront} onNavigate={navigate} />
     case '/privacy':
       return <PolicyPage storefront={storefront} policy="privacy" onNavigate={navigate} />
     case '/returns':

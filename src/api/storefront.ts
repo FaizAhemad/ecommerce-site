@@ -48,6 +48,8 @@ export type StorefrontApiResponse = {
       allCategoriesLabel: string
       noResultsLabel: string
       loadingMoreLabel: string
+      catalogEndLabel: string
+      catalogEndActionLabel: string
       sortLabel: string
       newestSortLabel: string
       priceLowSortLabel: string
@@ -114,7 +116,7 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
       ui: {
         loadingLabel: 'Loading storefront',
         unavailableLabel: 'Storefront unavailable',
-        bagLabel: 'Bag',
+        bagLabel: 'Cart',
         bagItemLabel: 'items',
         homeLabel: 'home',
         copyrightPrefix: '©',
@@ -141,13 +143,15 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
         eyebrow: 'The collection',
         title: 'Made for the daily ritual',
         description: 'Small runs. Natural materials. Nothing extra.',
-        addToBagLabel: 'Add to bag',
+        addToBagLabel: 'Add to cart',
         ratingLabel: 'Rating',
         reviewsLabel: 'reviews',
         searchPlaceholder: 'Search the collection',
         allCategoriesLabel: 'All categories',
         noResultsLabel: 'No products match these filters.',
         loadingMoreLabel: 'Loading more products',
+        catalogEndLabel: 'You have reached the end of the collection.',
+        catalogEndActionLabel: 'Back to top',
         sortLabel: 'Sort products',
         newestSortLabel: 'Newest',
         priceLowSortLabel: 'Price: low to high',
@@ -169,7 +173,7 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
         description: 'Reach the configured support team through the available support channels. Business hours, FAQs, and order assistance can be supplied by the API when available.',
       },
       bag: {
-        title: 'Your bag',
+        title: 'Your cart',
         emptyDescription: 'Your selected products will appear here.',
         continueShoppingLabel: 'Continue shopping',
       },

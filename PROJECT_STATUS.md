@@ -18,7 +18,10 @@ This repository is a **frontend foundation** for a reusable, white-label commerc
 - Light Ink-and-Citron design tokens, responsive layouts, keyboard focus styling, carousel controls, and basic accessible labels.
 - Privacy and return-policy placeholder pages that explicitly request approved business content.
 - Local cart-count interaction for visual prototyping.
-- Virtualized product-grid rendering with a 1,000-item local fixture to validate catalog performance without changing the card layout.
+- Enhanced bag page with item quantities, totals, and checkout navigation; added a responsive demo payment page with card, UPI, and cash-on-delivery options. Live payment processing is not connected.
+- Cart rows now use compact quantity stepper controls and no longer render empty media placeholder boxes.
+- Checkout now presents Razorpay and pay-on-delivery choices, including cash or card at the doorstep, with delivery details, method-specific messaging, and demo order feedback. Razorpay order creation/signature verification and COD eligibility remain backend work.
+- Virtualized product-grid rendering with a local volume fixture (currently reduced for visual review; expandable to 1,000 items) to validate catalog performance without changing the card layout.
 - API-derived catalog facets for categories and colors, plus rating filtering and product color swatches.
 - Full-height, sticky desktop filter rail with mobile collapse/expand behavior and clear-filters support.
 - Scroll-aware compact sticky header and floating back-to-top control.

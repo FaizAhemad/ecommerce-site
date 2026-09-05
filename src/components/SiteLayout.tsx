@@ -50,6 +50,7 @@ export function SiteLayout({ storefront, cartCount, children }: SiteLayoutProps)
         <div><span className="brand-mark">{identity.mark}</span><p>{identity.businessName}<br />{identity.tagline}</p></div>
         <div><p className="footer-label">{content.footer.customerCareLabel}</p><a href={`mailto:${contact.supportEmail}`}>{contact.supportEmail}</a><a href={`tel:${contact.phone}`}>{contact.phone}</a></div>
         <div><p className="footer-label">{content.footer.policiesLabel}</p><a href="/privacy" onClick={navigate('/privacy')}>{content.footer.privacyLabel}</a><a href="/returns" onClick={navigate('/returns')}>{content.footer.returnsLabel}</a></div>
+        <div><p className="footer-label">Explore</p><a href="/" onClick={navigate('/')}>{content.ui.homeLabel}</a><a href="/shop" onClick={navigate('/shop')}>{content.navigation.shop}</a><a href="/support" onClick={navigate('/support')}>{content.navigation.support}</a><a href="/bag" onClick={navigate('/bag')}>{content.ui.bagLabel}</a></div>
         <p className="copyright">{content.ui.copyrightPrefix} {content.footer.copyrightYear} {identity.businessName}</p>
         <SocialLinks storefront={storefront} placement="footer" />
       </footer>

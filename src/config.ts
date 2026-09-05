@@ -50,7 +50,7 @@ const starterProducts = [
     reviewCount: 124,
     tone: 'sage',
     badge: 'Best seller',
-    media: { images: [], videos: [] },
+    media: { images: [{ id: 'bag-01-main', url: heroArt, alt: 'Everyday Canvas Tote', isPrimary: true }, { id: 'bag-01-detail', url: heroArt, alt: 'Everyday Canvas Tote detail', isPrimary: false }], videos: [] },
   },
   {
     id: 'bag-02',
@@ -134,7 +134,7 @@ const starterProducts = [
 const fixtureColors = ['Black', 'White', 'Natural', 'Blue', 'Green', 'Rose', 'Brown'] as const
 
 // Fixture volume for exercising the virtualized catalog. Production data will come from the API.
-export const products = [...starterProducts, ...Array.from({ length: 992 }, (_, index) => {
+export const products = [...starterProducts, ...Array.from({ length: 16 }, (_, index) => {
   const source = starterProducts[index % starterProducts.length]
   return {
     ...source,
@@ -145,3 +145,4 @@ export const products = [...starterProducts, ...Array.from({ length: 992 }, (_, 
     colors: [fixtureColors[index % fixtureColors.length], fixtureColors[(index + 2) % fixtureColors.length]],
   }
 })] satisfies readonly CatalogProduct[]
+import heroArt from './assets/hero.png'

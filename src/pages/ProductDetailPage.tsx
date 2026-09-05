@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 
@@ -8,6 +8,7 @@ const reviewCopy = ['Beautifully made and exactly as pictured.', 'A thoughtful p
 export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: Props) {
   const product = storefront.products.find((item) => item.id === productId)
   const [showAll, setShowAll] = useState(false); const [limit, setLimit] = useState(4); const [reviewRating, setReviewRating] = useState(5); const [reviewComment, setReviewComment] = useState(''); const [submitted, setSubmitted] = useState(false); const [selected, setSelected] = useState<{ type: 'image' | 'video'; id: string } | null>(null)
+  useEffect(() => { document.body.style.overflow = showAll ? 'hidden' : ''; return () => { document.body.style.overflow = '' } }, [showAll])
   const reviews = useMemo(() => product ? Array.from({ length: Math.min(product.reviewCount, 12) }, (_, i) => ({ id: `${product.id}-${i}`, rating: Math.max(1, Math.min(5, Math.round(product.rating + ((i % 3) - 1) * .3))), text: reviewCopy[i % reviewCopy.length], author: ['Aarav', 'Maya', 'Rohan', 'Isha'][i % 4], date: `${i + 1} ${i % 2 ? 'weeks' : 'months'} ago` })) : [], [product])
   if (!product) return <section className="page-section state-panel"><p className="eyebrow">{storefront.content.collection.eyebrow}</p><h1>{storefront.content.collection.noResultsLabel}</h1><a className="primary-button" href="/shop" onClick={onNavigate('/shop')}>{storefront.content.collection.addToBagLabel}</a></section>
   const initial = product.media.images.find((image) => image.isPrimary); const image = selected?.type === 'image' ? product.media.images.find((item) => item.id === selected.id) : initial; const video = selected?.type === 'video' ? product.media.videos.find((item) => item.id === selected.id) : undefined; const total = reviews.length || 1; const distribution = [5, 4, 3, 2, 1].map((rating) => ({ rating, count: reviews.filter((item) => item.rating === rating).length })); const currency = new Intl.NumberFormat(storefront.localization.locale, { style: 'currency', currency: storefront.localization.currency, maximumFractionDigits: 0 })
