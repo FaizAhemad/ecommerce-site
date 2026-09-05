@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { getProducts, type ProductSort, type StorefrontApiResponse, type StorefrontProduct } from '../api/storefront'
 import { VirtualizedProductGrid } from '../components/VirtualizedProductGrid'
 import { FilterSidebar } from '../components/FilterSidebar'
+import { PromoCarousel } from '../components/PromoCarousel'
 
 type ShopPageProps = { storefront: StorefrontApiResponse; onAdd: () => void; onOpenProduct: (id: string) => void }
 
@@ -41,6 +42,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: ShopPageProps) {
   const toggleColor = (color: string) => { setLoading(true); setSelectedColors((current) => current.includes(color) ? current.filter((item) => item !== color) : [...current, color]) }
   return (
     <section className="collection-section page-section" aria-labelledby="collection-title">
+      <PromoCarousel promos={storefront.content.promotions} previousLabel={collection.carouselPreviousLabel} nextLabel={collection.carouselNextLabel} />
       <div className="section-heading"><div><p className="eyebrow">{collection.eyebrow}</p><h1 id="collection-title">{collection.title}</h1></div><p className="section-note">{collection.description}</p></div>
       <div className="catalog-layout"><FilterSidebar search={search} category={category} sort={sort} categories={storefront.facets.categories} searchPlaceholder={collection.searchPlaceholder} allCategoriesLabel={collection.allCategoriesLabel} sortLabel={collection.sortLabel} newestSortLabel={collection.newestSortLabel} priceLowSortLabel={collection.priceLowSortLabel} priceHighSortLabel={collection.priceHighSortLabel} clearLabel={collection.clearFiltersLabel} collapseLabel={collection.collapseFiltersLabel} expandLabel={collection.expandFiltersLabel} selectedColors={selectedColors} minRating={minRating} colorOptions={storefront.facets.colors} ratingLabel={collection.ratingLabel} colorsLabel={collection.colorsFilterLabel} onSearch={updateSearch} onCategory={updateCategory} onSort={(value) => { setLoading(true); setSort(value) }} onRating={(value) => { setLoading(true); setMinRating((current) => current === value ? 0 : value) }} onColorToggle={toggleColor} onClear={() => { setLoading(true); setSearch(''); setCategory(''); setSort('newest'); setSelectedColors([]); setMinRating(0) }} /><div className="catalog-results"><VirtualizedProductGrid products={catalog} currency={currency} addToBagLabel={collection.addToBagLabel} ratingLabel={collection.ratingLabel} reviewsLabel={collection.reviewsLabel} onAdd={onAdd} onOpenProduct={onOpenProduct} /></div></div>
       {!loading && catalog.length === 0 && <p className="empty-state">{collection.noResultsLabel}</p>}

@@ -35,6 +35,8 @@ export type StorefrontApiResponse = {
       artworkLabel: string
       artworkDescription: string
     }
+    promotions: readonly { eyebrow: string; title: string; description: string; artwork: string }[]
+    filterBenefits: { title: string; items: readonly string[] }
     collection: {
       eyebrow: string
       title: string
@@ -129,6 +131,12 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
         artworkLabel: 'FORM / 01',
         artworkDescription: 'Still life of a cup, book, and ceramic vase',
       },
+      promotions: [
+        { eyebrow: 'Featured edit', title: 'Small details, better days.', description: 'Explore useful pieces selected for everyday rituals.', artwork: 'sage' },
+        { eyebrow: 'New in the collection', title: 'Made to move with you.', description: 'Discover considered essentials for every part of your day.', artwork: 'clay' },
+        { eyebrow: 'Seasonal favorites', title: 'A little more considered.', description: 'Find timeless shapes and quietly useful design.', artwork: 'oak' },
+      ],
+      filterBenefits: { title: 'Shopping with us', items: ['Thoughtfully selected goods', 'Support when you need it', 'Secure checkout'] },
       collection: {
         eyebrow: 'The collection',
         title: 'Made for the daily ritual',
