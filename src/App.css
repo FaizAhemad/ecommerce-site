@@ -258,6 +258,7 @@ body { font-size: 16px; }.site-header nav a, .site-footer a { font-size: 13px; }
 .wishlist-button-header .nav-action-icon { display: none !important; }
 .header-auth-link { color: var(--ink); font: 13px Arial,sans-serif; text-decoration: none; white-space: nowrap; }
 .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; overflow: visible; }
+.language-switcher { display: inline-flex; align-items: center; gap: 5px; min-height: 38px; padding: 0 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); }.language-switcher span { font-size: 16px; line-height: 1; }.language-switcher select { border: 0; outline: 0; background: transparent; color: inherit; font: 11px Arial,sans-serif; cursor: pointer; }
 .header-auth-link { display: inline-block !important; }
 .wishlist-button-header .nav-action-label { display: inline !important; visibility: visible; }
 .search-button, .wishlist-button-header, .cart-button, .header-auth-link { box-sizing: border-box; min-height: 38px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); }

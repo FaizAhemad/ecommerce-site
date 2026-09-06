@@ -1,0 +1,18 @@
+{
+  "home": "Home",
+  "products": "Products",
+  "support": "Support",
+  "signIn": "Sign in",
+  "logOut": "Log out",
+  "wishlist": "Wishlist",
+  "cart": "Cart",
+  "searchProducts": "Search products",
+  "items": "items",
+  "backToTop": "Back to top",
+  "loading": "Loading storefront",
+  "loadError": "We could not load the storefront.",
+  "tryAgain": "Try again",
+  "errorTitle": "Something went wrong.",
+  "reloadPage": "Reload page",
+  "backToHome": "Back to home"
+}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import type { MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 import { SocialLinks } from './SocialLinks'
+import { useTranslation } from 'react-i18next'
 
 type SiteLayoutProps = {
   storefront: StorefrontApiResponse
@@ -14,6 +15,7 @@ type SiteLayoutProps = {
 
 export function SiteLayout({ storefront, cartCount, wishlistCount, children, isAuthenticated, onLogout }: SiteLayoutProps) {
   const { content, identity, contact } = storefront
+  const { t } = useTranslation()
   const [showStickyHeader, setShowStickyHeader] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
@@ -64,22 +66,23 @@ export function SiteLayout({ storefront, cartCount, wishlistCount, children, isA
           <a className={currentPath==='/'?'is-active':''} href="/" onClick={navigate('/')}>{content.ui.homeLabel}</a>
           <a className={currentPath==='/products'||currentPath.startsWith('/product/')?'is-active':''} href="/products" onClick={navigate('/products')}>{content.navigation.products}</a>
           <a className={currentPath==='/support'?'is-active':''} href="/support" onClick={navigate('/support')}>{content.navigation.support}</a>
-          {isAuthenticated ? <button className="header-link-button" type="button" onClick={() => { onLogout(); window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}>{content.ui.logOutLabel}</button> : <a className={currentPath==='/login'||currentPath==='/signup'?'is-active':''} href="/login" onClick={navigate('/login')}>{content.ui.signInLabel}</a>}
+          {isAuthenticated ? <button className="header-link-button" type="button" onClick={() => { onLogout(); window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}>{t('common:logOut')}</button> : <a className={currentPath==='/login'||currentPath==='/signup'?'is-active':''} href="/login" onClick={navigate('/login')}>{t('common:signIn')}</a>}
         </nav>
         <div className="header-actions" ref={headerActionsRef}>
-          <button className="search-button" type="button" onClick={() => setSearchOpen((open) => !open)} aria-label={searchOpen ? 'Close search' : 'Search products'}>{searchOpen ? 'Ã—' : 'âŒ•'}</button>{searchOpen && <form className="header-search" onSubmit={submitSearch}><input autoFocus autoComplete="off" spellCheck={false} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={content.ui.searchProductsLabel} aria-label={content.ui.searchProductsLabel} /></form>}<button className="wishlist-button-header" type="button" onClick={() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); window.history.pushState({}, '', '/wishlist'); window.dispatchEvent(new PopStateEvent('popstate')) }} aria-label={`${content.ui.wishlistLabel}, ${wishlistCount} items`}><span className="nav-action-icon" aria-hidden="true">♥</span><span className="nav-action-label">{content.ui.wishlistLabel}</span><b>{wishlistCount}</b></button>
           
-          <button className="cart-button" type="button" onClick={openCart} aria-label={`${content.ui.cartLabel}, ${cartCount} ${content.ui.cartItemLabel}`}>
-            <span className="nav-action-icon cart-icon" aria-hidden="true">🛒</span><span className="nav-action-label">{content.ui.cartLabel}</span><span>{cartCount}</span>
+          <button className="search-button" type="button" onClick={() => setSearchOpen((open) => !open)} aria-label={searchOpen ? 'Close search' : 'Search products'}>{searchOpen ? 'Ã—' : 'âŒ•'}</button>{searchOpen && <form className="header-search" onSubmit={submitSearch}><input autoFocus autoComplete="off" spellCheck={false} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t('common:searchProducts')} aria-label={t('common:searchProducts')} /></form>}<button className="wishlist-button-header" type="button" onClick={() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); window.history.pushState({}, '', '/wishlist'); window.dispatchEvent(new PopStateEvent('popstate')) }} aria-label={`${t('common:wishlist')}, ${wishlistCount} items`}><span className="nav-action-icon" aria-hidden="true">♥</span><span className="nav-action-label">{t('common:wishlist')}</span><b>{wishlistCount}</b></button>
+          
+          <button className="cart-button" type="button" onClick={openCart} aria-label={`${t('common:cart')}, ${cartCount} ${t('common:items')}`}>
+            <span className="nav-action-icon cart-icon" aria-hidden="true">🛒</span><span className="nav-action-label">{t('common:cart')}</span><span>{cartCount}</span>
           </button>
-                  {isAuthenticated ? <button className="header-auth-link" type="button" onClick={() => { onLogout(); window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}>{content.ui.logOutLabel}</button> : <a className="header-auth-link" href="/login" onClick={navigate('/login')}>{content.ui.signInLabel}</a>}</div>
+                  {isAuthenticated ? <button className="header-auth-link" type="button" onClick={() => { onLogout(); window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}>{t('common:logOut')}</button> : <a className="header-auth-link" href="/login" onClick={navigate('/login')}>{t('common:signIn')}</a>}</div>
       </header>
       <main>{children}</main>
       <SocialLinks storefront={storefront} placement="rail" /><footer className="site-footer" id="footer">
         <div><span className="brand-mark">{identity.mark}</span><p>{identity.businessName}<br />{identity.tagline}</p></div>
         <div><p className="footer-label">{content.footer.customerCareLabel}</p><a href={`mailto:${contact.supportEmail}`}>{contact.supportEmail}</a><a href={`tel:${contact.phone}`}>{contact.phone}</a></div>
         <div><p className="footer-label">{content.footer.policiesLabel}</p><a href="/privacy" onClick={navigate('/privacy')}>{content.footer.privacyLabel}</a><a href="/returns" onClick={navigate('/returns')}>{content.footer.returnsLabel}</a></div>
-        <div><p className="footer-label">Explore</p><a href="/" onClick={navigate('/')}>{content.ui.homeLabel}</a><a href="/products" onClick={navigate('/products')}>{content.navigation.products}</a><a href="/support" onClick={navigate('/support')}>{content.navigation.support}</a><a href="/orders" onClick={navigate('/orders')}>Orders</a><a href="/track-order" onClick={navigate('/track-order')}>Track order</a><a href="/cart" onClick={navigate('/cart')}>{content.ui.cartLabel}</a></div>
+        <div><p className="footer-label">Explore</p><a href="/" onClick={navigate('/')}>{content.ui.homeLabel}</a><a href="/products" onClick={navigate('/products')}>{content.navigation.products}</a><a href="/support" onClick={navigate('/support')}>{content.navigation.support}</a><a href="/orders" onClick={navigate('/orders')}>Orders</a><a href="/track-order" onClick={navigate('/track-order')}>Track order</a><a href="/cart" onClick={navigate('/cart')}>{t('common:cart')}</a></div>
         <p className="copyright">{content.ui.copyrightPrefix} {content.footer.copyrightYear} {identity.businessName}</p>
       </footer>
       {showBackToTop && <button className="back-to-top" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top"><span aria-hidden="true">↑</span></button>}
