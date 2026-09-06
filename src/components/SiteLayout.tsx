@@ -58,7 +58,7 @@ export function SiteLayout({ storefront, cartCount, wishlistCount, children, isA
 
   return (
     <div className="site-shell">
-      <header className={showStickyHeader ? 'site-header is-sticky' : 'site-header'}>
+      <header className={`${showStickyHeader ? 'site-header is-sticky' : 'site-header'}${isAuthenticated ? '' : ' guest-header'}`}>
         <a className="brand" href="/" onClick={navigate('/')} aria-label={`${identity.appName} ${content.ui.homeLabel}`}>
           <span className="brand-mark">{identity.mark}</span><span>{identity.businessName}</span>
         </a>
