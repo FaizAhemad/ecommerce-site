@@ -11,6 +11,7 @@ import { TrackOrderPage } from './pages/TrackOrderPage'
 import { AuthPage } from './pages/AuthPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
+import { WishlistPage } from './pages/WishlistPage'
 
 type RouteProps = {
   path: string
@@ -43,7 +44,9 @@ export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, onLo
     case '/debug-error':
       return <DebugErrorPage />
     case '/cart':
-      return <CartPage storefront={storefront} onNavigate={navigate} />
+      return isAuthenticated ? <CartPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+    case '/wishlist':
+      return isAuthenticated ? <WishlistPage storefront={storefront} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/checkout':
       return isAuthenticated ? <PaymentPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/track-order':
@@ -59,7 +62,7 @@ export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, onLo
     case '/returns':
       return <PolicyPage storefront={storefront} policy="returns" onNavigate={navigate} />
     case '/products':
-      return <ShopPage storefront={storefront} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} />
+      return <ShopPage key={window.location.search} storefront={storefront} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} />
     case '/support':
       return <SupportPage storefront={storefront} />
     default:

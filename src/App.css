@@ -234,3 +234,42 @@ body { font-size: 16px; }.site-header nav a, .site-footer a { font-size: 13px; }
 .home-products.page-section,.home-story.page-section,.subscribe-section.page-section { max-width:1440px; margin-left:auto; margin-right:auto; padding-left:32px; padding-right:32px; }
 @media(max-width:760px){.subscribe-section{grid-template-columns:1fr;gap:28px;padding-top:55px;padding-bottom:65px}.subscribe-form>div{display:grid}.subscribe-form button{width:100%}}
 @media(max-width:760px){.home-products.page-section,.home-story.page-section,.subscribe-section.page-section{padding-left:20px;padding-right:20px}}
+.search-button { position: relative; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: transparent; font-size: 0; line-height: 1; cursor: pointer; }.search-button::before { content: ''; position: absolute; width: 8px; height: 8px; border: 1.5px solid var(--ink); border-radius: 50%; top: 10px; left: 10px; }.search-button::after { content: ''; position: absolute; width: 6px; height: 1.5px; background: var(--ink); transform: rotate(45deg); top: 20px; left: 19px; }
+.header-actions { position: relative; }
+.site-header nav { margin-right: auto; }
+.site-header nav > a:last-child, .site-header nav > .header-link-button { margin-left: 18px; }
+.header-actions { margin-left: auto; }
+.header-search { position: absolute; right: 100%; top: 50%; display: flex; align-items: center; height: 38px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); box-shadow: 0 8px 20px rgba(37,40,33,.12); transform: translate(-8px,-50%); z-index: 3; }
+.header-search input { width: 240px; height: 36px; border: 0; outline: 0; padding: 0 12px; background: transparent; color: var(--ink); font: 12px Arial,sans-serif; }
+.header-search button { width: 30px; height: 32px; border: 0; background: var(--green); color: var(--paper); cursor: pointer; }
+.header-search button { display: none; }
+.wishlist-link { display: grid; place-items: center; width: 34px; height: 34px; color: var(--ink); font-size: 22px; text-decoration: none; }
+.wishlist-button-header { display: inline-flex; align-items: center; gap: 7px; min-width: 70px; justify-content: center; border: 1px solid var(--ink); border-radius: 999px; padding: 8px 11px; background: var(--ink); color: var(--paper); cursor: pointer; }.wishlist-button-header span { color: #ef4b5f; font-size: 24px; line-height: 1; }.wishlist-button-header b { display: inline-grid; place-items: center; min-width: 18px; height: 18px; border-radius: 50%; background: var(--yellow); color: var(--ink); font: 10px Arial,sans-serif; }
+.wishlist-button-header, .cart-button { border-color: var(--line); background: var(--surface); color: var(--ink); }.wishlist-button-header .nav-action-icon { color: #d52f45; }.nav-action-icon { display: none; }.nav-action-label { font: 11px Arial,sans-serif; letter-spacing: .04em; text-transform: uppercase; }.wishlist-button-header b, .cart-button > span:last-child { background: var(--yellow); color: var(--ink); }
+@media (max-width: 600px) { .nav-action-label { display: none; }.nav-action-icon { display: inline-block; font-size: 18px; line-height: 1; }.cart-icon { font-size: 16px; }.wishlist-button-header, .cart-button { min-width: 42px; width: 42px; height: 38px; padding: 6px; gap: 4px; }.wishlist-button-header b, .cart-button > span:last-child { min-width: 17px; height: 17px; } }
+.cart-button .cart-icon { width: auto; height: auto; margin-left: 0; border-radius: 0; background: transparent; color: var(--ink); }
+.nav-action-icon { display: none !important; }
+.nav-action-label { display: inline !important; }
+@media (max-width: 600px) { .wishlist-button-header, .cart-button { width: auto; min-width: 0; padding: 8px 10px; } }
+.wishlist-button-header .nav-action-label, .cart-button .nav-action-label { width: auto; height: auto; margin: 0; border-radius: 0; background: transparent; color: var(--ink); font: 11px Arial,sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+.wishlist-button-header .nav-action-label { color: var(--ink); }
+.cart-button > span:last-child { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 3px; border-radius: 50%; background: var(--yellow); color: var(--ink); font: 10px Arial,sans-serif; }
+.wishlist-button-header .nav-action-label { display: inline !important; }
+.wishlist-button-header .nav-action-icon { display: none !important; }
+.header-auth-link { color: var(--ink); font: 13px Arial,sans-serif; text-decoration: none; white-space: nowrap; }
+.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; overflow: visible; }
+.header-auth-link { display: inline-block !important; }
+.wishlist-button-header .nav-action-label { display: inline !important; visibility: visible; }
+.search-button, .wishlist-button-header, .cart-button, .header-auth-link { box-sizing: border-box; min-height: 38px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); }
+.search-button { width: 38px; padding: 0; }
+.wishlist-button-header, .cart-button { padding: 8px 12px; }
+.header-auth-link { display: inline-flex !important; align-items: center; padding: 0 14px; font: 11px Arial,sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+.site-header nav > a:last-child, .site-header nav > .header-link-button { display: none; }
+.wishlist-button { position: absolute; top: 12px; right: 12px; z-index: 2; display: grid; place-items: center; width: 42px; height: 38px; border: 1px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink); font-size: 23px; line-height: 1; cursor: pointer; }
+.wishlist-button.is-wishlisted { background: #fff; color: #d52f45; border-color: #d52f45; }
+.wishlist-empty { padding: 70px 0; text-align: center; border-top: 1px solid var(--line); }.wishlist-empty p { color: var(--muted); margin: 12px 0 24px; }
+.wishlist-page { max-width: 1440px; margin: 0 auto; padding: 72px 32px 100px; }
+.wishlist-page .section-heading { margin-bottom: 42px; }
+.wishlist-page .product-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 300px)); justify-content: start; gap: 42px 20px; }
+@media (max-width: 760px) { .wishlist-page { padding: 52px 20px 72px; }.wishlist-page .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 14px; } }
+@media (max-width: 760px) { .header-search input { width: 180px; }.search-button { width: 32px; height: 32px; } }

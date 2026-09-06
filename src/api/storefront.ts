@@ -24,6 +24,10 @@ export type StorefrontApiResponse = {
       cartItemLabel: string
       homeLabel: string
       copyrightPrefix: string
+      signInLabel: string
+      logOutLabel: string
+      wishlistLabel: string
+      searchProductsLabel: string
     }
     navigation: {
       products: string
@@ -124,6 +128,10 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
         cartItemLabel: 'items',
         homeLabel: 'home',
         copyrightPrefix: '©',
+        signInLabel: 'Sign in',
+        logOutLabel: 'Log out',
+        wishlistLabel: 'Wishlist',
+        searchProductsLabel: 'Search products',
       },
       navigation: {
         products: 'Products',

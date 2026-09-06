@@ -18,15 +18,19 @@ function App() {
   const [storefront, setStorefront] = useState<StorefrontApiResponse | null>(null)
   const [requestFailed, setRequestFailed] = useState(false)
   const [path, setPath] = useState(window.location.pathname)
+  const [, setRouteVersion] = useState(0)
   const [cartCount, setCartCount] = useState(0)
+  const [wishlistCount, setWishlistCount] = useState(() => JSON.parse(window.localStorage.getItem('wishlist') ?? '[]').length)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const loadStorefront = () => { setRequestFailed(false); setStorefront(null); getStorefront().then(setStorefront).catch(() => setRequestFailed(true)) }
   useEffect(() => {
     loadStorefront()
-    const onPopState = () => setPath(window.location.pathname)
+    const onPopState = () => { setPath(window.location.pathname); setRouteVersion((version) => version + 1) }
+    const onWishlistChange = () => setWishlistCount(JSON.parse(window.localStorage.getItem('wishlist') ?? '[]').length)
     window.addEventListener('popstate', onPopState)
-    return () => window.removeEventListener('popstate', onPopState)
+    window.addEventListener('wishlistchange', onWishlistChange)
+    return () => { window.removeEventListener('popstate', onPopState); window.removeEventListener('wishlistchange', onWishlistChange) }
   }, [])
 
   useEffect(() => {
@@ -42,7 +46,7 @@ function App() {
   if (requestFailed) return <div className="state-message"><p>We could not load the storefront.</p><button className="primary-button" type="button" onClick={loadStorefront}>Try again</button></div>
   if (!storefront) return <p className="state-message">Loading storefront</p>
 
-  return <AppErrorBoundary><SiteLayout storefront={storefront} cartCount={cartCount} isAuthenticated={isAuthenticated} onLogout={() => setIsAuthenticated(false)}><StorefrontRoute path={path} storefront={storefront} onAdd={() => setCartCount((count) => count + 1)} isAuthenticated={isAuthenticated} onLogin={() => setIsAuthenticated(true)} /></SiteLayout></AppErrorBoundary>
+  return <AppErrorBoundary><SiteLayout storefront={storefront} cartCount={cartCount} wishlistCount={wishlistCount} isAuthenticated={isAuthenticated} onLogout={() => setIsAuthenticated(false)}><StorefrontRoute path={path} storefront={storefront} onAdd={() => setCartCount((count) => count + 1)} isAuthenticated={isAuthenticated} onLogin={() => setIsAuthenticated(true)} /></SiteLayout></AppErrorBoundary>
 }
 
 export default App

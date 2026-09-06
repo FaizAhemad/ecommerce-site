@@ -1,9 +1,9 @@
 export const appConfig = {
   identity: {
-    appName: 'Field & Form',
-    businessName: 'Field & Form',
+    appName: 'Gadgify',
+    businessName: 'Gadgify',
     tagline: 'Useful objects, made to last.',
-    mark: 'F',
+    mark: 'G',
   },
   contact: {
     supportEmail: 'support@example.com',
