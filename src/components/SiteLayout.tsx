@@ -30,9 +30,9 @@ export function SiteLayout({ storefront, cartCount, children, isAuthenticated, o
     window.history.pushState({}, '', path)
     window.dispatchEvent(new PopStateEvent('popstate'))
   }
-  const openBag = () => {
+  const openCart = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-    window.history.pushState({}, '', '/bag')
+    window.history.pushState({}, '', '/cart')
     window.dispatchEvent(new PopStateEvent('popstate'))
   }
 
@@ -44,13 +44,13 @@ export function SiteLayout({ storefront, cartCount, children, isAuthenticated, o
         </a>
         <nav aria-label="Primary navigation">
           <a className={currentPath==='/'?'is-active':''} href="/" onClick={navigate('/')}>{content.ui.homeLabel}</a>
-          <a className={currentPath==='/shop'||currentPath.startsWith('/product/')?'is-active':''} href="/shop" onClick={navigate('/shop')}>{content.navigation.shop}</a>
+          <a className={currentPath==='/products'||currentPath.startsWith('/product/')?'is-active':''} href="/products" onClick={navigate('/products')}>{content.navigation.products}</a>
           <a className={currentPath==='/support'?'is-active':''} href="/support" onClick={navigate('/support')}>{content.navigation.support}</a>
           {isAuthenticated ? <button className="header-link-button" type="button" onClick={() => { onLogout(); window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}>Log out</button> : <a className={currentPath==='/login'||currentPath==='/signup'?'is-active':''} href="/login" onClick={navigate('/login')}>Sign in</a>}
         </nav>
         <div className="header-actions">
-          <button className="cart-button" type="button" onClick={openBag} aria-label={`${content.ui.bagLabel}, ${cartCount} ${content.ui.bagItemLabel}`}>
-            {content.ui.bagLabel} <span>{cartCount}</span>
+          <button className="cart-button" type="button" onClick={openCart} aria-label={`${content.ui.cartLabel}, ${cartCount} ${content.ui.cartItemLabel}`}>
+            {content.ui.cartLabel} <span>{cartCount}</span>
           </button>
         </div>
       </header>
@@ -59,7 +59,7 @@ export function SiteLayout({ storefront, cartCount, children, isAuthenticated, o
         <div><span className="brand-mark">{identity.mark}</span><p>{identity.businessName}<br />{identity.tagline}</p></div>
         <div><p className="footer-label">{content.footer.customerCareLabel}</p><a href={`mailto:${contact.supportEmail}`}>{contact.supportEmail}</a><a href={`tel:${contact.phone}`}>{contact.phone}</a></div>
         <div><p className="footer-label">{content.footer.policiesLabel}</p><a href="/privacy" onClick={navigate('/privacy')}>{content.footer.privacyLabel}</a><a href="/returns" onClick={navigate('/returns')}>{content.footer.returnsLabel}</a></div>
-        <div><p className="footer-label">Explore</p><a href="/" onClick={navigate('/')}>{content.ui.homeLabel}</a><a href="/shop" onClick={navigate('/shop')}>{content.navigation.shop}</a><a href="/support" onClick={navigate('/support')}>{content.navigation.support}</a><a href="/orders" onClick={navigate('/orders')}>Orders</a><a href="/track-order" onClick={navigate('/track-order')}>Track order</a><a href="/bag" onClick={navigate('/bag')}>{content.ui.bagLabel}</a></div>
+        <div><p className="footer-label">Explore</p><a href="/" onClick={navigate('/')}>{content.ui.homeLabel}</a><a href="/products" onClick={navigate('/products')}>{content.navigation.products}</a><a href="/support" onClick={navigate('/support')}>{content.navigation.support}</a><a href="/orders" onClick={navigate('/orders')}>Orders</a><a href="/track-order" onClick={navigate('/track-order')}>Track order</a><a href="/cart" onClick={navigate('/cart')}>{content.ui.cartLabel}</a></div>
         <p className="copyright">{content.ui.copyrightPrefix} {content.footer.copyrightYear} {identity.businessName}</p>
       </footer>
       {showBackToTop && <button className="back-to-top" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top"><span aria-hidden="true">↑</span></button>}

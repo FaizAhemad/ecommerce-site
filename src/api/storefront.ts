@@ -20,13 +20,13 @@ export type StorefrontApiResponse = {
     ui: {
       loadingLabel: string
       unavailableLabel: string
-      bagLabel: string
-      bagItemLabel: string
+      cartLabel: string
+      cartItemLabel: string
       homeLabel: string
       copyrightPrefix: string
     }
     navigation: {
-      shop: string
+      products: string
       support: string
     }
     hero: {
@@ -43,7 +43,7 @@ export type StorefrontApiResponse = {
       eyebrow: string
       title: string
       description: string
-      addToBagLabel: string
+      addToCartLabel: string
       ratingLabel: string
       reviewsLabel: string
       searchPlaceholder: string
@@ -72,7 +72,7 @@ export type StorefrontApiResponse = {
       title: string
       description: string
     }
-    bag: {
+    cart: {
       title: string
       emptyDescription: string
       continueShoppingLabel: string
@@ -116,17 +116,17 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
     facets: { categories: [...new Set(products.map((product) => product.category))], colors: [...new Set(products.flatMap((product) => (product as CatalogProduct).colors ?? []))], ratings: [5, 4, 3, 2, 1], price: { min: Math.min(...products.map((product) => product.price)), max: Math.max(...products.map((product) => product.price)) } },
     content: {
       errors: { unavailable: 'We could not load the storefront.', retryLabel: 'Try again', routeLabel: 'Something went wrong on this page.' },
-      auth: { loginEyebrow: 'Welcome back', signupEyebrow: 'Join Field & Form', loginTitle: 'Sign in', signupTitle: 'Create your account', loginDescription: 'Access your orders, saved details, and bag.', signupDescription: 'Save your details for a faster checkout.', googleLabel: 'Continue with Google', emailDivider: 'Or use email', fullNameLabel: 'Full name', mobileLabel: 'Mobile number', addressLabel: 'Delivery address', emailLabel: 'Email address', passwordLabel: 'Password', passwordPlaceholder: 'At least 8 characters', loginAction: 'Sign in', signupAction: 'Create account', loginSuccess: 'Signed in in demo mode.', signupSuccess: 'Account created in demo mode.', googleSuccess: 'Google sign-in completed in demo mode.', loginSwitch: 'New here?', signupSwitch: 'Already registered?', signupLink: 'Create an account', loginLink: 'Sign in', securityNote: 'Demo session only. Production must use HTTPS, hashed passwords, OAuth verification, and secure server sessions.' },
+      auth: { loginEyebrow: 'Welcome back', signupEyebrow: 'Join Field & Form', loginTitle: 'Sign in', signupTitle: 'Create your account', loginDescription: 'Access your orders, saved details, and cart.', signupDescription: 'Save your details for a faster checkout.', googleLabel: 'Continue with Google', emailDivider: 'Or use email', fullNameLabel: 'Full name', mobileLabel: 'Mobile number', addressLabel: 'Delivery address', emailLabel: 'Email address', passwordLabel: 'Password', passwordPlaceholder: 'At least 8 characters', loginAction: 'Sign in', signupAction: 'Create account', loginSuccess: 'Signed in in demo mode.', signupSuccess: 'Account created in demo mode.', googleSuccess: 'Google sign-in completed in demo mode.', loginSwitch: 'New here?', signupSwitch: 'Already registered?', signupLink: 'Create an account', loginLink: 'Sign in', securityNote: 'Demo session only. Production must use HTTPS, hashed passwords, OAuth verification, and secure server sessions.' },
       ui: {
         loadingLabel: 'Loading storefront',
         unavailableLabel: 'Storefront unavailable',
-        bagLabel: 'Cart',
-        bagItemLabel: 'items',
+        cartLabel: 'Cart',
+        cartItemLabel: 'items',
         homeLabel: 'home',
         copyrightPrefix: '©',
       },
       navigation: {
-        shop: 'Shop',
+        products: 'Products',
         support: 'Support',
       },
       hero: {
@@ -147,7 +147,7 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
         eyebrow: 'The collection',
         title: 'Made for the daily ritual',
         description: 'Small runs. Natural materials. Nothing extra.',
-        addToBagLabel: 'Add to cart',
+        addToCartLabel: 'Add to cart',
         ratingLabel: 'Rating',
         reviewsLabel: 'reviews',
         searchPlaceholder: 'Search the collection',
@@ -176,7 +176,7 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
         title: 'We are here to help.',
         description: 'Reach the configured support team through the available support channels. Business hours, FAQs, and order assistance can be supplied by the API when available.',
       },
-      bag: {
+      cart: {
         title: 'Your cart',
         emptyDescription: 'Your selected products will appear here.',
         continueShoppingLabel: 'Continue shopping',
@@ -221,7 +221,7 @@ export async function getProducts(query: ProductQuery = {}): Promise<ProductPage
     const matchesCategory = !query.category || product.category === query.category
     const productColors = (product as CatalogProduct).colors
     const matchesColor = !query.colors?.length || query.colors.some((color) => productColors?.includes(color))
-    const matchesRating = !query.minRating || product.rating >= query.minRating
+    const matchesRating = !query.minRating || Math.floor(product.rating) === query.minRating
     return matchesSearch && matchesCategory && matchesColor && matchesRating
   })
   const sorted = [...filtered].sort((left, right) => query.sort === 'price-low' ? left.price - right.price : query.sort === 'price-high' ? right.price - left.price : right.id.localeCompare(left.id))

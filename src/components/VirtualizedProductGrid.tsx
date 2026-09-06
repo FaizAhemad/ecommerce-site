@@ -3,9 +3,10 @@ import type { StorefrontProduct } from '../api/storefront'
 import { ProductCard } from './ProductCard'
 
 type VirtualizedProductGridProps = {
+  [key: string]: unknown
   products: readonly StorefrontProduct[]
   currency: Intl.NumberFormat
-  addToBagLabel: string
+  addToCartLabel?: string
   ratingLabel: string
   reviewsLabel: string
   onAdd: () => void
@@ -15,7 +16,8 @@ type VirtualizedProductGridProps = {
 
 const overscanRows = 2
 
-export function VirtualizedProductGrid({ products, currency, addToBagLabel, ratingLabel, reviewsLabel, onAdd, onOpenProduct, virtualize = true }: VirtualizedProductGridProps) {
+export function VirtualizedProductGrid({ products, currency, addToCartLabel = 'Add to cart', ratingLabel, reviewsLabel, onAdd, onOpenProduct, virtualize = true }: VirtualizedProductGridProps) {
+  const cartLabel = addToCartLabel
   const [columns, setColumns] = useState(() => window.matchMedia('(max-width: 760px)').matches ? 2 : 4)
   const [scrollY, setScrollY] = useState(() => window.scrollY)
   const [containerTop, setContainerTop] = useState(0)
@@ -52,6 +54,6 @@ export function VirtualizedProductGrid({ products, currency, addToBagLabel, rati
   const visibleRows = Math.min(rows, firstRow + Math.ceil((window.innerHeight + 1000) / rowHeight) + overscanRows)
   const visibleProducts = useMemo(() => products.slice(firstRow * columns, visibleRows * columns), [products, firstRow, visibleRows, columns])
 
-  if (!virtualize) return <div className="product-grid product-grid-static">{products.map((product) => <ProductCard key={product.id} product={product} currency={currency} addToBagLabel={addToBagLabel} ratingLabel={ratingLabel} reviewsLabel={reviewsLabel} onAdd={onAdd} onOpen={() => onOpenProduct(product.id)} />)}</div>
-  return <div className="virtualized-grid" ref={containerRef} style={{ height: rows * rowHeight }}><div className="product-grid" style={{ transform: `translateY(${firstRow * rowHeight}px)` }}>{visibleProducts.map((product) => <ProductCard key={product.id} product={product} currency={currency} addToBagLabel={addToBagLabel} ratingLabel={ratingLabel} reviewsLabel={reviewsLabel} onAdd={onAdd} onOpen={() => onOpenProduct(product.id)} />)}</div></div>
+  if (!virtualize) return <div className="product-grid product-grid-static">{products.map((product) => <ProductCard key={product.id} product={product} currency={currency} addToCartLabel={cartLabel} ratingLabel={ratingLabel} reviewsLabel={reviewsLabel} onAdd={onAdd} onOpen={() => onOpenProduct(product.id)} />)}</div>
+  return <div className="virtualized-grid" ref={containerRef} style={{ height: rows * rowHeight }}><div className="product-grid" style={{ transform: `translateY(${firstRow * rowHeight}px)` }}>{visibleProducts.map((product) => <ProductCard key={product.id} product={product} currency={currency} addToCartLabel={cartLabel} ratingLabel={ratingLabel} reviewsLabel={reviewsLabel} onAdd={onAdd} onOpen={() => onOpenProduct(product.id)} />)}</div></div>
 }

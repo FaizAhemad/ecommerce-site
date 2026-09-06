@@ -4,7 +4,7 @@ import { HomePage } from './pages/HomePage'
 import { ShopPage } from './pages/ShopPage'
 import { SupportPage } from './pages/SupportPage'
 import { ProductDetailPage } from './pages/ProductDetailPage'
-import { BagPage } from './pages/BagPage'
+import { CartPage } from './pages/CartPage'
 import { PolicyPage } from './pages/PolicyPage'
 import { PaymentPage } from './pages/PaymentPage'
 import { TrackOrderPage } from './pages/TrackOrderPage'
@@ -42,8 +42,8 @@ export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, onLo
   switch (normalizedPath) {
     case '/debug-error':
       return <DebugErrorPage />
-    case '/bag':
-      return <BagPage storefront={storefront} onNavigate={navigate} />
+    case '/cart':
+      return <CartPage storefront={storefront} onNavigate={navigate} />
     case '/checkout':
       return isAuthenticated ? <PaymentPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/track-order':
@@ -58,7 +58,7 @@ export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, onLo
       return <PolicyPage storefront={storefront} policy="privacy" onNavigate={navigate} />
     case '/returns':
       return <PolicyPage storefront={storefront} policy="returns" onNavigate={navigate} />
-    case '/shop':
+    case '/products':
       return <ShopPage storefront={storefront} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} />
     case '/support':
       return <SupportPage storefront={storefront} />

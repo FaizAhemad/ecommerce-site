@@ -22,7 +22,7 @@ export const appConfig = {
     reviewsEnabled: true,
     returnsEnabled: true,
   },
-  categories: ['Clothing', 'Sports', 'Home & Kitchen', 'Furniture', 'Footwear', 'Jewelry', 'Bags', 'Watches', 'Electronics', 'Toys'] as const,
+  categories: ['Clothing', 'Sports', 'Home & Kitchen', 'Furniture', 'Footwear', 'Jewelry', 'Accessories', 'Watches', 'Electronics', 'Toys'] as const,
 } as const
 
 export type ProductImage = { id: string; url: string; alt: string; isPrimary: boolean }
@@ -42,20 +42,20 @@ export type CatalogProduct = {
 
 const starterProducts = [
   {
-    id: 'bag-01',
+    id: 'accessory-01',
     name: 'Everyday Canvas Tote',
-    category: 'Bags',
+    category: 'Accessories',
     price: 28,
     rating: 4.8,
     reviewCount: 124,
     tone: 'sage',
     badge: 'Best seller',
-    media: { images: [{ id: 'bag-01-main', url: heroArt, alt: 'Everyday Canvas Tote', isPrimary: true }, { id: 'bag-01-detail', url: heroArt, alt: 'Everyday Canvas Tote detail', isPrimary: false }], videos: [] },
+    media: { images: [{ id: 'accessory-01-main', url: heroArt, alt: 'Everyday Canvas Tote', isPrimary: true }, { id: 'accessory-01-detail', url: heroArt, alt: 'Everyday Canvas Tote detail', isPrimary: false }], videos: [] },
   },
   {
-    id: 'bag-02',
+    id: 'accessory-02',
     name: 'Compact Travel Crossbody',
-    category: 'Bags',
+    category: 'Accessories',
     price: 42,
     rating: 4.6,
     reviewCount: 87,

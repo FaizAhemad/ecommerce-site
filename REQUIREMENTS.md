@@ -89,7 +89,7 @@ Dynamic business content must support localization where appropriate. Translated
 ## Commerce
 
 - Product catalog uses a responsive grid only; no list view or grid/list toggle.
-- Initial catalog families include bags, toys, and home gadgets such as mop hangers, organizers, and sink caddies. The category list must remain API-configured and extensible.
+- Initial catalog families include accessories, toys, and home gadgets such as mop hangers, organizers, and sink caddies. The category list must remain API-configured and extensible.
 - The products page must support API-backed search, category filtering, sorting, and other configured filters without hardcoded catalog assumptions.
 - Large catalogs must use cursor/page-based API pagination with infinite scroll or an equivalent progressive loading pattern. The UI must not assume that all products are loaded at once.
 - Each product must have a separate product detail page and URL, with media, price, inventory state, options, reviews, and configured commerce actions supplied by the API.

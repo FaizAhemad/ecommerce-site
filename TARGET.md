@@ -14,9 +14,9 @@ The Vite + React + TypeScript frontend currently provides:
 - Light-only Ink and Citron theme with semantic tokens
 - Responsive header, hero, collection, story, and footer surfaces
 - A local cart-count interaction for UI prototyping
-- Separate Home, Shop, and Support routes with reusable components
+- Separate Home, Products, and Support routes with reusable components
 - Approved starter palette: Ink and Citron (`#28313b` / `#c7d866`); dark mode is deferred pending a better palette decision
-- Starter catalog families: Bags, Toys, and Home gadgets, including mop hangers and household organizers
+- Starter catalog families: Accessories, Toys, and Home gadgets, including mop hangers and household organizers
 
 This is a frontend foundation, not a production commerce implementation yet.
 

@@ -19,6 +19,10 @@ This repository is a **frontend foundation** for a reusable, white-label commerc
 - [ ] Add Razorpay order creation, verification, and webhooks.
 - [ ] Connect frontend to production APIs and deploy.
 - [ ] Add realtime shipment/map tracking after order infrastructure is stable.
+
+## API planning checkpoint
+
+The backend approach is documented in [`API_IMPLEMENTATION_PLAN.md`](./API_IMPLEMENTATION_PLAN.md). The next implementation task is to verify the Vercel PostgreSQL connection and add the initial Prisma schema/migration. No backend code has been changed yet.
 - [~] Added a home newsletter subscription UI and Vercel Resend subscription endpoint. Configure `RESEND_API_KEY`, `RESEND_AUDIENCE_ID`, and optional `RESEND_FROM_EMAIL`; transactional order/auth emails remain backend work.
 
 ## Done
@@ -26,14 +30,14 @@ This repository is a **frontend foundation** for a reusable, white-label commerc
 - Vite, React, and TypeScript storefront application scaffold.
 - Centralized starter business configuration in `src/config.ts` for identity, contact details, locale/currency, branding, feature flags, and starter catalog data.
 - API-shaped storefront adapter in `src/api/storefront.ts`, including catalog query and product-detail contracts.
-- Responsive customer-facing routes for home, shop, product detail, bag, support, privacy, and returns.
+- Responsive customer-facing routes for home, products, product detail, cart, support, privacy, and returns.
 - Grid-only catalog UI with API-shaped search, category filtering, price sorting, and a loading/sentinel structure intended for future pagination. The local adapter currently simulates those query operations.
 - Product-detail media UI supporting image/video data when supplied, plus a local review-submission prototype.
 - Local, CSS-generated placeholder product art; no third-party product media is hotlinked.
 - Light Ink-and-Citron design tokens, responsive layouts, keyboard focus styling, carousel controls, and basic accessible labels.
 - Privacy and return-policy placeholder pages that explicitly request approved business content.
 - Local cart-count interaction for visual prototyping.
-- Enhanced bag page with item quantities, totals, and checkout navigation; added a responsive demo payment page with card, UPI, and cash-on-delivery options. Live payment processing is not connected.
+- Enhanced cart page with item quantities, totals, and checkout navigation; added a responsive demo payment page with card, UPI, and cash-on-delivery options. Live payment processing is not connected.
 - Cart rows now use compact quantity stepper controls and no longer render empty media placeholder boxes.
 - Checkout now presents Razorpay and pay-on-delivery choices, including cash or card at the doorstep, with delivery details, method-specific messaging, and demo order feedback. Razorpay order creation/signature verification and COD eligibility remain backend work.
 - Added a `/track-order` customer page with order-number lookup, demo delivery timeline, and footer navigation. Live tracking events still require an order/shipping backend.
@@ -53,7 +57,7 @@ This repository is a **frontend foundation** for a reusable, white-label commerc
 - `getStorefront`, `getProducts`, and `getProduct` are local in-memory adapters, not HTTP/API calls.
 - Catalog filtering and sorting work only on the small local catalog. Cursor pagination is typed but not implemented.
 - The current facet values are derived by the local adapter from fixture data; production facets should be returned by the catalog API.
-- The bag stores only a count in React state; it has no line items, quantities, persistence, pricing, or checkout.
+- The cart currently stores only a count in React state; it has no persistent server-backed line items or checkout state.
 - Product media, product details, ratings, and review submission are presentation/prototype data only.
 - Routing is a lightweight `history` implementation, not a router library with route-level loading/error handling.
 - Customer-facing strings are centralized in the local response object but there is no i18n library or Hindi/Marathi translation data.
