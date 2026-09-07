@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && tsc -p tsconfig.api.json --pretty false && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "postinstall": "prisma generate"
