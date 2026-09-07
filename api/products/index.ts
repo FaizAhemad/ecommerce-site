@@ -51,7 +51,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     })
     const hasMore = products.length > PAGE_SIZE
     const page = hasMore ? products.slice(0, PAGE_SIZE) : products
-    return response.status(200).json({ products: page.map(toProduct), nextCursor: hasMore ? page.at(-1)?.id ?? null : null, requestId: id })
+    return response.status(200).json({ products: page.map(toProduct), nextCursor: hasMore ? page[page.length - 1]?.id ?? null : null, requestId: id })
   } catch {
     return sendError(response, 503, 'DATABASE_UNAVAILABLE', 'Products are temporarily unavailable.', id)
   }
