@@ -61,6 +61,11 @@ export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, onLo
       return <PolicyPage storefront={storefront} policy="privacy" onNavigate={navigate} />
     case '/returns':
       return <PolicyPage storefront={storefront} policy="returns" onNavigate={navigate} />
+    case '/refund-policy':
+      return <PolicyPage storefront={storefront} policy="refund" onNavigate={navigate} />
+    case '/terms':
+    case '/terms-and-conditions':
+      return <PolicyPage storefront={storefront} policy="terms" onNavigate={navigate} />
     case '/products':
       return <ShopPage key={window.location.search} storefront={storefront} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} />
     case '/support':

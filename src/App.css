@@ -275,3 +275,8 @@ body { font-size: 16px; }.site-header nav a, .site-footer a { font-size: 13px; }
 .wishlist-page .product-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 300px)); justify-content: start; gap: 42px 20px; }
 @media (max-width: 760px) { .wishlist-page { padding: 52px 20px 72px; }.wishlist-page .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 14px; } }
 @media (max-width: 760px) { .header-search input { width: 180px; }.search-button { width: 32px; height: 32px; } }
+.auth-verification-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 24px 0 4px; border-bottom: 1px solid var(--line); }
+.auth-verification-tabs button { border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); padding: 10px; cursor: pointer; font: 11px Arial,sans-serif; text-transform: uppercase; letter-spacing: .06em; }
+.auth-verification-tabs button.is-active { border-bottom-color: var(--ink); color: var(--ink); }
+.auth-consent { margin: 18px 0 0; color: var(--muted); font: 11px/1.5 Arial,sans-serif; text-align: center; }
+.auth-consent a { color: #b52a6c; font-weight: 600; text-decoration: none; }

@@ -1,3 +1,5 @@
+import { db } from '../_lib/db.js'
+
 type VercelRequest = { method?: string; body?: { email?: unknown } }
 type VercelResponse = { status: (code: number) => { json: (body: unknown) => unknown } }
 
@@ -12,6 +14,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const result = await fetch(`https://api.resend.com/audiences/${audienceId}/contacts`, { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ email, unsubscribed: false }) })
     if (!result.ok) return response.status(502).json({ error: 'Newsletter service unavailable.' })
+    await db.newsletterSubscription.upsert({ where: { email }, create: { email }, update: { status: 'ACTIVE', unsubscribedAt: null } })
     if (fromEmail) await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: fromEmail, to: [email], subject: 'Welcome to Field & Form', html: '<p>Thanks for subscribing to Field &amp; Form.</p><p><a href="/">Return to the home page</a> for considered goods and useful ideas.</p>' }) })
     return response.status(202).json({ subscribed: true })
   } catch { return response.status(502).json({ error: 'Newsletter service unavailable.' }) }

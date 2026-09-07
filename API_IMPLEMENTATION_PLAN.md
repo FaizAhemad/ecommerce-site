@@ -1,8 +1,10 @@
 # API Implementation Plan
 
-## Scope
+## Scope and current baseline
 
 Build the backend for the existing Vite storefront using Vercel Node.js Functions, Prisma, and the existing Vercel PostgreSQL storage. The UI remains the current customer-facing client; API work will replace the local adapter incrementally.
+
+Current baseline: the UI has Products search/filtering, Cart and Wishlist flows, protected checkout/order routes, Resend newsletter subscription, and i18n scaffolding. API handlers now cover catalog, authentication, email/mobile verification, cart, wishlist, orders, reviews, tracking, Razorpay, and newsletter persistence. The Prisma migration and production frontend integration are still pending.
 
 ## Principles
 
@@ -30,6 +32,11 @@ api/
     login.ts
     logout.ts
     google.ts
+    verify-email.ts
+    mobile-request.ts
+    mobile-verify.ts
+    password-reset-request.ts
+    password-reset.ts
   products/
     index.ts
     [id].ts
@@ -54,7 +61,7 @@ prisma/
 ## Initial Prisma models
 
 - User and OAuth account
-- Session and email-verification token
+- Session and email/mobile-verification tokens
 - Address
 - Product, ProductImage, ProductVideo, ProductColor
 - Review and ReviewMedia
@@ -66,18 +73,44 @@ prisma/
 
 ## Delivery sequence
 
-1. Verify Vercel PostgreSQL connection and Prisma migrations in a safe environment.
-2. Add Prisma schema, generated client, and serverless-safe database helper.
-3. Add shared validation and error response contracts.
-4. Implement signup/login/logout and protected session checks.
-5. Replace product/catalog reads with database-backed APIs and server-side filtering.
-6. Persist cart items and quantities for authenticated users.
-7. Create orders transactionally from the server-owned cart.
-8. Add Razorpay order creation, payment verification, and webhook reconciliation.
-9. Add Resend email service for verification, welcome, order, payment, and shipping events.
-10. Add reviews and media-upload authorization.
-11. Add shipment status and tracking APIs.
-12. Connect the UI adapter to API routes, then test preview and production deployments.
+### Phase 1 — foundation (next implementation)
+
+1. Verify the Vercel PostgreSQL connection and Prisma migrations in a safe environment.
+2. Add `prisma/schema.prisma`, generated client, and a serverless-safe `api/_lib/db.ts` singleton.
+3. Add `GET /api/health` with database connectivity status without exposing secrets.
+4. Add shared validation, stable error responses, request IDs, and environment checks.
+
+### Phase 2 — identity and catalog (implemented; migration pending)
+
+5. Implement signup/login/logout, password hashing, email verification, and protected sessions.
+6. Replace local catalog reads with `GET /api/products` and `GET /api/products/:id`, including server-side search, facets, rating, sorting, and cursor pagination.
+
+### Phase 3 — customer commerce (implemented; migration pending)
+
+7. Persist authenticated cart items and quantities; add wishlist read/add/remove endpoints.
+8. Create orders transactionally from the server-owned cart, with server-calculated totals and stock checks.
+9. Add Razorpay order creation, payment verification, webhook reconciliation, COD rules, and idempotency.
+
+### Phase 4 — communication and operations (core handlers implemented)
+
+10. Add Resend email service for verification, welcome, order, payment, shipping, and newsletter events.
+11. Add reviews/media authorization, shipment status, tracking APIs, audit records, rate limits, and monitoring.
+12. Connect the UI adapter to each verified API, then test preview and production deployments.
+
+## First API milestone checklist
+
+- [x] Create `prisma/schema.prisma` with User, Session, Product, ProductImage, Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, and NewsletterSubscription models.
+- [ ] Configure the Vercel `DATABASE_URL` in the server environment and run the first migration.
+- [x] Add `api/_lib/db.ts` Prisma singleton and `api/health.ts`.
+- [x] Add shared HTTP error/request-id helpers and database-backed `GET /api/products` and `GET /api/products/:id` endpoints.
+- [x] Add password hashing and HttpOnly session-cookie handlers for `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout`, and `GET /api/auth/me`.
+- [x] Add authenticated Cart, Wishlist, Orders, order tracking, product reviews, and Razorpay create/verify handlers.
+- [x] Persist successful newsletter subscriptions in `NewsletterSubscription`.
+- [x] Add email verification, password-reset request/confirm, Razorpay webhook reconciliation, and order cancellation handlers.
+- [x] Add email/mobile verification tabs and mobile OTP endpoints (`/api/auth/mobile-request`, `/api/auth/mobile-verify`).
+- [ ] Confirm the health response in a Vercel preview before implementing auth or payments.
+
+The API files can be type-checked locally with `npx tsc -p tsconfig.api.json`. The frontend build remains `npm run build`.
 
 ## API error contract
 
@@ -103,6 +136,9 @@ DATABASE_URL
 RESEND_API_KEY
 RESEND_FROM_EMAIL
 RESEND_AUDIENCE_ID
+TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN
+TWILIO_FROM_NUMBER
 RAZORPAY_KEY_ID
 RAZORPAY_KEY_SECRET
 RAZORPAY_WEBHOOK_SECRET
