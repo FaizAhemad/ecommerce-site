@@ -6,7 +6,7 @@ export const appConfig = {
     mark: 'G',
   },
   contact: {
-    supportEmail: 'support@example.com',
+    supportEmail: 'support@gadgify.com',
     phone: '+1 (000) 000-0000',
     social: { instagram: 'https://instagram.com', youtube: 'https://youtube.com', whatsapp: 'https://wa.me/10000000000', twitter: 'https://twitter.com', facebook: 'https://facebook.com' },
   },
@@ -131,18 +131,8 @@ const starterProducts = [
   },
 ] satisfies readonly CatalogProduct[]
 
-const fixtureColors = ['Black', 'White', 'Natural', 'Blue', 'Green', 'Rose', 'Brown'] as const
+void starterProducts
 
-// Fixture volume for exercising the virtualized catalog. Production data will come from the API.
-export const products = [...starterProducts, ...Array.from({ length: 16 }, (_, index) => {
-  const source = starterProducts[index % starterProducts.length]
-  return {
-    ...source,
-    id: `${source.id}-sample-${String(index + 1).padStart(3, '0')}`,
-    name: `${appConfig.categories[index % appConfig.categories.length]} ${source.name} / Sample ${index + 1}`,
-    category: appConfig.categories[index % appConfig.categories.length],
-    price: source.price + (index % 7),
-    colors: [fixtureColors[index % fixtureColors.length], fixtureColors[(index + 2) % fixtureColors.length]],
-  }
-})] satisfies readonly CatalogProduct[]
+// Products are managed through the database/API. No demo catalog is rendered in production.
+export const products: readonly CatalogProduct[] = []
 import heroArt from './assets/hero.png'

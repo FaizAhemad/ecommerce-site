@@ -13,7 +13,8 @@ type ProductCardProps = {
 
 export function ProductCard({ product, currency, addToCartLabel, ratingLabel, reviewsLabel, onAdd, onOpen }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(() => JSON.parse(window.localStorage.getItem('wishlist') ?? '[]').includes(product.id))
-  const toggleWishlist = (event: MouseEvent<HTMLButtonElement>) => { event.stopPropagation(); const current: string[] = JSON.parse(window.localStorage.getItem('wishlist') ?? '[]'); const next = wishlisted ? current.filter((id) => id !== product.id) : [...new Set([...current, product.id])]; window.localStorage.setItem('wishlist', JSON.stringify(next)); setWishlisted(!wishlisted); window.dispatchEvent(new Event('wishlistchange')) }
+  const [actionLocked, setActionLocked] = useState(false)
+  const toggleWishlist = (event: MouseEvent<HTMLButtonElement>) => { event.stopPropagation(); if (actionLocked) return; setActionLocked(true); const current: string[] = JSON.parse(window.localStorage.getItem('wishlist') ?? '[]'); const next = wishlisted ? current.filter((id) => id !== product.id) : [...new Set([...current, product.id])]; window.localStorage.setItem('wishlist', JSON.stringify(next)); setWishlisted(!wishlisted); window.dispatchEvent(new Event('wishlistchange')); window.setTimeout(() => setActionLocked(false), 250) }
   const primaryImage = product.media.images.find((image) => image.isPrimary)
   return (
     <article className="product-card" role="link" tabIndex={0} onClick={onOpen} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen() } }}>
@@ -31,7 +32,7 @@ export function ProductCard({ product, currency, addToCartLabel, ratingLabel, re
       </div>
       <div className="product-rating" aria-label={`${ratingLabel}: ${product.rating}, ${product.reviewCount} ${reviewsLabel}`}><span aria-hidden="true">★★★★★</span><b>{product.rating.toFixed(1)}</b><em>({product.reviewCount} {reviewsLabel})</em></div>
       {product.colors && <div className="product-swatches" aria-label={`Available colors: ${product.colors.join(', ')}`}>{product.colors.map((color) => <span className={`color-swatch color-${color.toLowerCase()}`} key={color} title={color} />)}</div>}
-      <button className="add-button" type="button" onClick={(event) => { event.stopPropagation(); onAdd() }}>
+      <button className="add-button" type="button" disabled={actionLocked} onClick={(event) => { event.stopPropagation(); if (actionLocked) return; setActionLocked(true); onAdd(); window.setTimeout(() => setActionLocked(false), 400) }}>
         {addToCartLabel} <span aria-hidden="true">+</span>
       </button>
     </article>

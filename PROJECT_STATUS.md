@@ -1,10 +1,10 @@
 # Project Status
 
-Last reviewed: 2026-09-06
+Last reviewed: 2026-09-07
 
 ## Current state
 
-This repository is a **frontend foundation** for a reusable, white-label commerce platform. The customer UI and API handlers are implemented, while database migration, deployment configuration, and full frontend-to-API integration remain for handover.
+This repository contains the customer storefront, protected API handlers, and an admin control center. Production database migration, deployment configuration, and final end-to-end verification remain for handover.
 
 ## Implementation sequence
 
@@ -13,16 +13,17 @@ This repository is a **frontend foundation** for a reusable, white-label commerc
 - [~] i18n foundation with English, Hindi, and Marathi JSON namespaces; remaining pages still need migration.
 - [~] Global rendering fallback and storefront retry are in place; per-form/API error handling remains.
 - [x] Add Node.js/TypeScript API foundation (see `API_IMPLEMENTATION_PLAN.md`).
-- [~] Add Prisma schema and PostgreSQL connection; migration waits for deployment credentials.
+- [~] Add Prisma schema and PostgreSQL connection; schema is ready, but the production migration waits for deployment credentials.
 - [x] Add secure authentication and protected sessions.
 - [x] Add products, cart, wishlist, orders, reviews, tracking, and newsletter APIs.
 - [x] Add Razorpay order creation, verification, and webhook handlers.
-- [ ] Connect frontend to production APIs and deploy.
+- [~] Connect frontend catalog reads to `/api/products` and cart reads/quantity updates to `/api/cart`; wishlist, checkout, and order screens still need full server synchronization.
+- [ ] Configure Vercel environment variables, migrate Prisma, and deploy.
 - [ ] Add realtime shipment/map tracking after order infrastructure is stable.
 
 ## API planning checkpoint
 
-The backend approach is documented in [`API_IMPLEMENTATION_PLAN.md`](./API_IMPLEMENTATION_PLAN.md). API handlers now cover authentication, email/mobile verification, catalog, cart, wishlist, orders, reviews, tracking, payments, and newsletter persistence. The next implementation task is to configure the Vercel PostgreSQL connection and run the first migration.
+The backend approach is documented in [`API_IMPLEMENTATION_PLAN.md`](./API_IMPLEMENTATION_PLAN.md). API handlers now cover authentication, email/mobile verification, catalog, cart, wishlist, orders, reviews, tracking, payments, newsletter persistence, and protected admin operations. The next handover task is to configure the Vercel PostgreSQL connection, run the first migration, and verify the live API.
 - [~] Added a home newsletter subscription UI and Vercel Resend subscription endpoint. Configure `RESEND_API_KEY`, `RESEND_AUDIENCE_ID`, and optional `RESEND_FROM_EMAIL`; transactional order/auth emails remain backend work.
 
 ## Done
@@ -43,6 +44,10 @@ The backend approach is documented in [`API_IMPLEMENTATION_PLAN.md`](./API_IMPLE
 - Added a `/track-order` customer page with order-number lookup, demo delivery timeline, and footer navigation. Live tracking events still require an order/shipping backend.
 - Added `/login` and `/signup` screens with email/password and Google sign-in entry points. Authentication is UI-only until a secure backend provides OAuth verification, password hashing, HTTPS, and session handling.
 - Added Email/Mobile verification tabs in the auth UI. Email verification uses Resend; mobile verification uses OTP delivery through the Twilio-compatible SMS hook.
+- Disabled the local demo catalog and demo order/tracking records; storefront and tracking now require database/API data.
+- Added a protected Admin Dashboard foundation at `/admin` with catalog, orders, payments, customers, messaging, analytics, settings, and health areas.
+- Added server-authorized admin APIs for products, orders, customers, analytics, payments/refunds, returns, messaging, settings, and audit access. The Admin UI now connects Products, Overview, Orders, Customers, Messages, and Settings to these APIs.
+- Added session restoration on page refresh, server logout, configured-admin bootstrap from `ADMIN_EMAIL`/`ADMIN_PASSWORD`, and server-side `requireAdmin()` authorization.
 - Added an `/orders` page with recent order cards, delivery statuses, totals, track-order links, and customer-care support. It currently uses demo data until authenticated order APIs are available.
 - Added protected `/cart`, `/wishlist`, `/checkout`, `/orders`, and `/orders/:id` routes. Unauthenticated visitors are sent to the login screen.
 - Added browser-persisted wishlist controls, product-card heart buttons, a wishlist count in the navbar, and a wishlist page.
@@ -80,10 +85,11 @@ The backend approach is documented in [`API_IMPLEMENTATION_PLAN.md`](./API_IMPLE
 
 Follow the staged plan in [`API_IMPLEMENTATION_PLAN.md`](./API_IMPLEMENTATION_PLAN.md):
 
-1. Configure Vercel environment variables and run the Prisma migration.
-2. Verify `/api/health`, authentication, OTP, payments, and webhook routes in preview.
-3. Connect the existing UI adapter to the API one domain at a time and remove demo state only after each API is verified.
-4. Add integration, authorization, payment, and end-to-end tests before launch.
+1. Complete the Admin-first operations milestone: product CRUD, orders, payments/refunds, customers, messaging, analytics, settings, and audit logs.
+2. Configure Vercel environment variables and run the Prisma migration.
+3. Verify `/api/health`, authentication, OTP, payments, and webhook routes in preview.
+4. Connect the existing UI adapter to the API one domain at a time and remove demo state only after each API is verified.
+5. Add integration, authorization, payment, and end-to-end tests before launch.
 
 ## Remaining work
 

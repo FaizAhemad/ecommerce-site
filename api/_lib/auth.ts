@@ -27,7 +27,8 @@ export async function createSession(userId: string, response: VercelResponse) {
   const token = randomBytes(32).toString('hex')
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000)
   await db.session.create({ data: { userId, tokenHash: hashToken(token), expiresAt } })
-  response.setHeader?.('Set-Cookie', `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`)
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  response.setHeader?.('Set-Cookie', `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`)
 }
 
 export function sessionToken(request: VercelRequest) {
@@ -53,8 +54,19 @@ export async function requireUser(request: VercelRequest, response: VercelRespon
   return user
 }
 
+export async function requireAdmin(request: VercelRequest, response: VercelResponse) {
+  const user = await requireUser(request, response)
+  if (!user) return null
+  if (user.role !== 'ADMIN') {
+    response.status(403).json({ error: { code: 'FORBIDDEN', message: 'Administrator access is required.' } })
+    return null
+  }
+  return user
+}
+
 export async function clearSession(request: VercelRequest, response: VercelResponse) {
   const token = sessionToken(request)
   if (token) await db.session.deleteMany({ where: { tokenHash: hashToken(token) } })
-  response.setHeader?.('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0`)
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  response.setHeader?.('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=0`)
 }

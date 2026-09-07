@@ -1,4 +1,4 @@
-import { appConfig, products, type CatalogProduct } from '../config'
+import { appConfig, type CatalogProduct } from '../config'
 
 export type StorefrontProduct = CatalogProduct
 
@@ -117,6 +117,17 @@ export type StorefrontApiResponse = {
 
 // Temporary local adapter. Replace this function with the HTTP client when the API is available.
 export async function getStorefront(): Promise<StorefrontApiResponse> {
+  let products: readonly CatalogProduct[] = []
+  try {
+    const response = await fetch('/api/products')
+    if (response.ok) {
+      const liveBody = await response.json() as { products?: readonly CatalogProduct[] }
+      products = liveBody.products ?? []
+    }
+  } catch {
+    // Vite's development server does not run Vercel functions. The shell can
+    // still render without catalog records until the API is deployed.
+  }
   return {
     ...appConfig,
     facets: { categories: [...new Set(products.map((product) => product.category))], colors: [...new Set(products.flatMap((product) => (product as CatalogProduct).colors ?? []))], ratings: [5, 4, 3, 2, 1], price: { min: Math.min(...products.map((product) => product.price)), max: Math.max(...products.map((product) => product.price)) } },
@@ -227,19 +238,22 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
 }
 
 export async function getProducts(query: ProductQuery = {}): Promise<ProductPage> {
-  const normalizedSearch = query.search?.trim().toLowerCase()
-  const filtered = products.filter((product) => {
-    const matchesSearch = !normalizedSearch || `${product.name} ${product.category}`.toLowerCase().includes(normalizedSearch)
-    const matchesCategory = !query.category || product.category === query.category
-    const productColors = (product as CatalogProduct).colors
-    const matchesColor = !query.colors?.length || query.colors.some((color) => productColors?.includes(color))
-    const matchesRating = !query.minRating || Math.floor(product.rating) === query.minRating
-    return matchesSearch && matchesCategory && matchesColor && matchesRating
-  })
-  const sorted = [...filtered].sort((left, right) => query.sort === 'price-low' ? left.price - right.price : query.sort === 'price-high' ? right.price - left.price : right.id.localeCompare(left.id))
-  return { products: sorted, nextCursor: null }
+  const params = new URLSearchParams()
+  if (query.cursor) params.set('cursor', query.cursor)
+  if (query.search) params.set('search', query.search)
+  if (query.category) params.set('category', query.category)
+  if (query.sort) params.set('sort', query.sort)
+  if (query.colors?.length) params.set('colors', query.colors.join(','))
+  if (query.minRating) params.set('minRating', String(query.minRating))
+  const response = await fetch(`/api/products?${params.toString()}`)
+  if (!response.ok) return { products: [], nextCursor: null }
+  return await response.json() as ProductPage
 }
 
 export async function getProduct(id: string): Promise<StorefrontProduct | null> {
-  return products.find((product) => product.id === id) ?? null
+  const response = await fetch(`/api/products/${encodeURIComponent(id)}`)
+  if (response.status === 404) return null
+  if (!response.ok) throw new Error('Unable to load product')
+  const body = await response.json() as { product?: StorefrontProduct }
+  return body.product ?? null
 }

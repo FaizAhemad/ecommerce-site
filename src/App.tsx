@@ -22,16 +22,20 @@ function App() {
   const [cartCount, setCartCount] = useState(0)
   const [wishlistCount, setWishlistCount] = useState(() => JSON.parse(window.localStorage.getItem('wishlist') ?? '[]').length)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const loadStorefront = () => { setRequestFailed(false); setStorefront(null); getStorefront().then(setStorefront).catch(() => setRequestFailed(true)) }
   useEffect(() => {
     loadStorefront()
+    fetch('/api/auth/me').then(async (response) => { if (!response.ok) return; const body = await response.json() as { user?: { role?: string } }; setIsAuthenticated(true); setIsAdmin(body.user?.role === 'ADMIN') }).catch(() => undefined)
     const onPopState = () => { setPath(window.location.pathname); setRouteVersion((version) => version + 1) }
     const onWishlistChange = () => setWishlistCount(JSON.parse(window.localStorage.getItem('wishlist') ?? '[]').length)
     window.addEventListener('popstate', onPopState)
     window.addEventListener('wishlistchange', onWishlistChange)
     return () => { window.removeEventListener('popstate', onPopState); window.removeEventListener('wishlistchange', onWishlistChange) }
   }, [])
+
+  const logout = () => { void fetch('/api/auth/logout', { method: 'POST' }); setIsAuthenticated(false); setIsAdmin(false) }
 
   useEffect(() => {
     if (!storefront) return
@@ -46,7 +50,7 @@ function App() {
   if (requestFailed) return <div className="state-message"><p>We could not load the storefront.</p><button className="primary-button" type="button" onClick={loadStorefront}>Try again</button></div>
   if (!storefront) return <p className="state-message">Loading storefront</p>
 
-  return <AppErrorBoundary><SiteLayout storefront={storefront} cartCount={cartCount} wishlistCount={wishlistCount} isAuthenticated={isAuthenticated} onLogout={() => setIsAuthenticated(false)}><StorefrontRoute path={path} storefront={storefront} onAdd={() => setCartCount((count) => count + 1)} isAuthenticated={isAuthenticated} onLogin={() => setIsAuthenticated(true)} /></SiteLayout></AppErrorBoundary>
+  return <AppErrorBoundary><SiteLayout storefront={storefront} cartCount={cartCount} wishlistCount={wishlistCount} isAuthenticated={isAuthenticated} onLogout={logout}><StorefrontRoute path={path} storefront={storefront} onAdd={() => setCartCount((count) => count + 1)} isAuthenticated={isAuthenticated} isAdmin={isAdmin} onLogin={(role) => { setIsAuthenticated(true); setIsAdmin(role === 'ADMIN') }} /></SiteLayout></AppErrorBoundary>
 }
 
 export default App

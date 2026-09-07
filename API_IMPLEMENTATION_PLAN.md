@@ -73,6 +73,19 @@ prisma/
 
 ## Delivery sequence
 
+### Priority 0 — admin operations (first implementation focus)
+
+The Admin Dashboard is the operational source of truth. Complete these APIs and connect the existing `/admin` UI before polishing the remaining customer-facing integrations:
+
+1. Product CRUD, media, categories, pricing, inventory, and publish/archive controls.
+2. Order list/detail views, fulfillment status updates, cancellation, return, and refund workflows.
+3. Payment reconciliation, Razorpay webhook history, COD records, and refund actions.
+4. Customer search/detail, verification status, account actions, and role management.
+5. Customer messaging with Resend delivery status and message history.
+6. Analytics queries for revenue, orders, customers, products, conversion, and inventory risk.
+7. Store settings for branding, shipping, tax, locale, policies, and notification templates.
+8. Admin audit logs, rate limiting, and authorization tests for every admin route.
+
 ### Phase 1 — foundation (next implementation)
 
 1. Verify the Vercel PostgreSQL connection and Prisma migrations in a safe environment.
@@ -105,9 +118,15 @@ prisma/
 - [x] Add shared HTTP error/request-id helpers and database-backed `GET /api/products` and `GET /api/products/:id` endpoints.
 - [x] Add password hashing and HttpOnly session-cookie handlers for `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout`, and `GET /api/auth/me`.
 - [x] Add authenticated Cart, Wishlist, Orders, order tracking, product reviews, and Razorpay create/verify handlers.
+- [x] Add admin product, order, customer, analytics, payment/refund, returns, messaging, settings, and audit endpoints.
 - [x] Persist successful newsletter subscriptions in `NewsletterSubscription`.
 - [x] Add email verification, password-reset request/confirm, Razorpay webhook reconciliation, and order cancellation handlers.
 - [x] Add email/mobile verification tabs and mobile OTP endpoints (`/api/auth/mobile-request`, `/api/auth/mobile-verify`).
+- [x] Add admin dashboard foundation with role-protected CRUD, operations, messaging, analytics, payments, returns, and settings sections.
+- [~] Admin-first roadmap recorded above; product, order, customer, payment, messaging, analytics, settings, and audit work should be completed before final storefront handover.
+- [x] Restore sessions with `GET /api/auth/me`, server logout, configured-admin bootstrap on matching credentials, and reusable `requireAdmin()` authorization.
+- [x] Add admin product, order, customer, analytics, payment, returns, messaging, settings, and audit API routes.
+- [x] Connect Admin tabs to live APIs; empty database states are supported until migration and seed data are available.
 - [ ] Confirm the health response in a Vercel preview before implementing auth or payments.
 
 The API files can be type-checked locally with `npx tsc -p tsconfig.api.json`. The frontend build remains `npm run build`.
