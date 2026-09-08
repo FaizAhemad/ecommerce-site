@@ -48,6 +48,11 @@ const routes: Record<string, Handler> = {
 }
 
 function pathSegments(request: RequestLike) {
+  const wildcard = request.query?.route
+  if (wildcard) {
+    const route = Array.isArray(wildcard) ? wildcard.join('/') : wildcard
+    return route.split('/').filter(Boolean).map((segment) => decodeURIComponent(segment))
+  }
   const raw = request.url ?? ''
   const pathname = raw.startsWith('http') ? new URL(raw).pathname : raw.split('?')[0]
   return pathname.replace(/^\/api\/?/, '').split('/').filter(Boolean).map((segment) => decodeURIComponent(segment))

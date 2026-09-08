@@ -206,6 +206,8 @@ Removed the Vite `closeBundle` hook that called `process.exit(0)`. That forced e
 
 Added a minimal `vercel.json` with the explicit `npm run build` command and `dist` output directory. It leaves API function discovery and runtime selection to Vercel while making the static output path deterministic.
 
+Consolidated the API handlers under `server/api` and added the root `api/[...route].ts` dispatcher. Existing `/api/*` URLs and dynamic `id` parameters are preserved, while Vercel now packages one serverless function instead of exceeding the Hobby plan limit. Local `npm run build` and `npx vercel build --yes` both pass; the generated output contains one function.
+
 Snackbars now automatically dismiss after five seconds while retaining a manual Dismiss action. The duration is centralized as `SNACKBAR_DURATION_MS` in `NotificationProvider`.
 
 ## Product-owner backlog
