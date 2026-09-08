@@ -202,6 +202,8 @@ Review media continues to upload one request per selected image or video and the
 
 The `npm run dev` command now checks for Node 22 LTS before starting, so Windows Node 24 users receive a clear setup message instead of the repeated `UV_HANDLE_CLOSING` native crash. The package-level Node engine restriction was removed so deployment platforms can select their supported build runtime; `.nvmrc` remains the local development recommendation.
 
+Removed the Vite `closeBundle` hook that called `process.exit(0)`. That forced exit could occur after Vercel reported the build complete but before deployment output upload finished. The normal Vite build lifecycle now completes cleanly; local production build verification passes.
+
 Snackbars now automatically dismiss after five seconds while retaining a manual Dismiss action. The duration is centralized as `SNACKBAR_DURATION_MS` in `NotificationProvider`.
 
 ## Product-owner backlog
