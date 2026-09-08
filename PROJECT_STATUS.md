@@ -200,6 +200,8 @@ Newsletter responses now report whether the Resend confirmation email was actual
 
 Review media continues to upload one request per selected image or video and then saves all returned URLs in one review request. A synchronous submit lock now prevents rapid clicks from issuing duplicate review creates and causing a false “already reviewed” conflict.
 
+The `npm run dev` command now checks for Node 22 LTS before starting, so Windows Node 24 users receive a clear setup message instead of the repeated `UV_HANDLE_CLOSING` native crash.
+
 Snackbars now automatically dismiss after five seconds while retaining a manual Dismiss action. The duration is centralized as `SNACKBAR_DURATION_MS` in `NotificationProvider`.
 
 ## Product-owner backlog
