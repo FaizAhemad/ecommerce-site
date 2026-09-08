@@ -2,6 +2,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/[...route]?route=:path*" }
+    { "source": "/api/:path*", "destination": "/api/[...route]?route=:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
