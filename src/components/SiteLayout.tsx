@@ -9,11 +9,12 @@ type SiteLayoutProps = {
   cartCount: number
   wishlistCount: number
   isAuthenticated: boolean
+  isAdmin: boolean
   onLogout: () => void
   children: ReactNode
 }
 
-export function SiteLayout({ storefront, cartCount, wishlistCount, children, isAuthenticated, onLogout }: SiteLayoutProps) {
+export function SiteLayout({ storefront, cartCount, wishlistCount, children, isAuthenticated, isAdmin, onLogout }: SiteLayoutProps) {
   const { content, identity, contact } = storefront
   const { t } = useTranslation()
   const [showStickyHeader, setShowStickyHeader] = useState(false)
@@ -66,7 +67,9 @@ export function SiteLayout({ storefront, cartCount, wishlistCount, children, isA
           <a className={currentPath==='/'?'is-active':''} href="/" onClick={navigate('/')}>{content.ui.homeLabel}</a>
           <a className={currentPath==='/products'||currentPath.startsWith('/product/')?'is-active':''} href="/products" onClick={navigate('/products')}>{content.navigation.products}</a>
           <a className={currentPath==='/support'?'is-active':''} href="/support" onClick={navigate('/support')}>{content.navigation.support}</a>
-          {isAuthenticated ? <button className="header-link-button" type="button" onClick={() => { onLogout(); window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}>{t('common:logOut')}</button> : <a className={currentPath==='/login'||currentPath==='/signup'?'is-active':''} href="/login" onClick={navigate('/login')}>{t('common:signIn')}</a>}
+          {isAuthenticated && <a className={currentPath==='/orders'||currentPath.startsWith('/orders/')?'is-active':''} href="/orders" onClick={navigate('/orders')}>Orders</a>}
+          {/* {isAuthenticated ? <button className="header-link-button" type="button" onClick={() => { onLogout(); window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')) }}>{t('common:logOut')}</button> : <a className={currentPath==='/login'||currentPath==='/signup'?'is-active':''} href="/login" onClick={navigate('/login')}>{t('common:signIn')}</a>} */}
+          {isAuthenticated && (isAdmin || currentPath === '/admin') && <a className={currentPath === '/admin' ? 'is-active' : ''} href="/admin" onClick={navigate('/admin')}>Admin</a>}
         </nav>
         <div className="header-actions" ref={headerActionsRef}>
           

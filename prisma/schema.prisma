@@ -95,12 +95,19 @@ model Address {
   @@index([userId])
 }
 
+model Category {
+  name      String    @id
+  sortOrder Int       @default(0)
+  products  Product[]
+}
+
 model Product {
   id          String         @id
   name        String
   slug        String         @unique
   description String?
   category    String
+  categoryRecord Category @relation(fields: [category], references: [name], onDelete: Restrict, onUpdate: Cascade)
   priceMinor  Int
   currency    String         @default("INR")
   rating      Float          @default(0)

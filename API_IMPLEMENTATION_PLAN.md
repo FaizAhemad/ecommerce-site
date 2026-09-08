@@ -127,6 +127,7 @@ The Admin Dashboard is the operational source of truth. Complete these APIs and 
 - [x] Restore sessions with `GET /api/auth/me`, server logout, configured-admin bootstrap on matching credentials, and reusable `requireAdmin()` authorization.
 - [x] Add admin product, order, customer, analytics, payment, returns, messaging, settings, and audit API routes.
 - [x] Connect Admin tabs to live APIs; empty database states are supported until migration and seed data are available.
+- [x] Validate admin product creation against duplicate names with a server-side conflict response.
 - [ ] Confirm the health response in a Vercel preview before implementing auth or payments.
 
 The API files can be type-checked locally with `npx tsc -p tsconfig.api.json`. The frontend build remains `npm run build`.
@@ -178,3 +179,17 @@ Browser-safe values should use `VITE_` only when genuinely public, such as a Raz
 - Payment amounts are generated and verified server-side.
 - Webhooks are signature-verified and idempotent.
 - UI can use the API without changing the customer-facing layout.
+
+## UI integration update ? September 7, 2026
+
+- Cart POST is connected from product detail and listing buttons using productId and quantity; it increments an existing cart item. PATCH retains absolute-quantity semantics. Header counts use successful responses and initial cart loading.
+- Wishlist mutations wait for server confirmation; local storage mirrors successful state instead of acting as a fallback for failed requests.
+- Product review reads select media IDs/URLs, consumed by photo/video lists in both review views. Product load failures and HTTP 404 use separate UI states.
+- Shared notification handling is specified in [NOTIFICATION_GUIDELINES.md](NOTIFICATION_GUIDELINES.md). Action outcomes use snackbars; field validation and blocking load failures retain inline recovery context.
+- Build/type checking passed. Real server/database, authentication, upload/playback, concurrency, quantity-limit, and stopped-server scenarios still need integration verification. Checkout UI is still a placeholder; this update does not establish working payments.
+- Navigation consumes the authenticated session and a protected admin capability check to expose Orders and Admin links consistently. Header authentication controls are kept separate from primary navigation.
+
+The next API work must follow [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md), with security gates completed before feature expansion. Prioritize authorization/data isolation, rate limits and `429` handling, two-minute timeouts, dependency/XSS/network exposure audits, session/storage rules, support email through Resend, request tracking, and payment verification.
+# Page and route inventory
+
+The API consumers and route owners are listed in [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md). Keep the inventory synchronized when API-backed page behavior changes.

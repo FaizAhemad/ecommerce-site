@@ -6,6 +6,8 @@ Deliver a reusable white-label commerce platform rather than a one-off storefron
 
 ## Current Baseline
 
+The active post-stabilization security, feature, and UI backlog is maintained in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md). It is a release-gated plan, not a statement that these capabilities are already complete.
+
 The Vite + React + TypeScript frontend currently provides:
 
 - Centralized starter configuration in `src/config.ts`
@@ -117,3 +119,6 @@ Why it matters: <technical or business impact>
 Recommended option: <default proposal>
 Alternatives: <other valid options>
 ```
+# Page and route inventory
+
+The current page list and route ownership are documented in [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md). Update that file whenever a page or route changes.

@@ -1,10 +1,11 @@
 import { db } from '../_lib/db.js'
 import { requireUser } from '../_lib/auth.js'
-import { bodyRecord, requestId, sendError, type VercelRequest, type VercelResponse } from '../_lib/http.js'
+import { bodyRecord, requestId, sendError, setCacheControl, type VercelRequest, type VercelResponse } from '../_lib/http.js'
 
 const include = { items: { include: { product: { include: { images: true, colors: true } } }, orderBy: { productId: 'asc' as const } } }
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
+  setCacheControl(response, 'private')
   const id = requestId(request)
   const user = await requireUser(request, response)
   if (!user) return
@@ -22,7 +23,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (!product) return sendError(response, 404, 'NOT_FOUND', 'Product not found.', id)
     const cart = await db.cart.upsert({ where: { userId: user.id }, create: { userId: user.id }, update: {} })
     if (request.method === 'DELETE') await db.cartItem.deleteMany({ where: { cartId: cart.id, productId } })
-    else await db.cartItem.upsert({ where: { cartId_productId: { cartId: cart.id, productId } }, create: { cartId: cart.id, productId, quantity }, update: { quantity } })
+    else await db.cartItem.upsert({ where: { cartId_productId: { cartId: cart.id, productId } }, create: { cartId: cart.id, productId, quantity }, update: { quantity: request.method === 'POST' ? { increment: quantity } : quantity } })
     const updated = await db.cart.findUnique({ where: { id: cart.id }, include })
     return response.status(200).json({ cart: updated ?? { items: [] }, requestId: id })
   } catch { return sendError(response, 503, 'DATABASE_UNAVAILABLE', 'Cart is temporarily unavailable.', id) }

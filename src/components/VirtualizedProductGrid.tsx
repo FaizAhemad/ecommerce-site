@@ -9,7 +9,7 @@ type VirtualizedProductGridProps = {
   addToCartLabel?: string
   ratingLabel: string
   reviewsLabel: string
-  onAdd: () => void
+  onAdd: (productId: string) => Promise<void>
   onOpenProduct: (id: string) => void
   virtualize?: boolean
 }

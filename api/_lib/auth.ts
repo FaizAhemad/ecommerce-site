@@ -1,7 +1,7 @@
 import { createHash, randomBytes, scrypt as nodeScrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 import { db } from './db.js'
-import type { VercelRequest, VercelResponse } from './http.js'
+import { setCacheControl, type VercelRequest, type VercelResponse } from './http.js'
 
 const scrypt = promisify(nodeScrypt)
 const SESSION_COOKIE = 'gadgify_session'
@@ -46,6 +46,7 @@ export async function currentUser(request: VercelRequest) {
 }
 
 export async function requireUser(request: VercelRequest, response: VercelResponse) {
+  setCacheControl(response, 'private')
   const user = await currentUser(request)
   if (!user) {
     response.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Sign in is required.' } })

@@ -1,3 +1,5 @@
+import { useNotification } from '../components/NotificationProvider'
+import { apiFetch as fetch } from '../api/http'
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 
@@ -7,18 +9,18 @@ export function AuthPage({ mode, storefront, onNavigate, onLogin }: Props) {
   const signup = mode === 'signup'
   const copy = storefront.content.auth
   const [method, setMethod] = useState<'email' | 'mobile'>('email')
-  const [message, setMessage] = useState('')
+  const notify = useNotification()
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   useEffect(() => {
     setPassword('')
-    setMessage('')
   }, [mode, method])
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (submitting) return
     setSubmitting(true)
-    const values = new FormData(event.currentTarget)
+    const formElement = event.currentTarget
+    const values = new FormData(formElement)
     const contact = String(values.get('contact') ?? '')
     const enteredPassword = String(values.get('password') ?? '')
     const payload = signup ? { name: values.get('name'), password: enteredPassword, verificationMethod: method, ...(method === 'mobile' ? { phone: contact } : { email: contact }) } : { identifier: contact, password: enteredPassword }
@@ -26,9 +28,11 @@ export function AuthPage({ mode, storefront, onNavigate, onLogin }: Props) {
       const result = await fetch(signup ? '/api/auth/signup' : '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       if (!result.ok) throw new Error('Unable to complete authentication')
       const resultBody = await result.json() as { user?: { role?: string } }
+      formElement.reset()
+      setPassword('')
       onLogin(resultBody.user?.role)
-      setMessage(signup ? copy.signupSuccess : copy.loginSuccess)
-    } catch { setMessage('Unable to complete authentication. Please try again.') } finally { setSubmitting(false) }
+      notify(signup ? copy.signupSuccess : copy.loginSuccess, 'success')
+    } catch { notify('Unable to complete authentication. Please try again.') } finally { setSubmitting(false) }
   }
   return <section className="page-section auth-page" aria-labelledby="auth-title">
     <div className="auth-card">
@@ -47,7 +51,6 @@ export function AuthPage({ mode, storefront, onNavigate, onLogin }: Props) {
         <button className="primary-button auth-submit" type="submit" disabled={submitting}>{submitting ? 'Please wait…' : signup ? copy.signupAction : copy.loginAction} <span aria-hidden="true">→</span></button>
       </form>
       <p className="auth-consent">{copy.consentPrefix}{' '}<a href="/terms" onClick={onNavigate('/terms')}>{copy.termsLabel}</a>{' '} {copy.consentAnd}{' '}<a href="/privacy" onClick={onNavigate('/privacy')}>{copy.privacyLabel}</a></p>
-      {message && <p className="auth-message" role="status">{message}</p>}
       <p className="auth-switch">{signup ? copy.signupSwitch : copy.loginSwitch}{' '}<a href={signup ? '/login' : '/signup'} onClick={onNavigate(signup ? '/login' : '/signup')}>{signup ? copy.loginLink : copy.signupLink}</a></p>
       <p className="auth-security">{copy.securityNote}</p>
     </div>

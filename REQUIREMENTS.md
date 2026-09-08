@@ -2,6 +2,8 @@
 
 ## Product Direction
 
+The current pending security, feature, and UI requirements are tracked in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md). They supplement this architecture specification and must be reflected in implementation status before release claims are made.
+
 Build a reusable, production-ready commerce platform for small businesses. The same application must support different businesses through configuration and data, without forks or business-specific source-code changes.
 
 ```text
@@ -192,3 +194,6 @@ Implement -> format -> lint -> type check -> test -> build
 - Product images, primary images, and videos
 - Verified payment, email, AI, storage, map, shipping, and tracking providers
 - Domain, production database, storage, environment variables, and monitoring
+# Page and route inventory
+
+See [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md) for the complete implemented page and route list. Page-level requirements and status changes must update that inventory and `PROJECT_STATUS.md`.

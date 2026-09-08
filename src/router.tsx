@@ -17,7 +17,7 @@ import { AdminPage } from './pages/AdminPage'
 type RouteProps = {
   path: string
   storefront: StorefrontApiResponse
-  onAdd: () => void
+  onAdd: (productId: string) => Promise<void>
   isAuthenticated: boolean
   isAdmin: boolean
   onLogin: (role?: string) => void

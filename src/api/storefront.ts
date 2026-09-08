@@ -1,4 +1,7 @@
 import { appConfig, type CatalogProduct } from '../config'
+import { apiFetch } from './http'
+
+const fetch = apiFetch
 
 export type StorefrontProduct = CatalogProduct
 
@@ -12,7 +15,7 @@ export type StorefrontApiResponse = {
   localization: typeof appConfig.localization
   branding: typeof appConfig.branding
   features: typeof appConfig.features
-  categories: typeof appConfig.categories
+  categories: readonly string[]
   facets: { categories: readonly string[]; colors: readonly string[]; ratings: readonly number[]; price: { min: number; max: number } }
   content: {
     errors: { unavailable: string; retryLabel: string; routeLabel: string }
@@ -117,6 +120,16 @@ export type StorefrontApiResponse = {
 
 // Temporary local adapter. Replace this function with the HTTP client when the API is available.
 export async function getStorefront(): Promise<StorefrontApiResponse> {
+  let categories: string[] = []
+  try {
+    const categoryResponse = await fetch('/api/categories', { cache: 'no-store' })
+    const contentType = categoryResponse.headers.get('content-type') ?? ''
+    if (categoryResponse.ok && contentType.includes('application/json')) {
+      categories = (await categoryResponse.json() as { categories?: string[] }).categories ?? []
+    }
+  } catch {
+    // Local Vite does not execute Vercel API functions; the shell remains usable until the API is deployed.
+  }
   let products: readonly CatalogProduct[] = []
   try {
     const response = await fetch('/api/products')
@@ -130,7 +143,8 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
   }
   return {
     ...appConfig,
-    facets: { categories: [...new Set(products.map((product) => product.category))], colors: [...new Set(products.flatMap((product) => (product as CatalogProduct).colors ?? []))], ratings: [5, 4, 3, 2, 1], price: { min: Math.min(...products.map((product) => product.price)), max: Math.max(...products.map((product) => product.price)) } },
+    categories,
+    facets: { categories, colors: [...new Set(products.flatMap((product) => (product as CatalogProduct).colors ?? []))], ratings: [5, 4, 3, 2, 1], price: { min: Math.min(...products.map((product) => product.price)), max: Math.max(...products.map((product) => product.price)) } },
     content: {
       errors: { unavailable: 'We could not load the storefront.', retryLabel: 'Try again', routeLabel: 'Something went wrong on this page.' },
       auth: { loginEyebrow: 'Welcome back', signupEyebrow: 'Join Gadgify', loginTitle: 'Sign in', signupTitle: 'Create your account', loginDescription: 'Access your orders, saved details, and cart.', signupDescription: 'Save your details for a faster checkout.', googleLabel: 'Continue with Google', emailDivider: 'Or use email', fullNameLabel: 'Full name', mobileLabel: 'Mobile number', addressLabel: 'Delivery address', emailLabel: 'Email address', passwordLabel: 'Password', passwordPlaceholder: 'At least 8 characters', loginAction: 'Sign in', signupAction: 'Create account', loginSuccess: 'You are signed in securely.', signupSuccess: 'Your account has been created successfully.', googleSuccess: 'Google sign-in is not configured yet.', loginSwitch: 'New here?', signupSwitch: 'Already registered?', signupLink: 'Create an account', loginLink: 'Sign in', securityNote: 'Your account is protected with encrypted passwords and secure server sessions.', consentPrefix: 'By continuing, you agree to Gadgify’s', termsLabel: 'Terms & Conditions', consentAnd: 'and', privacyLabel: 'Privacy Policy' },

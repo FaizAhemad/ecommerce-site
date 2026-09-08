@@ -16,6 +16,7 @@ This repository contains the customer storefront, protected API handlers, and an
 - [~] Add Prisma schema and PostgreSQL connection; schema is ready, but the production migration waits for deployment credentials.
 - [x] Add secure authentication and protected sessions.
 - [x] Add products, cart, wishlist, orders, reviews, tracking, and newsletter APIs.
+- [x] Add server-side duplicate product-name validation and admin product media upload support.
 - [x] Add Razorpay order creation, verification, and webhook handlers.
 - [~] Connect frontend catalog reads to `/api/products` and cart reads/quantity updates to `/api/cart`; wishlist, checkout, and order screens still need full server synchronization.
 - [ ] Configure Vercel environment variables, migrate Prisma, and deploy.
@@ -140,3 +141,95 @@ Do not invent these decisions in code:
 `TARGET.md` is the current phased plan and should be treated as the primary implementation roadmap. `REQUIREMENTS.md` is the detailed product/architecture specification. `requirement.md` appears to be the original, more verbose brief and contains encoding artifacts; retain it as reference, but avoid using it as the source of truth when it conflicts with the other two documents.
 
 `README.md` should also be corrected in a future documentation pass: it says the UI supports a light/dark-mode toggle, while `TARGET.md` and the implementation are light-only. Keep API secrets server-side; only genuinely public browser values may use `VITE_` variables.
+
+## September 7, 2026: layout, product feedback, and notifications
+
+- Standardized responsive page gutters in App.css; product details, ratings, and review forms share a centered 1120px maximum width with mobile gutters preserved.
+- Review GET responses include saved media. Latest reviews and the all-reviews drawer display photo thumbnails and playable videos; submitted attachments appear immediately.
+- Product request failures now show a connection-error state with retry. Missing products show a dedicated not-found state and Browse products; neither displays Add to cart.
+- Add-to-cart callbacks pass the product ID to the API, disable buttons while pending, and update counts after success. POST increments existing quantities; PATCH replaces quantities. Cart quantity changes now check responses and notify failures.
+- Wishlist changes wait for the API; failed requests no longer pretend to succeed through local storage. Wishlist controls sit outside product images beside the price.
+- Removed redundant cart success text beneath cards. Shared queued, dismissible snackbars now handle action feedback across authentication, subscriptions, reviews, admin saves, cart/wishlist actions, and tracking request errors. See [message guidelines](NOTIFICATION_GUIDELINES.md) for inline-versus-snackbar decisions.
+- Selected filenames, field validation, empty states, loading states, and blocking page errors remain inline. Admin duplicate-file browser alerts are replaced with snackbars.
+- Checkout remains a placeholder: attempting payment now explains unavailability without claiming an order/payment was submitted. No payment integration was completed in this pass.
+- Verification: production build passed; lint completed with React warnings. Live API/browser scenarios have not been verified in this pass.
+
+## Optimistic interaction follow-up
+
+Cart additions and wishlist toggles now update visible counts/hearts immediately, then save in the background. Failed saves roll back the affected change and retain snackbar feedback. Cart writes are serialized and final counts reconciled; wishlist state uses shared product locks and version checks against stale reads. This supersedes the earlier wait-before-updating behavior described above. Cart quantity editing still waits for confirmation. Production build and two mocked wishlist concurrency/rollback tests passed (`node --test tests/wishlist-optimistic.test.mjs`). Live backend/browser behavior and cart concurrency still require integration verification.
+
+## Form reset follow-up
+
+Product creation resets native fields and the separate accumulated image/video selection cache only after a successful API save. File listeners are scoped to the product form; product fields are disabled while saving. Authentication explicitly resets native fields and controlled password state after success. Reviews clear comment, rating, and attachments after success and prevent edits during submission. Newsletter already clears email after success. Failures retain input. Search/tracking retain query context; checkout and admin messaging remain unimplemented submission flows and must not clear input as though saved. Production build passed; live browser submission/reset verification remains outstanding.
+
+## Admin product list refresh
+
+Successful product creation now inserts the product returned by POST directly at the top of the admin list, without waiting for another GET or a page refresh. Background list reads bypass browser cache and retain locally confirmed creations missing from older snapshots, with ID deduplication. Form reset and success notification follow the state update. Production build passed; live browser verification remains outstanding.
+
+## Admin product editing
+
+Product rows now offer Edit. The form loads name, category, description, price, stock, colors, and retained photos/videos. Admins can remove existing media, upload additions, choose a primary image, save changes through PATCH, or cancel. The product list updates from the successful response without refresh; stock and visibility edits also update list state. PATCH validates names, category, price/stock, duplicate names, and color values; color/media replacements run in the product transaction. List GET includes videos. Save errors retain form values and show snackbar feedback. Production build passed; live authenticated edit, media upload/removal, and rollback verification remain outstanding.
+
+## Database-backed category management
+
+Product categories are now stored in the `Category` table and served by `/api/categories`. The admin product form uses a strict select control. Admins can add a category from the Products section through the protected `/api/admin/categories` endpoint; the new option is available immediately in the product form. Product create/edit APIs validate the selected category against the database. The migration seeds the existing fixed categories and preserves legacy product category values. Applying the migration and live authenticated verification remain pending until a working PostgreSQL connection is available.
+
+`prisma db seed` is now configured through `prisma/seed.mjs`. It idempotently upserts the same ten default categories, so it can safely be run after migrations or against an existing database.
+
+The temporary Vercel SPA rewrite was removed after it caused Vite/Vercel dev routing loops. Local Vite development uses its built-in SPA fallback for `/admin`, `/orders`, and `/product/:id`; production routing should be configured through the deployment framework without overriding Vite’s dev middleware.
+
+Local Vite development now uses host `127.0.0.1` and port `3000` with a strict port check so Windows IPv6 binding failures cannot prevent startup and the browser, API origin, and HMR URL cannot silently drift to another port. If port 3000 is already occupied, stop the other process before starting the app.
+
+The storefront loader now treats non-JSON API responses from Vite-only local development as unavailable data and keeps the shell usable until the Vercel API runtime is connected. This prevents a local `/api/categories` module response from crashing the application.
+
+Vite uses the standard React Fast Refresh plugin in development. CSP is intentionally absent from the local Vite response so its required inline preamble is not blocked.
+
+Product detail review submission now clears the saved form values while keeping the review form visible; the success snackbar provides confirmation instead of replacing the form with an empty section.
+
+Review submission errors now preserve the API message in the snackbar, including authentication, duplicate-review, validation, and media-upload failures.
+
+Added the authenticated `/api/products/:id/reviews/mine` endpoint and product-detail edit mode. The server scopes reads and updates by the session user, while the client updates the public review cache after a successful edit without sending a customer ID.
+
+The edit form is now opt-in: customers without an existing review see no Edit review action; customers with one see it only beside their own review and can load it into the form.
+
+The latest reviews section was refined so the heading and View all action share a clear row, each review has consistent vertical rhythm, and the customer-only Edit review action is a compact accessible pencil icon grouped with its review.
+
+The newsletter form now uses the shared client request timeout wrapper, preventing a subscription request from hanging indefinitely and preserving the existing snackbar error handling.
+
+Newsletter responses now report whether the Resend confirmation email was actually accepted. The success state can be clicked to start another subscription, and failed confirmation delivery is surfaced instead of being reported as a silent success. The project now declares Node 22 LTS in `package.json` and `.nvmrc` because Node 24 can trigger a libuv shutdown assertion in the Vercel/Vite process on Windows.
+
+Review media continues to upload one request per selected image or video and then saves all returned URLs in one review request. A synchronous submit lock now prevents rapid clicks from issuing duplicate review creates and causing a false “already reviewed” conflict.
+
+Snackbars now automatically dismiss after five seconds while retaining a manual Dismiss action. The duration is centralized as `SNACKBAR_DURATION_MS` in `NotificationProvider`.
+
+## Product-owner backlog
+
+The complete pending security, resilience, feature, and UI backlog is recorded in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md). It is also referenced by [AGENTS.md](AGENTS.md), [CODEX_INSTRUCTIONS.md](CODEX_INSTRUCTIONS.md), and [.github/copilot-instructions.md](.github/copilot-instructions.md). These items remain open; earlier build checks do not constitute production security verification.
+
+## Navigation and header follow-up
+
+The primary navbar now includes Orders for signed-in users and Admin for users with confirmed admin access. Admin access is also confirmed through the protected analytics endpoint when an older session response omits its role field. Duplicate authentication controls were removed from the navbar; sign-in/log-out remains in the header action area. A conflicting CSS rule that hid the final navbar link was removed, so Admin remains visible and active on `/admin`. Build verification passed after this change.
+
+## Security implementation started
+
+Added a shared 30-second default timeout with a user-safe timeout error in `src/api/http.ts`. Long-running media uploads and Razorpay provider calls use a 60-second override. Existing storefront, authentication, cart, wishlist, admin, review, tracking, and newsletter API calls use the wrapper. Server-side outbound provider calls use the same policy through `api/_lib/http.ts` (Resend and Twilio use the 30-second default). `tests/http-timeout.test.mjs` verifies default and long-running client cancellation, typed errors, and server provider cancellation; `npm test` passes. Request actions already prevent duplicate submissions while pending. The timeout backlog item is complete for the implemented timeout contract; live deployment monitoring remains an operational follow-up. `npm run build` passes. `npm audit` could not reach the npm advisory endpoint in this environment, so dependency status remains unverified.
+
+## Server-state strategy implementation started
+
+Added `@tanstack/react-query` and a shared `QueryClient` in `src/api/queryClient.ts`. The public storefront/configuration request uses the `['storefront']` query key and the filter-driven shop listing uses a stable `['catalog', filters]` key with a 30-second stale window, five-minute garbage-collection window, one retry, and no focus refetch. Product details/reviews, cart, wishlist, tracking, and current admin reads now use explicit query keys; review/cart mutation results update their query data, and logout clears the client. The complete page-by-page migration map is documented in `PAGE_INVENTORY.md`. The React Query backlog item is complete for all current page server reads; new pages must add a scoped key and invalidation rule before shipping. `npm run build` passes.
+
+## Safe caching completed
+
+Public catalog, category, product, and review GET handlers now send short `public` cache headers. Authenticated user, cart, wishlist, order, tracking, payment, and admin paths send `private, no-store` headers through the shared HTTP/auth helpers. This prevents private responses from being reused across users while allowing limited public catalog caching. `npm run build` passes.
+
+## Dependency audit review
+
+`npm audit --omit=dev` initially reported three high-severity findings through Prisma's transitive `deepmerge-ts@7.1.5` dependency (`GHSA-ggr8-5vv4-36mx`). The approved remediation aligned `prisma` and `@prisma/client` at `6.12.0`; the escalated audit verification now reports `0 vulnerabilities`. `npm run build` and `npm test` pass after regeneration. The dependency-vulnerability backlog item is complete; Prisma should be upgraded together as a pair when a newer compatible security release is approved.
+
+## XSS and input-safety review started
+
+Added server-side URL validation for product, review, image, and video media so only HTTP(S) URLs are persisted, and restricted upload content types to supported image/video formats. React rendering contains no `dangerouslySetInnerHTML` or raw `innerHTML` usage. The XSS backlog item remains open until the full rendered-content review, CSP policy, and authenticated browser verification are complete. `npm run build` passes.
+The deployment CSP configuration was removed after it interfered with the Vite React refresh preamble in the active development environment. The source scan still finds no raw HTML rendering, media URLs are HTTP(S)-validated, upload MIME types are restricted, and the production build passes. The XSS item remains open until CSP can be introduced and verified through the actual production host without blocking required flows.
+# Page inventory
+
+The implemented route and page list is maintained in [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md). It covers all routes currently registered in `src/router.tsx`, their owning components, access requirements, and known page-level gaps. Keep it synchronized whenever page behavior changes.

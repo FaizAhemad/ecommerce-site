@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client'
 import { db } from '../_lib/db.js'
-import { queryValue, requestId, sendError, type VercelRequest, type VercelResponse } from '../_lib/http.js'
+import { queryValue, requestId, sendError, setCacheControl, type VercelRequest, type VercelResponse } from '../_lib/http.js'
 
 const PAGE_SIZE = 24
 
@@ -14,6 +14,7 @@ function toProduct(product: Prisma.ProductGetPayload<{ include: { images: true; 
     reviewCount: product.reviewCount,
     tone: product.colors[0]?.name.toLowerCase() ?? 'sage',
     badge: '',
+    colorValues: Object.fromEntries(product.colors.map((color: { name: string; hex: string }) => [color.name, color.hex])),
     colors: product.colors.map((color) => color.name),
     media: {
       images: product.images.map((image, index) => ({ id: image.id, url: image.url, alt: image.alt ?? product.name, isPrimary: index === 0 })),
@@ -25,6 +26,7 @@ function toProduct(product: Prisma.ProductGetPayload<{ include: { images: true; 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   const id = requestId(request)
   if (request.method !== 'GET') return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Only GET is supported.', id)
+  setCacheControl(response, 'public')
 
   const search = queryValue(request.query?.search)?.trim()
   const category = queryValue(request.query?.category)?.trim()

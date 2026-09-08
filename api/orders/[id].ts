@@ -1,8 +1,9 @@
 import { db } from '../_lib/db.js'
 import { requireUser } from '../_lib/auth.js'
-import { bodyRecord, requestId, sendError, type VercelRequest, type VercelResponse } from '../_lib/http.js'
+import { bodyRecord, requestId, sendError, setCacheControl, type VercelRequest, type VercelResponse } from '../_lib/http.js'
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
+  setCacheControl(response, 'private')
   const id = requestId(request)
   const user = await requireUser(request, response)
   if (!user) return

@@ -22,12 +22,12 @@ export const appConfig = {
     reviewsEnabled: true,
     returnsEnabled: true,
   },
-  categories: ['Clothing', 'Sports', 'Home & Kitchen', 'Furniture', 'Footwear', 'Jewelry', 'Accessories', 'Watches', 'Electronics', 'Toys'] as const,
 } as const
 
 export type ProductImage = { id: string; url: string; alt: string; isPrimary: boolean }
 export type ProductVideo = { id: string; url: string; posterUrl?: string; alt: string }
 export type CatalogProduct = {
+  colorValues?: Readonly<Record<string, string>>
   id: string
   name: string
   category: string
