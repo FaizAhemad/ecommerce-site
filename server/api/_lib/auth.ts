@@ -32,7 +32,8 @@ export async function createSession(userId: string, response: VercelResponse) {
 }
 
 export function sessionToken(request: VercelRequest) {
-  const cookieHeader = request.headers?.cookie
+  const headers = request.headers ?? {}
+  const cookieHeader = headers.cookie ?? headers.Cookie
   const cookie = Array.isArray(cookieHeader) ? cookieHeader[0] : cookieHeader
   return cookie?.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${SESSION_COOKIE}=`))?.slice(SESSION_COOKIE.length + 1)
 }
