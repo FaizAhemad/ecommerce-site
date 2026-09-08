@@ -20,7 +20,7 @@ export async function apiFetch(input: RequestInfo | URL, init: ApiRequestInit = 
     else init.signal.addEventListener('abort', () => controller.abort(), { once: true })
   }
   try {
-    return await window.fetch(input, { ...requestInit, signal: controller.signal })
+    return await window.fetch(input, { credentials: 'include', ...requestInit, signal: controller.signal })
   } catch (error) {
     if (timedOut) throw new ApiTimeoutError()
     throw error
