@@ -204,6 +204,8 @@ The `npm run dev` command now checks for Node 22 LTS before starting, so Windows
 
 Removed the Vite `closeBundle` hook that called `process.exit(0)`. That forced exit could occur after Vercel reported the build complete but before deployment output upload finished. The normal Vite build lifecycle now completes cleanly; local production build verification passes.
 
+Added a minimal `vercel.json` with the explicit `npm run build` command and `dist` output directory. It leaves API function discovery and runtime selection to Vercel while making the static output path deterministic.
+
 Snackbars now automatically dismiss after five seconds while retaining a manual Dismiss action. The duration is centralized as `SNACKBAR_DURATION_MS` in `NotificationProvider`.
 
 ## Product-owner backlog
