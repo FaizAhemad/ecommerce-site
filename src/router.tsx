@@ -4,20 +4,23 @@ import { HomePage } from './pages/HomePage'
 import { ShopPage } from './pages/ShopPage'
 import { SupportPage } from './pages/SupportPage'
 import { ProductDetailPage } from './pages/ProductDetailPage'
-import { BagPage } from './pages/BagPage'
+import { CartPage } from './pages/CartPage'
 import { PolicyPage } from './pages/PolicyPage'
 import { PaymentPage } from './pages/PaymentPage'
 import { TrackOrderPage } from './pages/TrackOrderPage'
 import { AuthPage } from './pages/AuthPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
+import { WishlistPage } from './pages/WishlistPage'
+import { AdminPage } from './pages/AdminPage'
 
 type RouteProps = {
   path: string
   storefront: StorefrontApiResponse
-  onAdd: () => void
+  onAdd: (productId: string) => Promise<void>
   isAuthenticated: boolean
-  onLogin: () => void
+  isAdmin: boolean
+  onLogin: (role?: string) => void
 }
 
 const navigate = (path: string) => (event: MouseEvent<HTMLAnchorElement>) => {
@@ -37,13 +40,15 @@ function DebugErrorPage() {
   return <p className="state-message">Debug route is available in development only.</p>
 }
 
-export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, onLogin }: RouteProps) {
+export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, isAdmin, onLogin }: RouteProps) {
   const normalizedPath = path.length > 1 ? path.replace(/\/+$/, '') : path
   switch (normalizedPath) {
     case '/debug-error':
       return <DebugErrorPage />
-    case '/bag':
-      return <BagPage storefront={storefront} onNavigate={navigate} />
+    case '/cart':
+      return isAuthenticated ? <CartPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+    case '/wishlist':
+      return isAuthenticated ? <WishlistPage storefront={storefront} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/checkout':
       return isAuthenticated ? <PaymentPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/track-order':
@@ -54,12 +59,19 @@ export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, onLo
       return isAuthenticated ? <HomePage storefront={storefront} onNavigate={navigate} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} /> : <AuthPage mode="signup" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/orders':
       return isAuthenticated ? <OrdersPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+    case '/admin':
+      return !isAuthenticated ? <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} /> : isAdmin ? <AdminPage storefront={storefront} onNavigate={navigate} /> : <p className="state-message">Administrator access is required.</p>
     case '/privacy':
       return <PolicyPage storefront={storefront} policy="privacy" onNavigate={navigate} />
     case '/returns':
       return <PolicyPage storefront={storefront} policy="returns" onNavigate={navigate} />
-    case '/shop':
-      return <ShopPage storefront={storefront} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} />
+    case '/refund-policy':
+      return <PolicyPage storefront={storefront} policy="refund" onNavigate={navigate} />
+    case '/terms':
+    case '/terms-and-conditions':
+      return <PolicyPage storefront={storefront} policy="terms" onNavigate={navigate} />
+    case '/products':
+      return <ShopPage key={window.location.search} storefront={storefront} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} />
     case '/support':
       return <SupportPage storefront={storefront} />
     default:

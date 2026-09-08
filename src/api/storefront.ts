@@ -1,4 +1,7 @@
-import { appConfig, products, type CatalogProduct } from '../config'
+import { appConfig, type CatalogProduct } from '../config'
+import { apiFetch } from './http'
+
+const fetch = apiFetch
 
 export type StorefrontProduct = CatalogProduct
 
@@ -12,21 +15,25 @@ export type StorefrontApiResponse = {
   localization: typeof appConfig.localization
   branding: typeof appConfig.branding
   features: typeof appConfig.features
-  categories: typeof appConfig.categories
+  categories: readonly string[]
   facets: { categories: readonly string[]; colors: readonly string[]; ratings: readonly number[]; price: { min: number; max: number } }
   content: {
     errors: { unavailable: string; retryLabel: string; routeLabel: string }
-    auth: { loginEyebrow: string; signupEyebrow: string; loginTitle: string; signupTitle: string; loginDescription: string; signupDescription: string; googleLabel: string; emailDivider: string; fullNameLabel: string; mobileLabel: string; addressLabel: string; emailLabel: string; passwordLabel: string; passwordPlaceholder: string; loginAction: string; signupAction: string; loginSuccess: string; signupSuccess: string; googleSuccess: string; loginSwitch: string; signupSwitch: string; signupLink: string; loginLink: string; securityNote: string }
+    auth: { loginEyebrow: string; signupEyebrow: string; loginTitle: string; signupTitle: string; loginDescription: string; signupDescription: string; googleLabel: string; emailDivider: string; fullNameLabel: string; mobileLabel: string; addressLabel: string; emailLabel: string; passwordLabel: string; passwordPlaceholder: string; loginAction: string; signupAction: string; loginSuccess: string; signupSuccess: string; googleSuccess: string; loginSwitch: string; signupSwitch: string; signupLink: string; loginLink: string; securityNote: string; consentPrefix: string; termsLabel: string; consentAnd: string; privacyLabel: string }
     ui: {
       loadingLabel: string
       unavailableLabel: string
-      bagLabel: string
-      bagItemLabel: string
+      cartLabel: string
+      cartItemLabel: string
       homeLabel: string
       copyrightPrefix: string
+      signInLabel: string
+      logOutLabel: string
+      wishlistLabel: string
+      searchProductsLabel: string
     }
     navigation: {
-      shop: string
+      products: string
       support: string
     }
     hero: {
@@ -43,7 +50,7 @@ export type StorefrontApiResponse = {
       eyebrow: string
       title: string
       description: string
-      addToBagLabel: string
+      addToCartLabel: string
       ratingLabel: string
       reviewsLabel: string
       searchPlaceholder: string
@@ -72,7 +79,7 @@ export type StorefrontApiResponse = {
       title: string
       description: string
     }
-    bag: {
+    cart: {
       title: string
       emptyDescription: string
       continueShoppingLabel: string
@@ -93,6 +100,8 @@ export type StorefrontApiResponse = {
     policies: {
       privacyTitle: string
       returnsTitle: string
+      refundTitle: string
+      termsTitle: string
       missingContentLabel: string
       missingContentStatus: string
       missingContentAction: string
@@ -111,22 +120,48 @@ export type StorefrontApiResponse = {
 
 // Temporary local adapter. Replace this function with the HTTP client when the API is available.
 export async function getStorefront(): Promise<StorefrontApiResponse> {
+  let categories: string[] = []
+  try {
+    const categoryResponse = await fetch('/api/categories', { cache: 'no-store' })
+    const contentType = categoryResponse.headers.get('content-type') ?? ''
+    if (categoryResponse.ok && contentType.includes('application/json')) {
+      categories = (await categoryResponse.json() as { categories?: string[] }).categories ?? []
+    }
+  } catch {
+    // Local Vite does not execute Vercel API functions; the shell remains usable until the API is deployed.
+  }
+  let products: readonly CatalogProduct[] = []
+  try {
+    const response = await fetch('/api/products')
+    if (response.ok) {
+      const liveBody = await response.json() as { products?: readonly CatalogProduct[] }
+      products = liveBody.products ?? []
+    }
+  } catch {
+    // Vite's development server does not run Vercel functions. The shell can
+    // still render without catalog records until the API is deployed.
+  }
   return {
     ...appConfig,
-    facets: { categories: [...new Set(products.map((product) => product.category))], colors: [...new Set(products.flatMap((product) => (product as CatalogProduct).colors ?? []))], ratings: [5, 4, 3, 2, 1], price: { min: Math.min(...products.map((product) => product.price)), max: Math.max(...products.map((product) => product.price)) } },
+    categories,
+    facets: { categories, colors: [...new Set(products.flatMap((product) => (product as CatalogProduct).colors ?? []))], ratings: [5, 4, 3, 2, 1], price: { min: Math.min(...products.map((product) => product.price)), max: Math.max(...products.map((product) => product.price)) } },
     content: {
       errors: { unavailable: 'We could not load the storefront.', retryLabel: 'Try again', routeLabel: 'Something went wrong on this page.' },
-      auth: { loginEyebrow: 'Welcome back', signupEyebrow: 'Join Field & Form', loginTitle: 'Sign in', signupTitle: 'Create your account', loginDescription: 'Access your orders, saved details, and bag.', signupDescription: 'Save your details for a faster checkout.', googleLabel: 'Continue with Google', emailDivider: 'Or use email', fullNameLabel: 'Full name', mobileLabel: 'Mobile number', addressLabel: 'Delivery address', emailLabel: 'Email address', passwordLabel: 'Password', passwordPlaceholder: 'At least 8 characters', loginAction: 'Sign in', signupAction: 'Create account', loginSuccess: 'Signed in in demo mode.', signupSuccess: 'Account created in demo mode.', googleSuccess: 'Google sign-in completed in demo mode.', loginSwitch: 'New here?', signupSwitch: 'Already registered?', signupLink: 'Create an account', loginLink: 'Sign in', securityNote: 'Demo session only. Production must use HTTPS, hashed passwords, OAuth verification, and secure server sessions.' },
+      auth: { loginEyebrow: 'Welcome back', signupEyebrow: 'Join Gadgify', loginTitle: 'Sign in', signupTitle: 'Create your account', loginDescription: 'Access your orders, saved details, and cart.', signupDescription: 'Save your details for a faster checkout.', googleLabel: 'Continue with Google', emailDivider: 'Or use email', fullNameLabel: 'Full name', mobileLabel: 'Mobile number', addressLabel: 'Delivery address', emailLabel: 'Email address', passwordLabel: 'Password', passwordPlaceholder: 'At least 8 characters', loginAction: 'Sign in', signupAction: 'Create account', loginSuccess: 'You are signed in securely.', signupSuccess: 'Your account has been created successfully.', googleSuccess: 'Google sign-in is not configured yet.', loginSwitch: 'New here?', signupSwitch: 'Already registered?', signupLink: 'Create an account', loginLink: 'Sign in', securityNote: 'Your account is protected with encrypted passwords and secure server sessions.', consentPrefix: 'By continuing, you agree to Gadgify’s', termsLabel: 'Terms & Conditions', consentAnd: 'and', privacyLabel: 'Privacy Policy' },
       ui: {
         loadingLabel: 'Loading storefront',
         unavailableLabel: 'Storefront unavailable',
-        bagLabel: 'Cart',
-        bagItemLabel: 'items',
+        cartLabel: 'Cart',
+        cartItemLabel: 'items',
         homeLabel: 'home',
         copyrightPrefix: '©',
+        signInLabel: 'Sign in',
+        logOutLabel: 'Log out',
+        wishlistLabel: 'Wishlist',
+        searchProductsLabel: 'Search products',
       },
       navigation: {
-        shop: 'Shop',
+        products: 'Products',
         support: 'Support',
       },
       hero: {
@@ -147,7 +182,7 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
         eyebrow: 'The collection',
         title: 'Made for the daily ritual',
         description: 'Small runs. Natural materials. Nothing extra.',
-        addToBagLabel: 'Add to cart',
+        addToCartLabel: 'Add to cart',
         ratingLabel: 'Rating',
         reviewsLabel: 'reviews',
         searchPlaceholder: 'Search the collection',
@@ -176,7 +211,7 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
         title: 'We are here to help.',
         description: 'Reach the configured support team through the available support channels. Business hours, FAQs, and order assistance can be supplied by the API when available.',
       },
-      bag: {
+      cart: {
         title: 'Your cart',
         emptyDescription: 'Your selected products will appear here.',
         continueShoppingLabel: 'Continue shopping',
@@ -197,6 +232,8 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
       policies: {
         privacyTitle: 'Privacy Policy',
         returnsTitle: 'Return Policy',
+        refundTitle: 'Refund Policy',
+        termsTitle: 'Terms & Conditions',
         missingContentLabel: 'Business input required',
         missingContentStatus: 'Approved policy content has not been supplied.',
         missingContentAction: 'The business owner must provide and review the approved policy content before launch.',
@@ -215,19 +252,22 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
 }
 
 export async function getProducts(query: ProductQuery = {}): Promise<ProductPage> {
-  const normalizedSearch = query.search?.trim().toLowerCase()
-  const filtered = products.filter((product) => {
-    const matchesSearch = !normalizedSearch || `${product.name} ${product.category}`.toLowerCase().includes(normalizedSearch)
-    const matchesCategory = !query.category || product.category === query.category
-    const productColors = (product as CatalogProduct).colors
-    const matchesColor = !query.colors?.length || query.colors.some((color) => productColors?.includes(color))
-    const matchesRating = !query.minRating || product.rating >= query.minRating
-    return matchesSearch && matchesCategory && matchesColor && matchesRating
-  })
-  const sorted = [...filtered].sort((left, right) => query.sort === 'price-low' ? left.price - right.price : query.sort === 'price-high' ? right.price - left.price : right.id.localeCompare(left.id))
-  return { products: sorted, nextCursor: null }
+  const params = new URLSearchParams()
+  if (query.cursor) params.set('cursor', query.cursor)
+  if (query.search) params.set('search', query.search)
+  if (query.category) params.set('category', query.category)
+  if (query.sort) params.set('sort', query.sort)
+  if (query.colors?.length) params.set('colors', query.colors.join(','))
+  if (query.minRating) params.set('minRating', String(query.minRating))
+  const response = await fetch(`/api/products?${params.toString()}`)
+  if (!response.ok) return { products: [], nextCursor: null }
+  return await response.json() as ProductPage
 }
 
 export async function getProduct(id: string): Promise<StorefrontProduct | null> {
-  return products.find((product) => product.id === id) ?? null
+  const response = await fetch(`/api/products/${encodeURIComponent(id)}`)
+  if (response.status === 404) return null
+  if (!response.ok) throw new Error('Unable to load product')
+  const body = await response.json() as { product?: StorefrontProduct }
+  return body.product ?? null
 }

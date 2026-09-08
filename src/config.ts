@@ -1,12 +1,12 @@
 export const appConfig = {
   identity: {
-    appName: 'Field & Form',
-    businessName: 'Field & Form',
+    appName: 'Gadgify',
+    businessName: 'Gadgify',
     tagline: 'Useful objects, made to last.',
-    mark: 'F',
+    mark: 'G',
   },
   contact: {
-    supportEmail: 'support@example.com',
+    supportEmail: 'support@gadgify.com',
     phone: '+1 (000) 000-0000',
     social: { instagram: 'https://instagram.com', youtube: 'https://youtube.com', whatsapp: 'https://wa.me/10000000000', twitter: 'https://twitter.com', facebook: 'https://facebook.com' },
   },
@@ -22,12 +22,12 @@ export const appConfig = {
     reviewsEnabled: true,
     returnsEnabled: true,
   },
-  categories: ['Clothing', 'Sports', 'Home & Kitchen', 'Furniture', 'Footwear', 'Jewelry', 'Bags', 'Watches', 'Electronics', 'Toys'] as const,
 } as const
 
 export type ProductImage = { id: string; url: string; alt: string; isPrimary: boolean }
 export type ProductVideo = { id: string; url: string; posterUrl?: string; alt: string }
 export type CatalogProduct = {
+  colorValues?: Readonly<Record<string, string>>
   id: string
   name: string
   category: string
@@ -42,20 +42,20 @@ export type CatalogProduct = {
 
 const starterProducts = [
   {
-    id: 'bag-01',
+    id: 'accessory-01',
     name: 'Everyday Canvas Tote',
-    category: 'Bags',
+    category: 'Accessories',
     price: 28,
     rating: 4.8,
     reviewCount: 124,
     tone: 'sage',
     badge: 'Best seller',
-    media: { images: [{ id: 'bag-01-main', url: heroArt, alt: 'Everyday Canvas Tote', isPrimary: true }, { id: 'bag-01-detail', url: heroArt, alt: 'Everyday Canvas Tote detail', isPrimary: false }], videos: [] },
+    media: { images: [{ id: 'accessory-01-main', url: heroArt, alt: 'Everyday Canvas Tote', isPrimary: true }, { id: 'accessory-01-detail', url: heroArt, alt: 'Everyday Canvas Tote detail', isPrimary: false }], videos: [] },
   },
   {
-    id: 'bag-02',
+    id: 'accessory-02',
     name: 'Compact Travel Crossbody',
-    category: 'Bags',
+    category: 'Accessories',
     price: 42,
     rating: 4.6,
     reviewCount: 87,
@@ -131,18 +131,8 @@ const starterProducts = [
   },
 ] satisfies readonly CatalogProduct[]
 
-const fixtureColors = ['Black', 'White', 'Natural', 'Blue', 'Green', 'Rose', 'Brown'] as const
+void starterProducts
 
-// Fixture volume for exercising the virtualized catalog. Production data will come from the API.
-export const products = [...starterProducts, ...Array.from({ length: 16 }, (_, index) => {
-  const source = starterProducts[index % starterProducts.length]
-  return {
-    ...source,
-    id: `${source.id}-sample-${String(index + 1).padStart(3, '0')}`,
-    name: `${appConfig.categories[index % appConfig.categories.length]} ${source.name} / Sample ${index + 1}`,
-    category: appConfig.categories[index % appConfig.categories.length],
-    price: source.price + (index % 7),
-    colors: [fixtureColors[index % fixtureColors.length], fixtureColors[(index + 2) % fixtureColors.length]],
-  }
-})] satisfies readonly CatalogProduct[]
+// Products are managed through the database/API. No demo catalog is rendered in production.
+export const products: readonly CatalogProduct[] = []
 import heroArt from './assets/hero.png'
