@@ -21,6 +21,8 @@ Status values describe the current implementation, not the overall product roadm
 
 ## Authentication and account pages
 
+On initial load or refresh, the app waits for `/api/auth/me` before mounting navigation and page content. A compact accessible session loader prevents the sign-in form and guest navbar flashing for returning customers, including on `/admin`, `/cart`, `/wishlist`, `/checkout`, `/orders`, and `/orders/:id`. The current URL is retained. Anonymous or failed session checks release the loader and use the existing access rules; login and logout invalidate older checks.
+
 | Route | Page component | Access | Current status and scope |
 | --- | --- | --- | --- |
 | `/login` | `AuthPage` (`login`) | Public | Sign-in form and authentication flow. |

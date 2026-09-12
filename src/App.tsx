@@ -32,6 +32,7 @@ function App() {
   const [wishlistCount, setWishlistCount] = useState(() => JSON.parse(window.localStorage.getItem('wishlist') ?? '[]').length)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isSessionLoading, setIsSessionLoading] = useState(true)
   const sessionVersion = useRef(0)
 
   const loadStorefront = () => { void storefrontQuery.refetch() }
@@ -39,22 +40,24 @@ function App() {
     sessionVersion.current += 1
     setIsAuthenticated(Boolean(user))
     setIsAdmin(String(user?.role ?? '').trim().toUpperCase() === 'ADMIN')
+    setIsSessionLoading(false)
   }
 
   useEffect(() => {
     loadStorefront()
+    let cancelled = false
     const requestVersion = sessionVersion.current
     fetch('/api/auth/me').then(async (response) => {
-      if (sessionVersion.current !== requestVersion) return
+      if (cancelled || sessionVersion.current !== requestVersion) return
       if (!response.ok) { applySession(); return }
       const body = await response.json() as { user?: { role?: string } }
-      if (sessionVersion.current === requestVersion) applySession(body.user)
-    }).catch(() => { if (sessionVersion.current === requestVersion) applySession() })
+      if (!cancelled && sessionVersion.current === requestVersion) applySession(body.user)
+    }).catch(() => { if (!cancelled && sessionVersion.current === requestVersion) applySession() })
     const onPopState = () => { setPath(window.location.pathname); setRouteVersion((version) => version + 1) }
     const onWishlistChange = () => setWishlistCount(JSON.parse(window.localStorage.getItem('wishlist') ?? '[]').length)
     window.addEventListener('popstate', onPopState)
     window.addEventListener('wishlistchange', onWishlistChange)
-    return () => { window.removeEventListener('popstate', onPopState); window.removeEventListener('wishlistchange', onWishlistChange) }
+    return () => { cancelled = true; window.removeEventListener('popstate', onPopState); window.removeEventListener('wishlistchange', onWishlistChange) }
   }, [])
 
   useEffect(() => {
@@ -122,7 +125,7 @@ function App() {
     return request
   }
 
-  const logout = () => { void fetch('/api/auth/logout', { method: 'POST' }); queryClient.clear(); setIsAuthenticated(false); setIsAdmin(false) }
+  const logout = () => { void fetch('/api/auth/logout', { method: 'POST' }); queryClient.clear(); applySession() }
 
   useEffect(() => {
     if (!storefront) return
@@ -138,6 +141,7 @@ function App() {
   if (!storefront) return <main className="app-loading" aria-busy="true" aria-label="Loading Gadgify"><div className="app-loading-mark">G</div><p className="eyebrow">GADGIFY</p><h1>Preparing your everyday.</h1><div className="app-loading-bar"><span /></div><p className="app-loading-note">Loading products, collections, and store details…</p></main>
 
   const handleLogin = (role?: string) => { applySession({ role }); const destination = String(role ?? '').toUpperCase() === 'ADMIN' ? '/admin' : '/'; window.history.pushState({}, '', destination); setPath(destination); window.dispatchEvent(new PopStateEvent('popstate')) }
+  if (isSessionLoading) return <main className="app-loading" aria-busy="true" aria-label="Loading your session"><div className="app-loading-mark" aria-hidden="true">G</div><p className="app-loading-note" role="status">Checking your session…</p><div className="app-loading-bar" aria-hidden="true"><span /></div></main>
   return <AppErrorBoundary><NotificationProvider><SiteLayout storefront={storefront} cartCount={cartCount} wishlistCount={wishlistCount} isAuthenticated={isAuthenticated} isAdmin={isAdmin} onLogout={logout}><StorefrontRoute path={path} storefront={storefront} onAdd={addToCart} isAuthenticated={isAuthenticated} isAdmin={isAdmin} onLogin={handleLogin} /></SiteLayout></NotificationProvider></AppErrorBoundary>
 }
 
