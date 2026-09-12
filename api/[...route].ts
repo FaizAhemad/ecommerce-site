@@ -74,5 +74,6 @@ function findRoute(segments: string[]) {
 export default async function handler(request: RequestLike, response: ResponseLike) {
   const match = findRoute(pathSegments(request))
   if (!match) return response.status(404).json({ error: { code: 'NOT_FOUND', message: 'API route not found.' } })
-  return await match.handler({ ...request, query: { ...(request.query ?? {}), ...match.query } }, response)
+  const headers = request.headers ?? {}
+  return await match.handler({ ...request, headers: { ...headers, cookie: headers.cookie ?? headers.Cookie }, query: { ...(request.query ?? {}), ...match.query } }, response)
 }

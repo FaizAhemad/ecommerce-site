@@ -32,16 +32,24 @@ function App() {
   const [wishlistCount, setWishlistCount] = useState(() => JSON.parse(window.localStorage.getItem('wishlist') ?? '[]').length)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const sessionVersion = useRef(0)
 
   const loadStorefront = () => { void storefrontQuery.refetch() }
   const applySession = (user?: { role?: string }) => {
+    sessionVersion.current += 1
     setIsAuthenticated(Boolean(user))
     setIsAdmin(String(user?.role ?? '').trim().toUpperCase() === 'ADMIN')
   }
 
   useEffect(() => {
     loadStorefront()
-    fetch('/api/auth/me').then(async (response) => { if (!response.ok) { applySession(); return }; const body = await response.json() as { user?: { role?: string } }; applySession(body.user) }).catch(() => applySession())
+    const requestVersion = sessionVersion.current
+    fetch('/api/auth/me').then(async (response) => {
+      if (sessionVersion.current !== requestVersion) return
+      if (!response.ok) { applySession(); return }
+      const body = await response.json() as { user?: { role?: string } }
+      if (sessionVersion.current === requestVersion) applySession(body.user)
+    }).catch(() => { if (sessionVersion.current === requestVersion) applySession() })
     const onPopState = () => { setPath(window.location.pathname); setRouteVersion((version) => version + 1) }
     const onWishlistChange = () => setWishlistCount(JSON.parse(window.localStorage.getItem('wishlist') ?? '[]').length)
     window.addEventListener('popstate', onPopState)

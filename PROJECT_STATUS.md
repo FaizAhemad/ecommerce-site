@@ -218,6 +218,10 @@ The complete pending security, resilience, feature, and UI backlog is recorded i
 
 The primary navbar now includes Orders for signed-in users and Admin for users with confirmed admin access. Admin access is also confirmed through the protected analytics endpoint when an older session response omits its role field. Duplicate authentication controls were removed from the navbar; sign-in/log-out remains in the header action area. A conflicting CSS rule that hid the final navbar link was removed, so Admin remains visible and active on `/admin`. Build verification passed after this change.
 
+## Session restoration follow-up
+
+The initial `/api/auth/me` probe is now guarded against stale unauthenticated responses. A probe that began before login can no longer overwrite the successful login session, preventing protected cart, wishlist, analytics, and refresh navigation from being incorrectly reset to 401/login. Production build verification passed; live Vercel login/API verification remains required.
+
 ## Security implementation started
 
 Added a shared 30-second default timeout with a user-safe timeout error in `src/api/http.ts`. Long-running media uploads and Razorpay provider calls use a 60-second override. Existing storefront, authentication, cart, wishlist, admin, review, tracking, and newsletter API calls use the wrapper. Server-side outbound provider calls use the same policy through `api/_lib/http.ts` (Resend and Twilio use the 30-second default). `tests/http-timeout.test.mjs` verifies default and long-running client cancellation, typed errors, and server provider cancellation; `npm test` passes. Request actions already prevent duplicate submissions while pending. The timeout backlog item is complete for the implemented timeout contract; live deployment monitoring remains an operational follow-up. `npm run build` passes. `npm audit` could not reach the npm advisory endpoint in this environment, so dependency status remains unverified.
