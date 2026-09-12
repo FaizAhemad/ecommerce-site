@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { apiFetch, API_TIMEOUT_MS, LONG_RUNNING_API_TIMEOUT_MS, ApiTimeoutError } from '../src/api/http.ts'
-import { fetchWithTimeout } from '../api/_lib/http.ts'
+import { fetchWithTimeout } from '../server/api/_lib/http.ts'
 
 test('client timeout uses the 30 second default and typed timeout error', async () => {
   assert.equal(API_TIMEOUT_MS, 30_000)

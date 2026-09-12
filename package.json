@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node scripts/check-node.mjs && vite",
     "build": "prisma generate && tsc -b && tsc -p tsconfig.api.json --pretty false && vite build",
-    "test": "node --experimental-strip-types --test tests/http-timeout.test.mjs",
+    "test": "node --experimental-strip-types --test tests/http-timeout.test.mjs tests/media-upload.test.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "postinstall": "prisma generate"

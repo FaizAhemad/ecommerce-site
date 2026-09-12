@@ -192,4 +192,6 @@ Browser-safe values should use `VITE_` only when genuinely public, such as a Raz
 The next API work must follow [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md), with security gates completed before feature expansion. Prioritize authorization/data isolation, rate limits and `429` handling, two-minute timeouts, dependency/XSS/network exposure audits, session/storage rules, support email through Resend, request tracking, and payment verification.
 # Page and route inventory
 
+Upload validation follow-up: `POST /api/admin/upload` and `POST /api/products/:id/review-upload` use `server/api/_lib/media.ts` before storage writes. Existing authentication, URLs, public Blob storage, response shapes, and request size caps remain. The shared validator checks canonical base64, matching supported MIME types, decoded byte limits (6,000,000 product / 1,500,000 review), and media signatures. Stored paths use UUIDs and canonical extensions instead of user filenames. Validation failures use the existing `400 VALIDATION_ERROR` contract. Signature checks do not replace full decoding, malware scanning, or content moderation. Provider request body limits can be lower than these application limits.
+
 The API consumers and route owners are listed in [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md). Keep the inventory synchronized when API-backed page behavior changes.

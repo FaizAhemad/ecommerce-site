@@ -58,4 +58,6 @@ These must be addressed before calling the application stable or production-read
 
 ## Acceptance and documentation
 
+Security increment: product and review upload validation now checks base64, declared/data-URL MIME agreement, decoded size, and supported signatures, with generated storage filenames. Automated tests pass; the XSS item stays pending until the remaining rendering, CSP, and live deployment checks are verified. See `PROJECT_STATUS.md` for scope and limitations.
+
 Each item needs an owner/priority, implementation notes, API/data changes, security impact, and verification evidence. Update `PROJECT_STATUS.md`, `API_IMPLEMENTATION_PLAN.md`, and this file when scope changes. Keep the Codex (`AGENTS.md`, `CODEX_INSTRUCTIONS.md`) and Copilot (`.github/copilot-instructions.md`) instructions aligned with this backlog.

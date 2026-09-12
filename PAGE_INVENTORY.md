@@ -41,6 +41,8 @@ On initial load or refresh, the app waits for `/api/auth/me` before mounting nav
 
 ## Development and fallback behavior
 
+Product media on `/admin` and review attachments on `/product/:id` now pass shared server-side base64, MIME agreement, decoded-size, and signature checks before Blob upload. Invalid media returns `400 VALIDATION_ERROR` through existing snackbar handling; form input is retained. Stored filenames use generated IDs and validated extensions. Live upload/playback verification remains pending.
+
 | Route | Page component | Access | Current status and scope |
 | --- | --- | --- | --- |
 | `/debug-error` | `DebugErrorPage` | Development only | Error-boundary verification route; not a customer-facing page. |
