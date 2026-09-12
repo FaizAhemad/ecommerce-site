@@ -21,7 +21,7 @@ The app waits for storefront/session checks before rendering navigation and rout
 | /login | AuthPage (login) | Public | Password login by email/mobile identifier. Authenticated visitors render HomePage at this path. |
 | /signup | AuthPage (signup) | Public | Registration with email/mobile selection. OTP/verification/reset customer UI incomplete. |
 | /cart | CartPage | Authenticated | API-backed line items and quantity/removal, query cache updates. |
-| /wishlist | WishlistPage | Authenticated | API IDs/local optimistic state; displays only products present in initial storefront data. |
+| /wishlist | WishlistRedirect | Public redirect | Temporarily hidden by request; replaces the URL with /products. Header link removed. WishlistPage is retained but inactive; product hearts and saved-item APIs remain available. |
 | /checkout | PaymentPage | Authenticated | Placeholder totals from first catalog products; informational snackbar on submit, no payment/order creation. |
 | /orders | OrdersPage | Authenticated | Static empty state/count; does not query order history. |
 | /orders/:id | OrderDetailPage | Authenticated | Catalog-derived placeholder items and hardcoded delivered/paid details; does not fetch this order. |

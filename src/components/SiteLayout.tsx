@@ -14,7 +14,7 @@ type SiteLayoutProps = {
   children: ReactNode
 }
 
-export function SiteLayout({ storefront, cartCount, wishlistCount, children, isAuthenticated, isAdmin, onLogout }: SiteLayoutProps) {
+export function SiteLayout({ storefront, cartCount, children, isAuthenticated, isAdmin, onLogout }: SiteLayoutProps) {
   const { content, identity, contact } = storefront
   const { t } = useTranslation()
   const [showStickyHeader, setShowStickyHeader] = useState(false)
@@ -73,7 +73,7 @@ export function SiteLayout({ storefront, cartCount, wishlistCount, children, isA
         </nav>
         <div className="header-actions" ref={headerActionsRef}>
           
-          <button className="search-button" type="button" onClick={() => setSearchOpen((open) => !open)} aria-label={searchOpen ? 'Close search' : 'Search products'}>{searchOpen ? 'Ã—' : 'âŒ•'}</button>{searchOpen && <form className="header-search" onSubmit={submitSearch}><input autoFocus autoComplete="off" spellCheck={false} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t('common:searchProducts')} aria-label={t('common:searchProducts')} /></form>}<button className="wishlist-button-header" type="button" onClick={() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); window.history.pushState({}, '', '/wishlist'); window.dispatchEvent(new PopStateEvent('popstate')) }} aria-label={`${t('common:wishlist')}, ${wishlistCount} items`}><span className="nav-action-icon" aria-hidden="true">♥</span><span className="nav-action-label">{t('common:wishlist')}</span><b>{wishlistCount}</b></button>
+          <button className="search-button" type="button" onClick={() => setSearchOpen((open) => !open)} aria-label={searchOpen ? 'Close search' : 'Search products'}>{searchOpen ? 'Ã—' : 'âŒ•'}</button>{searchOpen && <form className="header-search" onSubmit={submitSearch}><input autoFocus autoComplete="off" spellCheck={false} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t('common:searchProducts')} aria-label={t('common:searchProducts')} /></form>}
           
           <button className="cart-button" type="button" onClick={openCart} aria-label={`${t('common:cart')}, ${cartCount} ${t('common:items')}`}>
             <span className="nav-action-icon cart-icon" aria-hidden="true">🛒</span><span className="nav-action-label">{t('common:cart')}</span><span>{cartCount}</span>

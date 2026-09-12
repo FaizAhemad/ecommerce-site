@@ -14,7 +14,7 @@ Backend existence is not end-to-end completion. Customer order/checkout pages re
 | --- | --- | --- |
 | P0 — security rollout | Rate-limit migration, database test, controlled deployment, authentication/refresh, 429/recovery | Working counter storage, normal writes preserved, exceeded limits recover, live evidence recorded |
 | P0 — security review | XSS/CSP, upload safety, customer isolation, cache/session/storage, dependency/network review, penetration test | Scope, findings, fixes and retest evidence; no blanket readiness claim from builds |
-| P1 — truthful commerce | Orders/detail/checkout integration, pagination, wishlist completeness, tracking ID contract | Real account-scoped data, no fabricated order/review claims, full catalog navigation |
+| P1 — truthful commerce | Orders/detail/checkout integration, pagination, tracking ID contract; wishlist page deferred by user request | Real account-scoped data, no fabricated order/review claims, full catalog navigation; /wishlist redirects to Products while product hearts remain available |
 | P1 — payments and operations | Amount/stock/address checks, provider verification/webhooks/idempotency, cancellation/returns/refunds | Verified server calculations and actual provider outcomes, including failure/replay cases |
 | P1 — customer support/account | Profiles, addresses, reset/verification UI, help, Resend tickets/attachments/receipt and request tracking | Owner-scoped records, email delivery and recovery verified |
 | P2 — administration/configuration | CMS identity/branding/contact/locales/shipping/features, policy versions/consent, roles/audit, messages/settings | Appropriate non-secret changes work without source edits; audit and authorization verified |

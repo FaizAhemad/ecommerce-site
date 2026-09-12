@@ -1,4 +1,4 @@
-import type { MouseEvent } from 'react'
+import { useEffect, type MouseEvent } from 'react'
 import type { StorefrontApiResponse } from './api/storefront'
 import { HomePage } from './pages/HomePage'
 import { ShopPage } from './pages/ShopPage'
@@ -11,7 +11,6 @@ import { TrackOrderPage } from './pages/TrackOrderPage'
 import { AuthPage } from './pages/AuthPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
-import { WishlistPage } from './pages/WishlistPage'
 import { AdminPage } from './pages/AdminPage'
 
 type RouteProps = {
@@ -35,6 +34,14 @@ const navigateTo = (path: string) => {
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
+function WishlistRedirect() {
+  useEffect(() => {
+    window.history.replaceState({}, '', '/products')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }, [])
+  return null
+}
+
 function DebugErrorPage() {
   if (import.meta.env.DEV) throw new Error('Intentional error-boundary preview')
   return <p className="state-message">Debug route is available in development only.</p>
@@ -48,7 +55,7 @@ export function StorefrontRoute({ path, storefront, onAdd, isAuthenticated, isAd
     case '/cart':
       return isAuthenticated ? <CartPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/wishlist':
-      return isAuthenticated ? <WishlistPage storefront={storefront} onAdd={onAdd} onOpenProduct={(id) => navigateTo(`/product/${id}`)} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+      return <WishlistRedirect />
     case '/checkout':
       return isAuthenticated ? <PaymentPage storefront={storefront} onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/track-order':

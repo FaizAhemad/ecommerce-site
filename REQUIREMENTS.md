@@ -4,6 +4,8 @@ Reviewed: 2026-09-12. This is the desired architecture/product specification, no
 
 ## Implementation alignment
 
+The wishlist page is deferred by user request. Hide its navigation entry and redirect /wishlist to /products until reconsidered; saved-item APIs and product heart actions remain available.
+
 The current app uses React/Vite/TypeScript, one Vercel API dispatcher, Prisma/PostgreSQL, Blob, Resend and Razorpay handler code. It uses a custom History API router and a light-only theme. React Query adoption is partial; private cache isolation and several customer page integrations remain open. Client/provider timeouts are 30 seconds by default with a 60-second long-running override. Shared snackbars auto-dismiss after five seconds.
 
 The backlog now explicitly carries forward configuration/CMS, full localization, catalog pagination, authentic orders/reviews, refunds, delivery, admin operations/audit, notifications, policies/consent, accessibility, CI and release operations. No requirement below is waived by a placeholder page or backend scaffold. Rate-limit implementation requires its database migration and live verification; no CSP is currently deployed by configuration in this repository.

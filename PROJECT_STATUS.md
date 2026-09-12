@@ -17,6 +17,12 @@ Reviewed: 2026-09-12. This describes the current workspace, including staged imp
 | E7 — source audit | Router, page components, API handlers, schema/migrations, scripts, query keys, config, Vite/Vercel configuration and all project Markdown inspected. Documentation claims corrected against those files. |
 | E8 — documentation validation | Relative Markdown links, registered route inventory, script/handler references, completion formatting and stale active-document claims checked during this pass. Historical documents are explicitly labelled. |
 
+## Wishlist page deferral — 2026-09-12
+
+Per user request, the shared header no longer displays the wishlist link. Opening /wishlist (including its trailing-slash variant) replaces the history entry with /products for guests and signed-in users. WishlistPage is retained but not routed; product hearts and saved-item APIs remain available. Restoring and completing the page remains deferred in the backlog.
+
+Verification: npm run build passed (Prisma generation, frontend/API types and production bundle); npm run lint passed with the same eight existing warnings. Source review confirms the shared header entry is removed and the redirect uses replaceState to avoid a Back-button loop. Live browser/deployment verification was not performed. Cache/session implementation remains pending.
+
 ## Current implementation
 
 | Area | Implemented | Remaining or verification limit |

@@ -72,7 +72,7 @@ These requirements from REQUIREMENTS.md and the original brief remain in scope a
 - [ ] Finish English/Hindi/Marathi localization across UI, validation, errors, emails, statuses and business content.
 - [ ] Add API-configured independent home sections and complete catalog cursor loading, full facets and large-catalog performance verification.
 - [ ] Fetch real Orders/Order Details data and use actual cart totals in Checkout; remove hardcoded delivered/paid dates and catalog-derived placeholder orders.
-- [ ] Render saved wishlist products outside the initially loaded storefront catalog and verify empty/error/account-switch states.
+- [ ] Wishlist page deferred by user request: navigation is hidden and /wishlist redirects to /products. Reconsider the page later; before restoring it, render saved products outside the initial catalog and verify empty/error/account-switch states. Product heart actions remain available.
 - [ ] Complete password-reset/email-verification customer routes and profile/address workflows using the existing backend where appropriate.
 - [ ] Define verified-purchase/moderation eligibility and remove generated fallback reviews before presenting authentic customer feedback.
 - [ ] Integrate actual provider refunds and complete configurable cancellation/returns/refund workflows, amounts, idempotency and auditability.

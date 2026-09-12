@@ -58,7 +58,7 @@ The user previously reported the first two migrations up to date and login worki
 
 ## Implementation boundaries
 
-Catalog/categories, session login, cart/wishlist mutations, product administration and review create/edit are connected to APIs. React Query handles many page reads; session/header reads remain effect-driven and private cache scoping needs review.
+Catalog/categories, session login, cart/wishlist mutations, product administration and review create/edit are connected to APIs. The wishlist page is temporarily hidden: its header link is removed and /wishlist redirects to /products; product hearts remain available. React Query handles many page reads; session/header reads remain effect-driven and private cache scoping needs review.
 
 Orders currently renders an empty shell. Order Details and Checkout use placeholder catalog-derived content, and Checkout does not submit payments. Support still opens email/phone links. Profile/reset/verification customer pages, full settings, customer messaging UI, AI, referrals, coupons, cashback and delivery integrations remain incomplete or absent.
 
