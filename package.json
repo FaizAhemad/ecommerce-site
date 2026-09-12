@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "node scripts/check-node.mjs && vite",
     "build": "prisma generate && tsc -b && tsc -p tsconfig.api.json --pretty false && vite build",
-    "test": "node --experimental-strip-types --test tests/http-timeout.test.mjs tests/media-upload.test.mjs",
+    "test": "node --experimental-strip-types --test tests/http-timeout.test.mjs tests/media-upload.test.mjs tests/rate-limit.test.mjs",
+    "rate-limits:cleanup": "node scripts/cleanup-rate-limits.mjs",
+    "test:rate-limits:db": "node --experimental-strip-types tests/rate-limit-postgres.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "postinstall": "prisma generate"

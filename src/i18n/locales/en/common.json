@@ -14,5 +14,6 @@
   "tryAgain": "Try again",
   "errorTitle": "Something went wrong.",
   "reloadPage": "Reload page",
-  "backToHome": "Back to home"
+  "backToHome": "Back to home",
+  "rateLimited": "Too many requests. Please try again in {{seconds}} seconds."
 }

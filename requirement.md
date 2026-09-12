@@ -1,3 +1,11 @@
+# Original requirements brief — historical source
+
+Preserved original 49-section product/architecture brief. It describes desired capabilities, not completed functionality or the current technical layout. Reviewed for alignment on 2026-09-12; original scope is retained below.
+
+Use [REQUIREMENTS.md](REQUIREMENTS.md) for the maintained specification, [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) for the single completion checklist, [PROJECT_STATUS.md](PROJECT_STATUS.md) for evidence and [PAGE_INVENTORY.md](PAGE_INVENTORY.md) for current routes. Current implementation uses Node.js handlers under server/api, Prisma/PostgreSQL, a custom History API router, a light-only theme, five-second snackbars and 30/60-second client/provider timeouts. Historical examples such as Python are not statements about the current stack.
+
+---
+
 Yes. Since you may **reuse/sell the application to other businesses**, I would change the architecture from a one-off business website into a **white-label, configurable commerce platform**.
 
  The important distinction is: **business-specific data should not require code changes**. App name, logo, emails, policies, support details, branding, etc. should be configurable. Secrets still belong in environment variables, while editable business content can live in a database/configuration layer.

@@ -1,71 +1,70 @@
 # Page and route inventory
 
-This is the source of truth for the pages currently implemented by the storefront. Route ownership is defined in [`src/router.tsx`](src/router.tsx); update this inventory in the same change whenever a page, route, access rule, or page-level behavior changes.
+Reviewed against [src/router.tsx](src/router.tsx) on 2026-09-12. Routing uses browser History API and a component switch, not the react-router package. This lists actual behavior; desired behavior belongs in [REQUIREMENTS.md](REQUIREMENTS.md), and completion is tracked only in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md).
 
-Status values describe the current implementation, not the overall product roadmap. Roadmap work remains tracked in [`APPLICATION_BACKLOG.md`](APPLICATION_BACKLOG.md).
+The app waits for storefront/session checks before rendering navigation and route content. The new session loader prevents a temporary guest form while /api/auth/me is pending. Login/logout invalidate older probes. The loader has build evidence; live refresh verification remains pending.
 
-## Public and customer pages
+## Registered pages
 
-| Route | Page component | Access | Current status and scope |
+| Route | Component | Access | Current implementation and gaps |
 | --- | --- | --- | --- |
-| `/` | `HomePage` | Public | Storefront landing page with product discovery and promotional sections. |
-| `/products` | `ShopPage` | Public | Product listing, search, filters, sorting, and product navigation. |
-| `/product/:id` | `ProductDetailPage` | Public | Product media, details, ratings/reviews, review media, wishlist, add-to-cart, and authenticated review editing. The server identifies the customer from the session and permits one create plus subsequent edits per product; the Edit review action appears only for that customer’s existing review. |
-| `/support` | `SupportPage` | Public | Support request form; Resend delivery and request tracking remain roadmap work. |
-| `/track-order` | `TrackOrderPage` | Public | Order tracking entry/status flow. |
-| `/privacy` | `PolicyPage` (`privacy`) | Public | Privacy policy page; final legal copy remains to be reviewed. |
-| `/returns` | `PolicyPage` (`returns`) | Public | Returns policy page; final legal copy remains to be reviewed. |
-| `/refund-policy` | `PolicyPage` (`refund`) | Public | Refund policy page; final legal copy remains to be reviewed. |
-| `/terms` | `PolicyPage` (`terms`) | Public | Terms page; final legal copy remains to be reviewed. |
-| `/terms-and-conditions` | `PolicyPage` (`terms`) | Public | Terms and conditions alias. |
+| / | HomePage | Public | API catalog slices plus locally configured hero/story/sections and newsletter. Full section CMS pending. |
+| /products | ShopPage | Public | Query-backed search/category/sort/color/rating filtering. API returns nextCursor but UI does not load subsequent pages. Rating radios and CSS color swatches remain. |
+| /product/:id | ProductDetailPage | Public; review writes require session | Product/media/review reads, own-review edit pencil, media uploads. Generated fallback reviews remain. Live review ownership/media checks pending. |
+| /support | SupportPage | Public | Email/phone links via mailto/tel. No support ticket form or Resend support submission. |
+| /track-order | TrackOrderPage | Public page; API requires session | Manual tracking query; UI prompts for order number while API expects internal order ID. Error handling/provider integration incomplete. |
+| /privacy | PolicyPage (privacy) | Public | Placeholder asking for approved content. |
+| /returns | PolicyPage (returns) | Public | Placeholder asking for approved content. |
+| /refund-policy | PolicyPage (refund) | Public | Placeholder asking for approved content. |
+| /terms | PolicyPage (terms) | Public | Placeholder asking for approved content. |
+| /terms-and-conditions | PolicyPage (terms) | Public | Terms alias. |
+| /login | AuthPage (login) | Public | Password login by email/mobile identifier. Authenticated visitors render HomePage at this path. |
+| /signup | AuthPage (signup) | Public | Registration with email/mobile selection. OTP/verification/reset customer UI incomplete. |
+| /cart | CartPage | Authenticated | API-backed line items and quantity/removal, query cache updates. |
+| /wishlist | WishlistPage | Authenticated | API IDs/local optimistic state; displays only products present in initial storefront data. |
+| /checkout | PaymentPage | Authenticated | Placeholder totals from first catalog products; informational snackbar on submit, no payment/order creation. |
+| /orders | OrdersPage | Authenticated | Static empty state/count; does not query order history. |
+| /orders/:id | OrderDetailPage | Authenticated | Catalog-derived placeholder items and hardcoded delivered/paid details; does not fetch this order. |
+| /admin | AdminPage | Administrator for page content | Products/categories CRUD subset and operational reads; see tab map below. Unauthorized users get login or access-required content. |
+| /debug-error | DebugErrorPage | Intentional throw only in development | In production renders a development-only notice. |
+| Any unmatched path | HomePage fallback | Public fallback | Includes unknown /admin/* paths. No parent-route redirect/not-found handling yet. |
 
-## Authentication and account pages
+Missing pages include profile/address management, password reset, email verification, support request tracking, AI/tour/help flows, and shipping/cancellation/cookie policy pages. Auth emails reference /reset-password and /verify-email, but those routes are not registered.
 
-On initial load or refresh, the app waits for `/api/auth/me` before mounting navigation and page content. A compact accessible session loader prevents the sign-in form and guest navbar flashing for returning customers, including on `/admin`, `/cart`, `/wishlist`, `/checkout`, `/orders`, and `/orders/:id`. The current URL is retained. Anonymous or failed session checks release the loader and use the existing access rules; login and logout invalidate older checks.
+The navbar includes Orders for authenticated users. Admin visibility currently uses authenticated state plus either admin state or current /admin path; the page/API still apply authorization. Final responsive/role-visibility verification is pending.
 
-| Route | Page component | Access | Current status and scope |
-| --- | --- | --- | --- |
-| `/login` | `AuthPage` (`login`) | Public | Sign-in form and authentication flow. |
-| `/signup` | `AuthPage` (`signup`) | Public | Registration form and authentication flow. |
-| `/cart` | `CartPage` | Authenticated | Cart contents, quantity changes, removal, and checkout navigation. |
-| `/wishlist` | `WishlistPage` | Authenticated | Saved products and wishlist actions. |
-| `/checkout` | `PaymentPage` | Authenticated | Checkout/payment page shell; payment integration remains pending. |
-| `/orders` | `OrdersPage` | Authenticated | Customer order list. |
-| `/orders/:id` | `OrderDetailPage` | Authenticated | Customer order details for the requested order. |
+## Admin tabs
 
-## Administration
+All tabs are component state under /admin, not separate URL routes.
 
-| Route | Page component | Access | Current status and scope |
-| --- | --- | --- | --- |
-| `/admin` | `AdminPage` | Authenticated administrator | Product create/edit, category management, and admin product operations. Additional admin workflows remain in the roadmap. |
+| Tab | Data/behavior |
+| --- | --- |
+| Overview / Analytics | Reads /api/admin/analytics; renders statistics. |
+| Products | Reads products; create/edit, strict category select/add, image/video upload, primary image, colors, stock, archive and immediate list updates. |
+| Orders | Reads orders; status controls use admin update handler. Full fulfillment verification pending. |
+| Payments | Reads payment data; refund handler currently changes database status only, not provider funds. |
+| Returns | Reads returns; complete workflow remains pending. |
+| Customers | Reads customer data/order counts; no full account-management UI. |
+| Messages | Unconnected form; Send message button has no handler. |
+| Settings | Fetches settings; informational panel rather than full settings editor. |
 
-## Development and fallback behavior
+## Server-state coverage
 
-Product media on `/admin` and review attachments on `/product/:id` now pass shared server-side base64, MIME agreement, decoded-size, and signature checks before Blob upload. Invalid media returns `400 VALIDATION_ERROR` through existing snackbar handling; form input is retained. Stored filenames use generated IDs and validated extensions. Live upload/playback verification remains pending.
+| Area | Implemented data boundary | Remaining |
+| --- | --- | --- |
+| Storefront/Home | ['storefront'] plus API categories/products merged with local config | Full catalog facets and independent CMS sections |
+| Shop | ['catalog', filters] | Progressive cursor consumption and robust error states |
+| Product/reviews | ['product', id], ['product-reviews', id], ['my-review', id] | Cached initial product fallback, account-scoped private key, remove generated feedback |
+| Cart/wishlist | ['cart'], ['wishlist'] and direct header/optimistic calls | Explicit user isolation, missing catalog items and cross-tab handling |
+| Orders/detail/checkout | No page API read | Connect actual orders, totals and checkout |
+| Tracking | ['tracking', enteredId] | ID/number mapping, errors and authenticated isolation |
+| Login/signup/session | Mutation/session state and direct /api/auth/me | Verification/reset pages and full session lifecycle tests |
+| Admin | ['admin', section] via fetchQuery, zero stale/gc retention | Functional messages/settings, role/account transition verification |
 
-| Route | Page component | Access | Current status and scope |
-| --- | --- | --- | --- |
-| `/debug-error` | `DebugErrorPage` | Development only | Error-boundary verification route; not a customer-facing page. |
-| Any unlisted route | `HomePage` fallback | Depends on app auth state | The current router falls back to the home page. Unknown-route redirect behavior is tracked in the UI backlog. |
+React Query is the chosen strategy, not RTK. Logout clears the client; not all private keys are user-scoped. No claim of complete migration follows from this map.
 
-## Documentation rule
+## Shared page behavior
 
-When adding, removing, renaming, or materially changing a page or route:
+Action outcomes use [five-second snackbars](NOTIFICATION_GUIDELINES.md). Failed inputs remain; successful product creation resets its form. Product/review uploads use shared byte/MIME/signature validation. Rate-limit errors use translated retry guidance and suppress automatic retries. See [required database rollout](RATE_LIMITING.md) before deploying these write policies.
 
-1. Update this table in the same change.
-2. Update `PROJECT_STATUS.md` when implementation or verification status changes.
-3. Update `APPLICATION_BACKLOG.md` only when the related roadmap acceptance criteria are completed and verified; include evidence in `PROJECT_STATUS.md`.
-4. Keep `AGENTS.md`, `CODEX_INSTRUCTIONS.md`, and `.github/copilot-instructions.md` aligned with these rules.
-
-## Server-state migration map
-
-React Query is the selected server-state approach. Migrate page data one page at a time with a stable query key, explicit stale/cache policy, and documented invalidation behavior. Public catalog data is the first migrated query (`['storefront']`).
-
-| Page area | Data boundary | Cache rule | Migration status |
-| --- | --- | --- | --- |
-| Home, shop, product discovery | Public storefront/catalog | Shared public cache is allowed; invalidate after admin catalog changes when safe. | Storefront and filter-driven product-list queries migrated; product detail follow-up pending. |
-| Product detail and reviews | Public product data plus user review mutations | Cache product/review reads; update the review key after a successful review. | Migrated. |
-| Cart and wishlist | Authenticated customer data | Short-lived user-scoped queries; clear the shared client on logout and synchronize mutation results. | Migrated. |
-| Orders, order detail, tracking, checkout | Authenticated customer/payment data | Tracking uses an explicit order query key; order/checkout pages currently have no additional server read. | Migrated for current reads. |
-| Login/signup/session | Authentication state | Authentication remains mutation/session state; private query cache is cleared on logout. | Migrated for current session behavior. |
-| Admin products, categories, orders, analytics, customers, settings | Authorized administrator data | Admin query keys use zero stale/cache retention; mutation responses update the active admin view. | Migrated for current admin reads. |
+When a route, page, access rule or data boundary changes, update this inventory and [PROJECT_STATUS.md](PROJECT_STATUS.md) in the same change. Update the corresponding backlog status only after its acceptance criteria are implemented and verified.

@@ -1,197 +1,85 @@
-# API Implementation Plan
+# API implementation and remaining plan
 
-## Scope and current baseline
+Reviewed: 2026-09-12. This describes current files and known gaps. [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) owns completion; [PROJECT_STATUS.md](PROJECT_STATUS.md) owns verification evidence.
 
-Build the backend for the existing Vite storefront using Vercel Node.js Functions, Prisma, and the existing Vercel PostgreSQL storage. The UI remains the current customer-facing client; API work will replace the local adapter incrementally.
-
-Current baseline: the UI has Products search/filtering, Cart and Wishlist flows, protected checkout/order routes, Resend newsletter subscription, and i18n scaffolding. API handlers now cover catalog, authentication, email/mobile verification, cart, wishlist, orders, reviews, tracking, Razorpay, and newsletter persistence. The Prisma migration and production frontend integration are still pending.
-
-## Principles
-
-- Keep Prisma, database URLs, payment secrets, and Resend keys server-only.
-- Validate every request at the API boundary.
-- Return stable JSON error shapes that the UI can localize.
-- Store money as integer minor units (for example, paise), never floating-point totals.
-- Calculate prices, discounts, stock, delivery fees, and payment amounts on the server.
-- Treat webhook handlers as idempotent and verify provider signatures.
-- Use database transactions for cart checkout and order creation.
-
-## Proposed structure
+## Current layout
 
 ```text
-api/
-  _lib/
-    db.ts                 Prisma client singleton
-    auth.ts               session and authorization helpers
-    validation.ts         request validation helpers
-    errors.ts             stable API error responses
-    email.ts              Resend client and templates
-    payments.ts           Razorpay integration and verification
-  auth/
-    signup.ts
-    login.ts
-    logout.ts
-    google.ts
-    verify-email.ts
-    mobile-request.ts
-    mobile-verify.ts
-    password-reset-request.ts
-    password-reset.ts
-  products/
-    index.ts
-    [id].ts
-  cart/
-    index.ts
-    items.ts
-  orders/
-    index.ts
-    [id].ts
-  payments/
-    razorpay-order.ts
-    razorpay-verify.ts
-  webhooks/
-    razorpay.ts
-  newsletter/
-    subscribe.ts
+api/[...route].ts          Single Vercel entry point and route dispatcher
+server/api/
+  _lib/                   db, auth, http, email, sms, media, rate-limit, rate-limit-store
+  auth/                   Login/signup/logout/me, verification and reset handlers
+  admin/                  Products, categories, upload and operational handlers
+  products/               Catalog/detail, reviews, own-review, review upload
+  cart/                   Cart reads and mutations
+  wishlist/               Wishlist reads and mutations
+  orders/                 Order create/list/detail/cancel and shipment lookup
+  payments/               Razorpay order and verification
+  webhooks/               Razorpay webhook
+  newsletter/             Subscribe
+  categories.ts           Public categories
+  health.ts               Database connectivity
 prisma/
   schema.prisma
-  migrations/
+  migrations/             Initial schema, categories, rate-limit buckets
+  seed.mjs                Ten default categories
 ```
 
-## Initial Prisma models
+Keep implementation helpers outside root api. Current Vercel configuration rewrites /api/:path* to the catch-all dispatcher and other paths to index.html. Vite alone does not execute these handlers. Runtime setup is documented in [README.md](README.md).
 
-- User and OAuth account
-- Session and email/mobile-verification tokens
-- Address
-- Product, ProductImage, ProductVideo, ProductColor
-- Review and ReviewMedia
-- Cart and CartItem
-- Order and OrderItem
-- Payment
-- Shipment and tracking events
-- Newsletter subscription/audit record
+## Existing endpoint groups
 
-## Delivery sequence
+| URLs under /api | Current behavior and limitations |
+| --- | --- |
+| health; categories; products; products/:id | Connectivity, database categories, active products/detail. Catalog returns pages of up to 24 and nextCursor; UI pagination incomplete. |
+| auth/login, signup, logout, me | Password/session implementation, configured-admin bootstrap; user reports login working. Complete session/security verification pending. |
+| auth/verify-email, mobile-request, mobile-verify, password-reset-request, password-reset | Backend handlers exist; customer verification/reset routes and complete flows missing. |
+| cart; wishlist | Authenticated persistence; optimistic client updates. Concurrency/isolation/storage review pending. |
+| products/:id/reviews; products/:id/reviews/mine; products/:id/review-upload | Public approved reviews and authenticated create/own edit/upload; one review per user/product. Upload byte checks implemented, live verification pending. |
+| orders; orders/:id; orders/:id/tracking | User-scoped list/detail/tracking and create/cancel handlers. Customer order pages are not integrated. Address ownership, inventory concurrency and order rules need review. |
+| payments/razorpay-order; payments/razorpay-verify; webhooks/razorpay | Provider request/signature/status handling exists. Checkout, raw-body verification, idempotency, replay/state ordering, money and refunds require end-to-end verification. |
+| newsletter/subscribe | Persists subscription; optional audience/contact and confirmation email. Uses legacy string errors and some hardcoded branding. |
+| admin/products; admin/products/:id; admin/categories; admin/upload | Product create/edit/archive/stock, category creation and public media uploads. |
+| admin/orders; payments; returns; customers; analytics; messages; settings; audit | Protected handlers. Refund changes DB flags only; audit returns an empty list; messages/settings UI incomplete. |
 
-### Priority 0 — admin operations (first implementation focus)
+There is no Google OAuth handler, support-ticket API, profile/address CRUD API, coupon/referral/cashback API, AI endpoint, policy CMS, or durable notification worker. Do not infer working functionality from a schema model or handler filename.
 
-The Admin Dashboard is the operational source of truth. Complete these APIs and connect the existing `/admin` UI before polishing the remaining customer-facing integrations:
+## Data and configuration
 
-1. Product CRUD, media, categories, pricing, inventory, and publish/archive controls.
-2. Order list/detail views, fulfillment status updates, cancellation, return, and refund workflows.
-3. Payment reconciliation, Razorpay webhook history, COD records, and refund actions.
-4. Customer search/detail, verification status, account actions, and role management.
-5. Customer messaging with Resend delivery status and message history.
-6. Analytics queries for revenue, orders, customers, products, conversion, and inventory risk.
-7. Store settings for branding, shipping, tax, locale, policies, and notification templates.
-8. Admin audit logs, rate limiting, and authorization tests for every admin route.
+Prisma defines users/accounts/sessions/tokens/addresses, categories/products/media/colors, reviews/media, cart/wishlist, orders/items/payments, shipments/events, returns, customer messages, store settings, newsletter subscriptions and rate-limit buckets. Only CUSTOMER and ADMIN roles are currently modeled. Policy version/consent, audit events, notification outbox, coupon/reward and tenant models are future work.
 
-### Phase 1 — foundation (next implementation)
+Application identity/content largely comes from src/config.ts and src/api/storefront.ts. Store settings have a generic admin API but are not a complete business CMS. The seed upserts Clothing, Sports, Home & Kitchen, Furniture, Footwear, Jewelry, Accessories, Watches, Electronics and Toys. It does not seed admin users; matching ADMIN_EMAIL/ADMIN_PASSWORD credentials bootstrap a missing admin at login.
 
-1. Verify the Vercel PostgreSQL connection and Prisma migrations in a safe environment.
-2. Add `prisma/schema.prisma`, generated client, and a serverless-safe `api/_lib/db.ts` singleton.
-3. Add `GET /api/health` with database connectivity status without exposing secrets.
-4. Add shared validation, stable error responses, request IDs, and environment checks.
+## Environment names actually consumed
 
-### Phase 2 — identity and catalog (implemented; migration pending)
+| Server-only setting | Purpose |
+| --- | --- |
+| DATABASE_URL | Prisma connection, sessions and shared rate-limit storage |
+| ADMIN_EMAIL, ADMIN_PASSWORD | Configured admin login/bootstrap |
+| RESEND_API_KEY, RESEND_FROM_EMAIL | Transactional email; verified sender/provider configuration required |
+| RESEND_AUDIENCE_ID | Optional newsletter audience contact synchronization |
+| TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER | Mobile verification transport |
+| RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET | Payment requests/verification and webhook authentication |
+| APP_URL | Base URL in verification/reset email links; destination pages still missing |
+| BLOB_READ_WRITE_TOKEN | Vercel Blob SDK credential for upload access |
+| NODE_ENV, VERCEL, VERCEL_ENV | Runtime cookie/security and proxy-address behavior |
 
-5. Implement signup/login/logout, password hashing, email verification, and protected sessions.
-6. Replace local catalog reads with `GET /api/products` and `GET /api/products/:id`, including server-side search, facets, rating, sorting, and cursor pagination.
+SESSION_SECRET, JWT_SECRET, GOOGLE_CLIENT_ID/SECRET, Stripe keys, support destination settings and AI/map keys are not read by the current application handlers. They must not be presented as fixes for existing session failures or as proof integrations are available. Browser-prefixed variables must contain only intentionally public values; do not copy backend secrets into them.
 
-### Phase 3 — customer commerce (implemented; migration pending)
+## Error, timeout and abuse-control contracts
 
-7. Persist authenticated cart items and quantities; add wishlist read/add/remove endpoints.
-8. Create orders transactionally from the server-owned cart, with server-calculated totals and stock checks.
-9. Add Razorpay order creation, payment verification, webhook reconciliation, COD rules, and idempotency.
+Shared JSON errors generally contain code, safe message and requestId. Namespace-wide validation/localization is incomplete; newsletter and some handlers still have different shapes. Typed client/provider timeout wrappers use 30 seconds by default and 60 seconds for explicit long-running calls. These wrappers do not guarantee a database/function execution deadline.
 
-### Phase 4 — communication and operations (core handlers implemented)
+Public catalog/category/product/review handlers use short public cache headers; authenticated helpers and private handlers use no-store headers. Full response/cache isolation, error caching and per-user query keys still require verification.
 
-10. Add Resend email service for verification, welcome, order, payment, shipping, and newsletter events.
-11. Add reviews/media authorization, shipment status, tracking APIs, audit records, rate limits, and monitoring.
-12. Connect the UI adapter to each verified API, then test preview and production deployments.
+[Rate-limit policies](RATE_LIMITING.md) run in the single dispatcher. 429 responses include RATE_LIMITED, retryAfterSeconds, requestId and Retry-After. Counter failures return RATE_LIMIT_UNAVAILABLE (503). Apply the additive third migration before deploying; no new external counter service or rate-limit secret is required. Session restoration, logout, normal GET reads and payment webhooks are excluded.
 
-## First API milestone checklist
+Product/review uploads accept supported image/video formats after MIME agreement, canonical base64, byte limit and signature checks, storing generated names/extensions. Existing encoded caps remain; provider body limits can be lower. Public Blob upload is not private-media authorization, decoding, malware scanning or moderation.
 
-- [x] Create `prisma/schema.prisma` with User, Session, Product, ProductImage, Cart, CartItem, Wishlist, WishlistItem, Order, OrderItem, Payment, and NewsletterSubscription models.
-- [ ] Configure the Vercel `DATABASE_URL` in the server environment and run the first migration.
-- [x] Add `api/_lib/db.ts` Prisma singleton and `api/health.ts`.
-- [x] Add shared HTTP error/request-id helpers and database-backed `GET /api/products` and `GET /api/products/:id` endpoints.
-- [x] Add password hashing and HttpOnly session-cookie handlers for `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout`, and `GET /api/auth/me`.
-- [x] Add authenticated Cart, Wishlist, Orders, order tracking, product reviews, and Razorpay create/verify handlers.
-- [x] Add admin product, order, customer, analytics, payment/refund, returns, messaging, settings, and audit endpoints.
-- [x] Persist successful newsletter subscriptions in `NewsletterSubscription`.
-- [x] Add email verification, password-reset request/confirm, Razorpay webhook reconciliation, and order cancellation handlers.
-- [x] Add email/mobile verification tabs and mobile OTP endpoints (`/api/auth/mobile-request`, `/api/auth/mobile-verify`).
-- [x] Add admin dashboard foundation with role-protected CRUD, operations, messaging, analytics, payments, returns, and settings sections.
-- [~] Admin-first roadmap recorded above; product, order, customer, payment, messaging, analytics, settings, and audit work should be completed before final storefront handover.
-- [x] Restore sessions with `GET /api/auth/me`, server logout, configured-admin bootstrap on matching credentials, and reusable `requireAdmin()` authorization.
-- [x] Add admin product, order, customer, analytics, payment, returns, messaging, settings, and audit API routes.
-- [x] Connect Admin tabs to live APIs; empty database states are supported until migration and seed data are available.
-- [x] Validate admin product creation against duplicate names with a server-side conflict response.
-- [ ] Confirm the health response in a Vercel preview before implementing auth or payments.
+## Next implementation and verification
 
-The API files can be type-checked locally with `npx tsc -p tsconfig.api.json`. The frontend build remains `npm run build`.
+Prioritize the open security gates, then complete the customer commerce and administration flows already described in REQUIREMENTS.md. In particular, connect real Orders/Order Details/Checkout and tracking identifiers; verify address ownership, stock concurrency, amounts and provider refunds; implement support/customer messaging and durable notifications; complete business settings, policy management, roles and localization.
 
-## API error contract
+Use npm test, npm run lint and npm run build for local verification. The build includes Prisma generation and both type-check targets. The database-specific test and deployment/migration/cleanup order are in RATE_LIMITING.md. Tests/build alone do not establish live provider, authorization, multi-instance, delivery or checkout correctness.
 
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Some fields need attention.",
-    "fields": { "email": "Enter a valid email address." },
-    "requestId": "..."
-  }
-}
-```
-
-Planned codes include `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `PAYMENT_FAILED`, `RATE_LIMITED`, and `INTERNAL_ERROR`.
-
-## Environment variables
-
-Server-only:
-
-```text
-DATABASE_URL
-RESEND_API_KEY
-RESEND_FROM_EMAIL
-RESEND_AUDIENCE_ID
-TWILIO_ACCOUNT_SID
-TWILIO_AUTH_TOKEN
-TWILIO_FROM_NUMBER
-RAZORPAY_KEY_ID
-RAZORPAY_KEY_SECRET
-RAZORPAY_WEBHOOK_SECRET
-APP_URL
-SESSION_SECRET
-GOOGLE_CLIENT_ID
-GOOGLE_CLIENT_SECRET
-```
-
-Browser-safe values should use `VITE_` only when genuinely public, such as a Razorpay key ID needed by the checkout widget. Never expose database, Resend, OAuth secret, or Razorpay secret values.
-
-## Definition of done for API foundation
-
-- Prisma migration applies successfully to the Vercel database.
-- API routes return typed success and error responses.
-- Secrets are configured only in Vercel environment settings.
-- Authentication and authorization are enforced server-side.
-- Payment amounts are generated and verified server-side.
-- Webhooks are signature-verified and idempotent.
-- UI can use the API without changing the customer-facing layout.
-
-## UI integration update ? September 7, 2026
-
-- Cart POST is connected from product detail and listing buttons using productId and quantity; it increments an existing cart item. PATCH retains absolute-quantity semantics. Header counts use successful responses and initial cart loading.
-- Wishlist mutations wait for server confirmation; local storage mirrors successful state instead of acting as a fallback for failed requests.
-- Product review reads select media IDs/URLs, consumed by photo/video lists in both review views. Product load failures and HTTP 404 use separate UI states.
-- Shared notification handling is specified in [NOTIFICATION_GUIDELINES.md](NOTIFICATION_GUIDELINES.md). Action outcomes use snackbars; field validation and blocking load failures retain inline recovery context.
-- Build/type checking passed. Real server/database, authentication, upload/playback, concurrency, quantity-limit, and stopped-server scenarios still need integration verification. Checkout UI is still a placeholder; this update does not establish working payments.
-- Navigation consumes the authenticated session and a protected admin capability check to expose Orders and Admin links consistently. Header authentication controls are kept separate from primary navigation.
-
-The next API work must follow [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md), with security gates completed before feature expansion. Prioritize authorization/data isolation, rate limits and `429` handling, two-minute timeouts, dependency/XSS/network exposure audits, session/storage rules, support email through Resend, request tracking, and payment verification.
-# Page and route inventory
-
-Upload validation follow-up: `POST /api/admin/upload` and `POST /api/products/:id/review-upload` use `server/api/_lib/media.ts` before storage writes. Existing authentication, URLs, public Blob storage, response shapes, and request size caps remain. The shared validator checks canonical base64, matching supported MIME types, decoded byte limits (6,000,000 product / 1,500,000 review), and media signatures. Stored paths use UUIDs and canonical extensions instead of user filenames. Validation failures use the existing `400 VALIDATION_ERROR` contract. Signature checks do not replace full decoding, malware scanning, or content moderation. Provider request body limits can be lower than these application limits.
-
-The API consumers and route owners are listed in [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md). Keep the inventory synchronized when API-backed page behavior changes.
+Page consumers and missing routes are listed in [PAGE_INVENTORY.md](PAGE_INVENTORY.md). Keep this file synchronized when routes, environment usage, data models or response contracts change.

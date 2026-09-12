@@ -1,1 +1,19 @@
-{"home":"होम","products":"उत्पाद","support":"सहायता","signIn":"साइन इन","logOut":"लॉग आउट","wishlist":"विशलिस्ट","cart":"कार्ट","searchProducts":"उत्पाद खोजें","items":"आइटम","backToTop":"ऊपर जाएँ","loading":"स्टोरफ्रंट लोड हो रहा है","loadError":"स्टोरफ्रंट लोड नहीं हो सका","tryAgain":"फिर कोशिश करें","errorTitle":"कुछ गलत हो गया","reloadPage":"पेज फिर लोड करें","backToHome":"होम पर जाएँ"}
+{
+  "home": "होम",
+  "products": "उत्पाद",
+  "support": "सहायता",
+  "signIn": "साइन इन",
+  "logOut": "लॉग आउट",
+  "wishlist": "विशलिस्ट",
+  "cart": "कार्ट",
+  "searchProducts": "उत्पाद खोजें",
+  "items": "आइटम",
+  "backToTop": "ऊपर जाएँ",
+  "loading": "स्टोरफ्रंट लोड हो रहा है",
+  "loadError": "स्टोरफ्रंट लोड नहीं हो सका",
+  "tryAgain": "फिर कोशिश करें",
+  "errorTitle": "कुछ गलत हो गया",
+  "reloadPage": "पेज फिर लोड करें",
+  "backToHome": "होम पर जाएँ",
+  "rateLimited": "बहुत अधिक अनुरोध। कृपया {{seconds}} सेकंड बाद फिर प्रयास करें।"
+}

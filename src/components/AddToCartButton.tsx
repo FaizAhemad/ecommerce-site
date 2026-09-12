@@ -19,7 +19,7 @@ export function AddToCartButton({ productId, onAdd, label, className }: {
       try {
         await onAdd(productId)
       } catch (error) {
-        notify(error instanceof Error ? error.message : 'Unable to add to cart. Please try again.')
+        notify(error instanceof Error ? error : 'Unable to add to cart. Please try again.')
       } finally {
         locked.current = false
         setPending(false)

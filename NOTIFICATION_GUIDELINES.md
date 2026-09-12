@@ -1,6 +1,6 @@
 # Application message guidelines
 
-Use `useNotification()` from `src/components/NotificationProvider.tsx` for action feedback. Call `notify(message)` for errors, or pass `success` or `info` as the second argument. Never notify during render.
+Use `useNotification()` from `src/components/NotificationProvider.tsx` for action feedback. Call `notify(messageOrError)` for errors, or pass `success` or `info` as the second argument. Passing an `ApiRateLimitError` preserves translated retry guidance. Never notify during render.
 
 | Situation | Presentation | Examples |
 | --- | --- | --- |
@@ -13,11 +13,13 @@ Use `useNotification()` from `src/components/NotificationProvider.tsx` for actio
 | Empty content or durable information | Inline content | Empty cart, no results, policy notices, tracking history, selected files, upload instructions |
 | Feature is unavailable | Persistent explanation; informational snackbar if attempted | Checkout integration placeholder; never claim payment or order success |
 
-Snackbars are fixed at the bottom and do not change card layout. They persist until dismissed, queue distinct messages, and deduplicate identical pending notifications. Errors use an assertive live region; success/info use a polite live region. Dismiss controls are keyboard accessible. Notifications survive normal route changes through the shared provider.
+Snackbars are fixed at the bottom and do not change card layout. They auto-dismiss after five seconds, allow manual dismissal, queue distinct messages, and deduplicate identical pending notifications. Errors use an assertive live region; success/info use a polite live region. Dismiss controls are keyboard accessible. Notifications survive normal route changes through the shared provider.
 
 Keep actionable errors specific without exposing server internals. Preserve form values after failures. Do not replace essential form guidance or page content with a notification. Avoid duplicating the same action result inline and in a snackbar.
 
-Navigation controls should remain stable while session state is restored. Orders is shown for authenticated users; Admin is shown only after admin access is confirmed (with `/admin` kept navigable during that state transition). Authentication actions belong in the header action area, not duplicated inside the primary navigation.
+Navigation controls should remain stable while session state is restored. Orders is shown for authenticated users. The current Admin link condition also includes authenticated users already on `/admin`; tighten/verify this behavior as tracked in the backlog. Page and API authorization remain separate. Authentication actions belong in the header action area, not duplicated inside the primary navigation.
+
+Reviewed against the current workspace on 2026-09-12. [PROJECT_STATUS.md](PROJECT_STATUS.md) records evidence; [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) owns completion. These conventions are not a claim that every page has passed live verification.
 
 ## Current coverage
 
@@ -38,3 +40,9 @@ Cart additions immediately include pending quantities in the header count. Write
 # Notification timing
 
 Snackbars automatically dismiss after five seconds (`SNACKBAR_DURATION_MS`), with a manual Dismiss button available for immediate removal. A new notification starts its own timer, and duplicate messages are suppressed while the same notification is already queued.
+
+## Rate-limit and current limitations
+
+Use the shared typed 429 error through `apiFetch` and pass it to `notify` so English/Hindi/Marathi retry guidance is retained. Do not automatically retry limited writes; query defaults skip retries for this error. The five-second snackbar lifetime does not change the server retry interval. See [RATE_LIMITING.md](RATE_LIMITING.md).
+
+These are target conventions as well as current components. Tracking may resolve query errors without entering its catch, Admin upload validation can still become generic feedback, and some load failures render empty data; these gaps remain in the backlog. Support currently uses mailto/tel and has no snackbar-backed submission. Do not report these flows fully verified until tested.

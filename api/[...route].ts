@@ -35,6 +35,12 @@ import reviews from '../server/api/products/[id]/reviews.js'
 import myReview from '../server/api/products/[id]/reviews/mine.js'
 import razorpayWebhook from '../server/api/webhooks/razorpay.js'
 import wishlist from '../server/api/wishlist/index.js'
+import { currentUser } from '../server/api/_lib/auth.js'
+import { enforceRateLimit } from '../server/api/_lib/rate-limit.js'
+import { createRateLimitStore } from '../server/api/_lib/rate-limit-store.js'
+import { db } from '../server/api/_lib/db.js'
+
+const consumeRateLimit = createRateLimitStore(db)
 
 type RequestLike = { method?: string; body?: unknown; query?: Record<string, string | string[] | undefined>; headers?: Record<string, string | string[] | undefined>; url?: string }
 type ResponseLike = { status: (code: number) => ResponseLike; json: (body: unknown) => unknown; setHeader?: (name: string, value: string) => void }
@@ -72,8 +78,14 @@ function findRoute(segments: string[]) {
 }
 
 export default async function handler(request: RequestLike, response: ResponseLike) {
-  const match = findRoute(pathSegments(request))
+  const segments = pathSegments(request)
+  const match = findRoute(segments)
   if (!match) return response.status(404).json({ error: { code: 'NOT_FOUND', message: 'API route not found.' } })
   const headers = request.headers ?? {}
+  if (!(await enforceRateLimit(request, response, segments.join('/'), {
+    consume: consumeRateLimit,
+    userId: async () => (await currentUser(request))?.id,
+    vercel: process.env.VERCEL === '1' && process.env.VERCEL_ENV !== 'development',
+  }))) return
   return await match.handler({ ...request, headers: { ...headers, cookie: headers.cookie ?? headers.Cookie }, query: { ...(request.query ?? {}), ...match.query } }, response)
 }

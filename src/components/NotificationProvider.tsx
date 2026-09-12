@@ -1,16 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import { ApiRateLimitError } from '../api/http'
 
 type Tone = 'error' | 'success' | 'info'
 type Notification = { message: string; tone: Tone }
 export const SNACKBAR_DURATION_MS = 5_000
-const NotificationContext = createContext<(message: string, tone?: Tone) => void>(() => undefined)
+const NotificationContext = createContext<(message: string | Error, tone?: Tone) => void>(() => undefined)
 export const useNotification = () => useContext(NotificationContext)
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation('common')
   const [queue, setQueue] = useState<Notification[]>([])
-  const notify = useCallback((message: string, tone: Tone = 'error') => {
+  const notify = useCallback((input: string | Error, tone: Tone = 'error') => {
+    const message = input instanceof ApiRateLimitError ? t('rateLimited', { seconds: input.retryAfterSeconds }) : input instanceof Error ? input.message : input
     setQueue((current) => current.some((item) => item.message === message && item.tone === tone) ? current : [...current, { message, tone }])
-  }, [])
+  }, [t])
   const notification = queue[0]
   useEffect(() => {
     if (!notification) return

@@ -1,5 +1,5 @@
 import { useNotification } from '../components/NotificationProvider'
-import { apiFetch as fetch } from '../api/http'
+import { apiFetch as fetch, ApiRateLimitError } from '../api/http'
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 
@@ -32,7 +32,7 @@ export function AuthPage({ mode, storefront, onNavigate, onLogin }: Props) {
       setPassword('')
       onLogin(resultBody.user?.role)
       notify(signup ? copy.signupSuccess : copy.loginSuccess, 'success')
-    } catch { notify('Unable to complete authentication. Please try again.') } finally { setSubmitting(false) }
+    } catch (error) { notify(error instanceof ApiRateLimitError ? error : 'Unable to complete authentication. Please try again.') } finally { setSubmitting(false) }
   }
   return <section className="page-section auth-page" aria-labelledby="auth-title">
     <div className="auth-card">

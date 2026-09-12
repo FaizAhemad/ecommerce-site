@@ -57,6 +57,13 @@ model Session {
   @@index([userId])
 }
 
+model RateLimitBucket {
+  key       String   @id
+  count     Int
+  expiresAt DateTime @db.Timestamptz(3)
+  @@index([expiresAt])
+}
+
 model VerificationToken {
   id        String   @id @default(cuid())
   userId    String

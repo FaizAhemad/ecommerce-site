@@ -1,5 +1,22 @@
 # White-label Commerce Platform Requirements
 
+Reviewed: 2026-09-12. This is the desired architecture/product specification, not an implementation checklist. Current source findings and evidence are in [PROJECT_STATUS.md](PROJECT_STATUS.md); completion is tracked only in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md). The original 49-section brief is retained in [requirement.md](requirement.md).
+
+## Implementation alignment
+
+The current app uses React/Vite/TypeScript, one Vercel API dispatcher, Prisma/PostgreSQL, Blob, Resend and Razorpay handler code. It uses a custom History API router and a light-only theme. React Query adoption is partial; private cache isolation and several customer page integrations remain open. Client/provider timeouts are 30 seconds by default with a 60-second long-running override. Shared snackbars auto-dismiss after five seconds.
+
+The backlog now explicitly carries forward configuration/CMS, full localization, catalog pagination, authentic orders/reviews, refunds, delivery, admin operations/audit, notifications, policies/consent, accessibility, CI and release operations. No requirement below is waived by a placeholder page or backend scaffold. Rate-limit implementation requires its database migration and live verification; no CSP is currently deployed by configuration in this repository.
+
+| Requirements area | Implementation tracking |
+| --- | --- |
+| Configuration, branding, home sections, localization | Backlog architecture/commerce carry-forward items |
+| Catalog/media/reviews/cart/orders/payments | Page inventory plus backlog commerce/security items |
+| Delivery, refunds, cancellation, admin permissions/audit | Backlog architecture/commerce carry-forward items |
+| Policies, emails/events, support/customer requests | Backlog UI/features and architecture/commerce items |
+| AI, tours, incentives and medicines | Backlog product features; business/provider decisions required |
+| Security, accessibility, performance, tests/operations | Backlog release gates and architecture/commerce items |
+
 ## Product Direction
 
 The current pending security, feature, and UI requirements are tracked in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md). They supplement this architecture specification and must be reflected in implementation status before release claims are made.
@@ -194,6 +211,6 @@ Implement -> format -> lint -> type check -> test -> build
 - Product images, primary images, and videos
 - Verified payment, email, AI, storage, map, shipping, and tracking providers
 - Domain, production database, storage, environment variables, and monitoring
-# Page and route inventory
+## Page and route inventory
 
 See [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md) for the complete implemented page and route list. Page-level requirements and status changes must update that inventory and `PROJECT_STATUS.md`.

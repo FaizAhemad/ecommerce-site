@@ -1,124 +1,45 @@
-# Implementation Target
+# Implementation target and delivery order
 
-## Target Outcome
+Reviewed: 2026-09-12. Deliver the configurable commerce platform described in [REQUIREMENTS.md](REQUIREMENTS.md). This is a plan; [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) is the single completion checklist and [PROJECT_STATUS.md](PROJECT_STATUS.md) contains evidence.
 
-Deliver a reusable white-label commerce platform rather than a one-off storefront. A second business should be deployable by changing configuration, approved content, products, and infrastructure secrets, not by rewriting business logic.
+## Current baseline
 
-## Current Baseline
+Vite/React/TypeScript UI, Node.js handlers consolidated behind one Vercel function, Prisma/PostgreSQL models/migrations, Blob uploads, Resend helpers and Razorpay handlers are present. Catalog/category reads, login, cart/wishlist mutations and product/review administration have implementations. The theme is light-only Ink and Citron (#28313b / #c7d866).
 
-The active post-stabilization security, feature, and UI backlog is maintained in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md). It is a release-gated plan, not a statement that these capabilities are already complete.
+Backend existence is not end-to-end completion. Customer order/checkout pages remain placeholders, Support opens email/phone links, settings/messages are incomplete, API cursor pagination is not consumed by the shop, and much business content/localization remains hardcoded. See [all pages](PAGE_INVENTORY.md).
 
-The Vite + React + TypeScript frontend currently provides:
+## Delivery sequence
 
-- Centralized starter configuration in `src/config.ts`
-- Configurable business identity, contact details, locale, currency, and feature flags
-- Product grid presentation with local placeholder art
-- Light-only Ink and Citron theme with semantic tokens
-- Responsive header, hero, collection, story, and footer surfaces
-- A local cart-count interaction for UI prototyping
-- Separate Home, Products, and Support routes with reusable components
-- Approved starter palette: Ink and Citron (`#28313b` / `#c7d866`); dark mode is deferred pending a better palette decision
-- Starter catalog families: Accessories, Toys, and Home gadgets, including mop hangers and household organizers
+| Priority | Work | Acceptance before calling it complete |
+| --- | --- | --- |
+| P0 — security rollout | Rate-limit migration, database test, controlled deployment, authentication/refresh, 429/recovery | Working counter storage, normal writes preserved, exceeded limits recover, live evidence recorded |
+| P0 — security review | XSS/CSP, upload safety, customer isolation, cache/session/storage, dependency/network review, penetration test | Scope, findings, fixes and retest evidence; no blanket readiness claim from builds |
+| P1 — truthful commerce | Orders/detail/checkout integration, pagination, wishlist completeness, tracking ID contract | Real account-scoped data, no fabricated order/review claims, full catalog navigation |
+| P1 — payments and operations | Amount/stock/address checks, provider verification/webhooks/idempotency, cancellation/returns/refunds | Verified server calculations and actual provider outcomes, including failure/replay cases |
+| P1 — customer support/account | Profiles, addresses, reset/verification UI, help, Resend tickets/attachments/receipt and request tracking | Owner-scoped records, email delivery and recovery verified |
+| P2 — administration/configuration | CMS identity/branding/contact/locales/shipping/features, policy versions/consent, roles/audit, messages/settings | Appropriate non-secret changes work without source edits; audit and authorization verified |
+| P2 — notifications and UX | Durable localized transactional events, navigation/filter/loading/footer/offline/SEO/accessibility | Consistent UI, retry/recovery, no fake contacts/links or false provider promises |
+| P3 — business roadmap | AI/tour/feedback/referrals/cashback/coupons/purchase discounts; medicines if approved | Eligibility, provider/data contracts, abuse prevention and acceptance tests defined and verified |
+| Release | End-to-end regression, performance, deployment/monitoring/backup/rollback, second-business configuration test | All release gates and required business decisions resolved |
 
-This is a frontend foundation, not a production commerce implementation yet.
+Review the backlog after each bounded implementation. Keep every requirement in scope, but do not invent missing legal, financial or provider decisions to meet a date.
 
-## Delivery Phases
+## Architecture and acceptance
 
-### Phase 1: Frontend foundation
+Business configuration belongs in data/configuration, credentials in environment/infrastructure, commerce logic in reusable source. One deployment/business/database is the current model; complex multi-tenancy is not authorized by the white-label requirement alone.
 
-- Establish light-only design tokens for the approved Ink and Citron palette, with contrast verification.
-- Add typed configuration access instead of scattered business literals.
-- Add i18n infrastructure for `en-US`, `hi-IN`, and `mr-IN`.
-- Build reusable layout, form, button, card, dialog, drawer, snackbar, loading, and empty-state components.
-- Keep the product catalog grid-only and responsive.
-- Add an API-shaped home page section model for heroes, carousels, featured products, promotions, story, service information, and calls to action.
-- Add API-backed catalog filters, progressive infinite loading, and product detail routes.
-- Add accessible metadata, focus handling, keyboard navigation, and no-overlap layout rules.
+Use consistent design-system components, responsive grid-only catalog, accessible controls and loading/empty/error states. Use API-backed progressive catalog loading, independent home sections, product detail URLs and business-provided media.
 
-### Phase 2: Application and data foundation
+Translate customer/admin UI and emails through i18n (English/Hindi/Marathi targets); review business/legal translations. Verify the approved light theme, responsive sizes, contrast, focus and layering. Dark mode remains deferred.
 
-- Choose and document the backend, database, ORM, storage, and migration strategy.
-- Define typed models for business configuration, products, media, users, roles, carts, orders, payments, shipments, tracking events, reviews, policies, notifications, and audit records.
-- Define cursor/page pagination contracts, filter/sort contracts, product detail responses, and home-section responses.
-- Add environment configuration documentation and secret handling.
-- Add request IDs, structured errors, validation, authorization boundaries, and safe API responses.
+Payments, orders, refunds, returns, delivery, tracking, notifications and AI must use authoritative backend data. Do not claim actual refunds from DB status changes, successful payment from placeholders, or genuine reviews from generated examples.
 
-### Phase 3: Customer commerce
+Configuration/feature changes must support a second business without rewriting logic. Policies require approved versioned content and applicable consent tracking. Reliable notification processing needs retries and admin visibility without coupling provider outages to core commerce transactions.
 
-- Implement authentication, account verification, password reset, and customer profile flows.
-- Implement catalog, media, inventory, cart, checkout, payment provider abstraction, webhooks, and order history.
-- Implement configurable cancellation, return, refund, shipping, and delivery workflows.
-- Verify all money and eligibility decisions on the backend.
+## Decisions still required
 
-### Phase 4: Admin and operations
+Business operating jurisdiction/tax, approved policies/age/eligibility, product and medicine scope, shipping areas/charges/provider/GPS capability, payment/refund rules, AI/map/shipping integrations, incentive calculation/stacking and admin permissions remain decisions to confirm. Resend, Blob, Prisma and Razorpay code already exists; the remaining work is configuration, integration and verification, not selecting those technologies again by default.
 
-- Implement role-aware admin navigation and authorization.
-- Add business profile, branding, contact, locale, shipping, feature, policy, and email display configuration screens.
-- Add product and media management, inventory, order operations, returns, refunds, shipments, review moderation, and notification failure visibility.
-- Keep secrets outside normal admin UI.
+For a missing decision, record its impact and the exact question in PROJECT_STATUS.md while continuing independent work. No roadmap item is complete until its specific acceptance criteria and relevant checks pass.
 
-### Phase 5: Policies, email, and AI
-
-- Add versioned and localized policy records and customer-facing pages.
-- Add checkout policy access and versioned consent recording where required.
-- Add domain events and asynchronous notification processing with retries and failure records.
-- Add localized transactional templates for the required account, order, payment, refund, return, and delivery events.
-- Add a configured AI assistant that uses authoritative catalog, order, FAQ, contact, and policy tools and refuses unsupported claims.
-
-### Phase 6: Delivery and integrations
-
-- Add shipment and tracking abstractions.
-- Integrate only verified payment, email, storage, map, AI, and shipping providers.
-- Add live delivery location only after a real courier or delivery-agent requirement is supplied.
-- Keep map rendering behind a `MapProvider` abstraction.
-
-### Phase 7: Verification and release
-
-- Add unit, integration, API, authorization, webhook, event, and end-to-end tests.
-- Test success and failure paths for every capability listed in `REQUIREMENTS.md`.
-- Run formatting, lint, type check, tests, and production build in CI.
-- Verify both themes, all target locales, responsive breakpoints, focus states, and no-overlap behavior.
-- Document deployment, migrations, backups, monitoring, error reporting, and rollback procedures.
-
-## Acceptance Criteria
-
-The target is complete only when:
-
-- A new business can change identity, branding, contact details, products, locales, shipping settings, email display details, policies, and feature flags through configuration/data.
-- A catalog with thousands of products loads progressively from API pagination and can be filtered without loading the entire catalog into the browser.
-- Products and home sections have independent routes/components and render from API responses.
-- Secrets are environment-managed and never shipped to the browser or exposed in ordinary admin UI.
-- The light-only Ink and Citron theme remains legible with business branding applied.
-- Customer and admin UI text is translated through i18n rather than hardcoded.
-- Legal policy pages exist, are versioned, and clearly identify missing business-approved content.
-- Payments, webhooks, order state changes, refunds, returns, delivery, tracking, notifications, and AI use authoritative backend data.
-- Notification failure does not silently lose an event or incorrectly fail an order/payment transaction.
-- Role boundaries, structured errors, request IDs, auditability, and safe provider error handling are present.
-- Automated checks cover core success and failure paths and the production build passes.
-
-## Open Decisions Requiring Business Input
-
-These must not be silently invented:
-
-- Business country, state, tax/GST treatment, and legal jurisdiction
-- Product type, return conditions, refund rules, cancellation cutoff, and eligibility
-- Delivery areas, charges, estimates, courier, and tracking capabilities
-- Payment, email, AI, storage, map, and shipping providers
-- Approved policy text and translated legal content
-- Admin roles and exact permissions
-- Whether live delivery location is needed
-
-Use this format when blocked:
-
-```text
-CLARIFICATION NEEDED
-
-Area: <decision area>
-Question: <specific question>
-Why it matters: <technical or business impact>
-Recommended option: <default proposal>
-Alternatives: <other valid options>
-```
-# Page and route inventory
-
-The current page list and route ownership are documented in [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md). Update that file whenever a page or route changes.
+Update PAGE_INVENTORY.md for route/page changes and the relevant API/notification/operational docs in the same change.

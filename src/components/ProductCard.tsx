@@ -26,7 +26,7 @@ export function ProductCard({ product, currency, addToCartLabel, ratingLabel, re
   const toggleWishlist = async (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation()
     try { await toggleWishlistItem(product.id) }
-    catch (error) { notify(error instanceof Error ? error.message : 'Unable to update your wishlist.') }
+    catch (error) { notify(error instanceof Error ? error : 'Unable to update your wishlist.') }
   }
 
   const primaryImage = product.media.images.find((image) => image.isPrimary)

@@ -116,7 +116,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
       const body = await response.json() as { review?: { id: string; rating: number; body?: string | null; createdAt: string; media?: ReviewMedia[] } }
       if (body.review) { const nextReview = { id: body.review.id, rating: body.review.rating, text: body.review.body ?? '', author: 'You', date: new Date(body.review.createdAt).toLocaleDateString(), media: body.review.media ?? urls.map((url) => ({ id: url, url })) }; queryClient.setQueryData<Array<{ id: string; rating: number; text: string; author: string; date: string; media: ReviewMedia[] }>>(['product-reviews', productId], (current = []) => current.some((item) => item.id === nextReview.id) ? current.map((item) => item.id === nextReview.id ? nextReview : item) : [nextReview, ...current]); queryClient.setQueryData(['my-review', productId], { id: nextReview.id, rating: nextReview.rating, body: nextReview.text }) }
       setReviewFiles([]); if (!editingReviewId) { setReviewComment(''); setReviewRating(5) }; notify(storefront.content.reviews.successLabel, 'success')
-    } catch (error) { notify(error instanceof Error ? error.message : 'Your review could not be saved. Please try again.') } finally { reviewSavingRef.current = false; setReviewSaving(false) }
+    } catch (error) { notify(error instanceof Error ? error : 'Your review could not be saved. Please try again.') } finally { reviewSavingRef.current = false; setReviewSaving(false) }
   }
 
   return <>
@@ -141,5 +141,4 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
     {lightboxIndex !== null && mediaItems[lightboxIndex] && <div className="media-lightbox" role="dialog" aria-modal="true" aria-label="Product media preview" onMouseDown={(event) => { if (event.target === event.currentTarget) setLightboxIndex(null) }}><button className="media-lightbox-close" type="button" onClick={() => setLightboxIndex(null)} aria-label="Close media preview">×</button><button className="media-lightbox-arrow media-lightbox-prev" type="button" onClick={() => setLightboxIndex((lightboxIndex - 1 + mediaItems.length) % mediaItems.length)} aria-label="Previous media">‹</button><div className="media-lightbox-content">{mediaItems[lightboxIndex].type === 'video' ? <video src={mediaItems[lightboxIndex].url} poster={mediaItems[lightboxIndex].posterUrl} controls autoPlay playsInline /> : <img src={mediaItems[lightboxIndex].url} alt={mediaItems[lightboxIndex].alt} />}<p>{lightboxIndex + 1} / {mediaItems.length}</p></div><button className="media-lightbox-arrow media-lightbox-next" type="button" onClick={() => setLightboxIndex((lightboxIndex + 1) % mediaItems.length)} aria-label="Next media">›</button></div>}
   </>
 }
-
 
