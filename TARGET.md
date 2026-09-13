@@ -10,6 +10,8 @@ Backend existence is not end-to-end completion. Customer order/checkout pages re
 
 ## Delivery sequence
 
+Follow the detailed findings and acceptance matrix in [ARCHITECTURE_UI_UX_AUDIT.md](ARCHITECTURE_UI_UX_AUDIT.md): secure account/data boundaries first, repair shared API action feedback, establish shared layout primitives, then migrate and verify every page. Keep the existing stack; no wholesale framework rewrite is required for this work.
+
 | Priority | Work | Acceptance before calling it complete |
 | --- | --- | --- |
 | P0 — security rollout | Rate-limit migration, database test, controlled deployment, authentication/refresh, 429/recovery | Working counter storage, normal writes preserved, exceeded limits recover, live evidence recorded |
@@ -26,9 +28,13 @@ Review the backlog after each bounded implementation. Keep every requirement in 
 
 ## Architecture and acceptance
 
+The source formatting baseline is implemented (PROJECT_STATUS E10). Keep it enforced with npm run format:check while refactoring components, types and shared state in bounded changes. Existing React warnings and structural cleanup remain open alongside the security/UI roadmap.
+
 Business configuration belongs in data/configuration, credentials in environment/infrastructure, commerce logic in reusable source. One deployment/business/database is the current model; complex multi-tenancy is not authorized by the white-label requirement alone.
 
 Use consistent design-system components, responsive grid-only catalog, accessible controls and loading/empty/error states. Use API-backed progressive catalog loading, independent home sections, product detail URLs and business-provided media.
+
+Mobile is the primary customer platform. Implement and verify phone layouts and touch/keyboard/slow-network interactions before tablet/desktop refinements, using the audit's mobile matrix. Prioritize responsive remediation as P1 after P0 security foundations. Include real Android Chrome/iOS Safari evidence where available; document missing-device verification.
 
 Translate customer/admin UI and emails through i18n (English/Hindi/Marathi targets); review business/legal translations. Verify the approved light theme, responsive sizes, contrast, focus and layering. Dark mode remains deferred.
 
@@ -43,3 +49,9 @@ Business operating jurisdiction/tax, approved policies/age/eligibility, product 
 For a missing decision, record its impact and the exact question in PROJECT_STATUS.md while continuing independent work. No roadmap item is complete until its specific acceptance criteria and relevant checks pass.
 
 Update PAGE_INVENTORY.md for route/page changes and the relevant API/notification/operational docs in the same change.
+
+Implementation update E11/E12: address ownership, account/session-scoped caches, guarded logout/stale responses, shared optimistic cart state, catalog/tracking/admin feedback and shared mobile PageContainer foundations are implemented with bounded regression evidence. The configured database has no pending migrations and live temporary-table rate-limit SQL passes. Local Vercel routing/module transport is repaired. These do not complete the remaining security, provider, Orders/Checkout/Support integration or real-device/browser acceptance requirements. PROJECT_STATUS.md supplies current evidence; APPLICATION_BACKLOG.md remains the only completion checklist. Playwright installation remains deferred.
+
+E13 implements the inventory-integrity task: serializable order/cart/stock changes, conditional stock reservation, one-time customer/admin cancellation restock and protection against reopening closed orders through admin edits or late capture callbacks. No automatic retries or provider refunds are implied. Production concurrency/payment acceptance remains with the owner. Codex continues requirements/backlog implementation using offline checks and synchronized documentation, without .env inspection or live environment checks.
+
+E14 implements central CSRF proof for current browser writes, including guest auth forms, with session-scoped in-memory tokens, source checks and a narrow signed-webhook exception. This is offline-verified scope, not production security certification. New page actions must use apiFetch; future handlers must preserve authorization and avoid state-changing GETs. See [CSRF_PROTECTION.md](CSRF_PROTECTION.md); remaining requirements and owner acceptance stay in APPLICATION_BACKLOG.

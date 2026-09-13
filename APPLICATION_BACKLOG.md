@@ -6,15 +6,29 @@ Reviewed against the current workspace on 2026-09-12. This is the single complet
 
 Completion convention: `- [ ]` means pending, partial, blocked or awaiting required verification; `- [x] ✅` means the stated scope is implemented and verified, with evidence in [PROJECT_STATUS.md](PROJECT_STATUS.md). A code implementation or build alone does not complete a live integration. Preserve unverified work and business dependencies. Evidence IDs below refer to that status document.
 
+## Current task: CSRF protection (E14)
+
+Owner: Codex for offline implementation; product owner for production acceptance. See [CSRF_PROTECTION.md](CSRF_PROTECTION.md) for the shared API contract and rollout.
+
+- [x] ✅ Implement central CSRF bootstrap/token validation, session-scoped client handling and exact signed-webhook exception; 75 offline tests pass including existing regressions and E14 security cases. Evidence: PROJECT_STATUS E14.
+- [ ] Product owner: validate E14 on production/preview hosts and mobile browsers, including login/logout, existing write flows, expired sessions, cross-tab behavior and provider callbacks. Deploy frontend/server together and refresh old tabs.
+
+## Previous task: order inventory integrity (E13)
+
+Owner: Codex for implementation and offline regression evidence; product owner for production validation. Scope: atomic stock reservation/cart consumption, one-time customer/admin cancellation restock, terminal-order protection and late-payment order-state guards. No new migration or provider refund implementation is included. Broader requirements remain in this backlog; validation tasks must not block unrelated implementation work.
+
+- [x] ✅ Implement and test E13 order inventory integrity with serializable transactions, conditional updates and rollback; default suite now passes 56 tests. Offline client/API compilation and formatting pass; three pre-existing lint warnings remain.
+- [ ] Product owner: validate E13 against production with controlled test orders, competing checkout/cancellation requests and delayed payment events. Real database concurrency and provider behavior are not established by the synthetic transaction tests.
+
 ## Release gates: security and resilience
 
 These must be addressed before calling the application stable or production-ready:
 
-- [ ] Complete the React Query server-state strategy across required page reads, private user-scoped cache keys, invalidation, stale data, optimistic rollback and deduplication. React Query is adopted for many reads; App/session/header reads remain direct effects, private keys omit user IDs, and Orders/Order Details/Checkout have no integrated page reads. Earlier full-migration completion was overstated (E7).
-- [ ] Complete and verify safe caching at API/client layers. Public/private headers and logout cache clearing exist; account-switch isolation, private key scoping and error caching remain unverified (E7).
+- [ ] Complete the React Query server-state strategy across required page reads, private user-scoped cache keys, invalidation, stale data, optimistic rollback and deduplication. React Query is adopted for many reads; session/wishlist restoration remains guarded effects; E11 scopes private keys and shares header/cart reads, and Orders/Order Details/Checkout have no integrated page reads. Earlier full-migration completion was overstated (E7).
+- [ ] Complete and verify safe caching at API/client layers. Public/private headers and logout cache clearing exist; E11 adds private scoping, delayed-response guards and no-store errors; live account-switch/browser acceptance remains unverified (E7).
 - [x] ✅ Prior production dependency-audit remediation: earlier recorded `npm audit --omit=dev` reported 0 vulnerabilities after aligning Prisma packages at 6.12.0 (historical evidence E6). A fresh release audit is tracked separately below.
 - [ ] Complete user-input/rendered-content XSS review. HTTP(S) URL filtering and upload signature/MIME/base64/size checks exist. Current CSP is absent, including report-only mode; controlled CSP, external media, full content validation and live verification remain (E1, E7).
-- [ ] Add authentication-aware rate limits to login, signup, password reset, review, upload, support, coupon, and admin endpoints. PostgreSQL counters and dispatcher policies are implemented for existing writes; migration, live database/host verification and future support/coupon endpoints remain pending. See `RATE_LIMITING.md`.
+- [ ] Add authentication-aware rate limits to login, signup, password reset, review, upload, support, coupon, and admin endpoints. PostgreSQL counters and dispatcher policies are implemented for existing writes; E11 verifies migration status and live temporary-table SQL; production-host/browser checks and future support/coupon endpoints remain pending. See `RATE_LIMITING.md`.
 - [ ] Handle too many requests with consistent `429` responses, retry guidance, request IDs, and snackbar/UI feedback. Structured 429s, typed client errors, translated snackbars and no automatic 429 retries are implemented and covered by automated tests; live browser acceptance remains pending.
 - [ ] Perform a penetration test and document scope, findings, remediation, and retest evidence.
 - [ ] Ensure customer data is scoped server-side to the authenticated customer or authorized admin. Do not share customer records through catalog, logs, browser storage, or broad API responses.
@@ -25,9 +39,10 @@ Additional release checks:
 
 - [ ] Re-run dependency/security checks against the release lockfile and record the result; historical audits do not certify a new release.
 - [ ] Verify database/function execution budgets, client cancellation, retry/idempotency and ambiguous outcomes end to end.
-- [ ] Apply and verify the rate-limit migration, test live SQL/concurrency and host 429 recovery, and schedule expired-counter cleanup.
+- [ ] E11 verifies no pending migrations and passing live temporary-table SQL. Finish production-host/browser concurrency/429 recovery acceptance and schedule expired-counter cleanup.
 - [ ] Standardize remaining API error shapes and localized recovery; newsletter still returns legacy string errors.
-- [ ] Review CSRF protection, signup/verification/account enumeration, order-address ownership, inventory concurrency and payment/webhook replay/state transitions.
+- [ ] Review CSRF protection, signup/verification/account enumeration, remaining ownership/CSRF and payment/webhook replay/state-transition gaps; E13 adds stock/cancellation concurrency guards with production acceptance still pending.
+- [ ] Remediate and verify source-audit findings SEC-01 through SEC-06 in ARCHITECTURE_UI_UX_AUDIT.md against the security gates above; E11 repairs order-address validation, account/session scoping and error caching; retain full browser/customer-isolation and remaining security verification. These are detailed findings within the existing gates, not separate security completion claims.
 
 ## Product features
 
@@ -44,27 +59,32 @@ Additional release checks:
 
 ## UI, routing, content, and operations
 
+- [ ] P1 mobile-first: apply the shared layout/token/component standard in ARCHITECTURE_UI_UX_AUDIT.md across every route and admin tab. Most customers use phones; verify phone layouts first, then tablet/desktop. Include width variants, gutters/spacing, readable typography, touch targets, accessible mobile navigation/filters, keyboard/safe-area behavior, reduced motion and overlay clearance. Record real Android Chrome/iOS Safari and slow-network evidence or explicit device blockers using the documented matrix.
+- [ ] Repair the audited action/read-state gaps (UX-01 through UX-08): shared header/page queries, cart quantity feedback and conflict locks, tracking pending/errors, admin load errors/upload progress, search debounce/cancellation, authentic content and no unused form fields. Preserve inputs and verify slow/error/duplicate-click behavior.
+
 - [ ] Unknown routes such as `/admin/abc` should resolve to the relevant parent route (`/admin`) or a deliberate not-found route, consistently across client and server navigation.
 - [ ] Replace the rating filter’s radio controls with checkboxes where multiple ratings can be selected.
 - [ ] Show color filters as checkboxes with visible color swatches and hexadecimal values.
 - [ ] Verify Orders navigation for authenticated users across responsive layouts. The link exists in SiteLayout; live acceptance pending.
-- [ ] Verify and tighten Admin navigation visibility with a route back to the dashboard. The current link also appears for authenticated users already on /admin; content/API access is separately guarded.
+- [ ] Verify and tighten Admin navigation visibility with a route back to the dashboard. E11 removes the current-route fallback; the link requires verified ADMIN role and content/API access remains separately guarded.
 - [ ] Add and verify configured social links in header/footer/rail placements.
 - [ ] Support messages must send through Resend to an environment-configured support address; never hard-code or expose the address in the client.
 - [ ] When a support request is created, email the customer a confirmation that the ticket was received and will be handled promptly.
 - [ ] Add a customer request page showing ticket status, resolution, cancellation, reasons, timestamps, and support responses.
 - [ ] Update privacy, returns, refunds, terms, age language, and other policies for the actual ecommerce operation; obtain approved legal copy before publishing.
-- [ ] Define session and local-storage behavior, expiry, logout clearing, cross-tab synchronization, and what data is safe to persist.
+- [ ] Verify E11 session behavior in browsers: account/generation isolation, 401 expiry, awaited logout, BroadcastChannel invalidation and visibility recheck. Wishlist stays in memory; no customer payloads or credentials are persisted.
 - [ ] Complete payment integration, server-side amount verification, webhooks, idempotency, failure states, refunds, and reconciliation.
 - [ ] Remove hard-coded brand/product images and use configured or database-backed media with safe fallbacks.
 - [ ] Review and replace unclear, placeholder, or inconsistent wording across the application.
 - [ ] Remove the customer-care phone number until a real number is configured; do not show a placeholder number.
-- [ ] Replace oversized product-detail loading text with a compact accessible loading indicator and stable layout.
+- [ ] Verify E11 compact product-detail loading indicator and stable layout on phones and assistive technology.
 - [ ] Keep support submission in-app through the Resend API; do not open Outlook or another mail client. Support uploads must be validated and attached safely.
 - [ ] Show an offline state immediately when connectivity is lost and a clear online notification when connectivity returns. Avoid losing unsaved form data.
 - [ ] Add SEO metadata, canonical URLs, sitemap/robots behavior, structured product data, social previews, and crawl-safe route handling.
 
 ## Architecture and commerce requirements carried forward
+
+- [ ] Complete structural code cleanup after the formatting baseline: focused page/domain components and hooks, typed API contracts instead of loose any, removal of duplicate/obsolete CSS and state, and resolution of existing React warnings with relevant regression evidence. Follow the security-first audit; do not combine behavior changes with broad mechanical rewrites.
 
 These requirements from REQUIREMENTS.md and the original brief remain in scope alongside the product-owner list above:
 
@@ -74,7 +94,7 @@ These requirements from REQUIREMENTS.md and the original brief remain in scope a
 - [ ] Fetch real Orders/Order Details data and use actual cart totals in Checkout; remove hardcoded delivered/paid dates and catalog-derived placeholder orders.
 - [ ] Wishlist page deferred by user request: navigation is hidden and /wishlist redirects to /products. Reconsider the page later; before restoring it, render saved products outside the initial catalog and verify empty/error/account-switch states. Product heart actions remain available.
 - [ ] Complete password-reset/email-verification customer routes and profile/address workflows using the existing backend where appropriate.
-- [ ] Define verified-purchase/moderation eligibility and remove generated fallback reviews before presenting authentic customer feedback.
+- [ ] Define verified-purchase/moderation eligibility. E11 removes generated fallback reviews; verify live customer review/error/empty states.
 - [ ] Integrate actual provider refunds and complete configurable cancellation/returns/refund workflows, amounts, idempotency and auditability.
 - [ ] Finish shipment/tracking integration and resolve the order-number versus internal-ID mismatch; add a configurable map/GPS provider only after confirmation.
 - [ ] Connect admin Messages and Settings forms, complete customer/fulfillment/return operations and add real audit event persistence.
@@ -82,12 +102,21 @@ These requirements from REQUIREMENTS.md and the original brief remain in scope a
 - [ ] Implement durable localized transactional notification events, retries and admin failure visibility for the required account/order/payment/refund/delivery lifecycle.
 - [ ] Add versioned localized policy/CMS storage, publication/approval and consent versions where applicable; provide missing cancellation/shipping/cookie pages as required.
 - [ ] Verify shared design-system accessibility, keyboard/focus, light-theme contrast, responsive layout and overlay layering across all pages.
-- [ ] Add end-to-end success/failure, authorization, provider, performance and release regression tests; repair/re-enable the legacy wishlist test before claiming current coverage.
+- [ ] Add end-to-end success/failure, authorization, provider, performance and release regression tests; E11 repairs/re-enables the legacy wishlist regressions; full end-to-end coverage remains pending.
 - [ ] Establish CI, monitoring, backup/restore, migration, deployment and rollback procedures with evidence.
 
 ## Verified bounded milestones
 
 These do not complete the broader release gates:
+
+- [x] ✅ Order-address POST ownership validation, private cache generation guards, no-store errors and cart optimistic coordination pass synthetic regression tests; 38 tests in the default suite (E11). Live customer/browser acceptance remains pending.
+- [x] ✅ Configured database migration status verified (three migrations, none pending) and live temporary-table rate-limit SQL checks pass after correcting environment initialization order (E11). This is point-in-time: subsequent .env edits removed DATABASE_URL and recovery verification is blocked until restored; it does not certify another database or production host.
+- [x] ✅ Vercel local route/module/API transport regression repaired and verified on port 3100 (E12); production deployment and rendered browser checks remain pending.
+
+
+- [x] ✅ Source formatting baseline and repeatable format/format:check workflow established with pinned Prettier and editor settings (E10). Formatting/debug checks, 20 tests and build/types pass; lint retains eight existing warnings. Structural refactoring remains pending.
+
+- [x] ✅ Consolidated architecture/security/UI source audit and shared design standard recorded in ARCHITECTURE_UI_UX_AUDIT.md; Codex/Copilot workflow aligned (E9). Remediation and rendered/browser acceptance remain pending.
 
 - [x] ✅ Existing login works on the user's deployment, as explicitly reported by the user (E4); new loader and rate-limit rollout remain separate.
 - [x] ✅ Automated upload-validator regression scope passes for supported signatures, spoofed content, encoding/type mismatches and size boundaries (E1); live upload and broader XSS remain pending.

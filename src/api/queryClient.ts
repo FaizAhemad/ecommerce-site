@@ -1,9 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
-import { ApiRateLimitError } from './http'
+import { ApiRateLimitError } from './http.ts'
 
-// The shared cache is currently limited to public catalog/configuration data.
-// Private cart, order, payment, wishlist, and admin queries must remain
-// user-scoped before they are added here.
+// Private resources use privateKey(account, session generation, resource).
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

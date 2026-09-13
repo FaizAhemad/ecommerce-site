@@ -17,7 +17,7 @@ Snackbars are fixed at the bottom and do not change card layout. They auto-dismi
 
 Keep actionable errors specific without exposing server internals. Preserve form values after failures. Do not replace essential form guidance or page content with a notification. Avoid duplicating the same action result inline and in a snackbar.
 
-Navigation controls should remain stable while session state is restored. Orders is shown for authenticated users. The current Admin link condition also includes authenticated users already on `/admin`; tighten/verify this behavior as tracked in the backlog. Page and API authorization remain separate. Authentication actions belong in the header action area, not duplicated inside the primary navigation.
+Navigation controls should remain stable while session state is restored. Orders is shown for authenticated users. The Admin link requires verified ADMIN role; responsive/live acceptance remains tracked. Page and API authorization remain separate. Authentication actions belong in the header action area, not duplicated inside the primary navigation.
 
 Reviewed against the current workspace on 2026-09-12. [PROJECT_STATUS.md](PROJECT_STATUS.md) records evidence; [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) owns completion. These conventions are not a claim that every page has passed live verification.
 
@@ -36,8 +36,15 @@ Cart add/update and wishlist failures; authentication outcomes; newsletter outco
 
 ## Optimistic cart and wishlist updates
 
-Cart additions immediately include pending quantities in the header count. Writes are serialized, duplicate additions for the same product are blocked while pending, successful responses establish the confirmed count, and failures remove only their pending increment. A final read reconciles the count; stale reads are ignored. Wishlist toggles publish immediately to shared local state, lock the affected product across cards, and roll back only that product on failure. Version checks prevent background reads overwriting newer changes; session resets invalidate late wishlist rollbacks. Button pending indicators remain until saving settles. Payments and order placement must still wait for server confirmation.
+Use the consolidated [action-state contract](ARCHITECTURE_UI_UX_AUDIT.md). E11 shares cart/header state and updates affected quantities/counts/estimated totals optimistically, with per-product locks, affected-row rollback and final reconciliation. Unrelated cart rows remain usable; checkout is unavailable while cart changes are unresolved. Duplicate submissions are guarded synchronously. Wishlist hearts stay in memory, with version/epoch protection against stale reads and rollbacks.
+
+Tracking now shows pending feedback and explicitly handles failed lookups. Admin reads display loading/error/retry; sequential uploads report file/stage progress and reuse completed uploads on retry. Login/signup/logout show guarded pending states; logout changes session only after server confirmation and shows a retry snackbar on failure. Failed form inputs remain. Session-probe failures use persistent retry UI rather than reporting a confirmed logout.
+
+Snackbars survive ordinary route changes; account/session-generation changes remount the notification/route subtree so messages and copied private state from the prior account do not carry across. Payments/orders/refunds must still await authoritative server/provider outcomes. Live mobile/keyboard/error acceptance remains pending.
+
 # Notification timing
+
+Mobile acceptance: snackbar text and Dismiss must remain readable/reachable at 320–430px, with safe-area insets, software keyboard and any sticky action bar. Reserve space or reposition overlays so notifications do not cover payment/form controls. Keep five-second dismissal and persistent page/field recovery where the user still needs information after the snackbar closes. Verify touch and screen reader behavior.
 
 Snackbars automatically dismiss after five seconds (`SNACKBAR_DURATION_MS`), with a manual Dismiss button available for immediate removal. A new notification starts its own timer, and duplicate messages are suppressed while the same notification is already queued.
 
@@ -45,4 +52,8 @@ Snackbars automatically dismiss after five seconds (`SNACKBAR_DURATION_MS`), wit
 
 Use the shared typed 429 error through `apiFetch` and pass it to `notify` so English/Hindi/Marathi retry guidance is retained. Do not automatically retry limited writes; query defaults skip retries for this error. The five-second snackbar lifetime does not change the server retry interval. See [RATE_LIMITING.md](RATE_LIMITING.md).
 
-These are target conventions as well as current components. Tracking may resolve query errors without entering its catch, Admin upload validation can still become generic feedback, and some load failures render empty data; these gaps remain in the backlog. Support currently uses mailto/tel and has no snackbar-backed submission. Do not report these flows fully verified until tested.
+These are target conventions as well as current components. E11 fixes tracking error handling, admin load states and catalog failures. Provider/email outcomes, remaining admin operations and full rendered regression coverage remain in the backlog. Support currently uses mailto/tel and has no snackbar-backed submission. Do not report these flows fully verified until tested.
+
+E13 commerce conflicts: order/cart serialization conflicts return 409 with refresh guidance, never optimistic purchase success or automatic write replay. Admin status selectors retain confirmed values after errors and reconcile only after a successful response. Repeated cancellation of an already-cancelled order does not restore stock again. Payment capture acknowledgement must not imply cancellation was reversed or funds refunded. The product owner validates these behaviors in production.
+
+E14 CSRF failures return 403 CSRF_INVALID with refresh guidance. Bootstrap failures use a safe preparation error; no mutation is sent. Existing page error/snackbar handling and five-second dismissal remain, including generic action-specific text where pages already use it. A 403 does not expire the session; the next explicit attempt fetches fresh proof. Preserve failed drafts and rollback optimistic cart/hearts. Never automatically replay a failed/ambiguous write. Old deployed tabs require refresh; production notification acceptance belongs to the owner. See [CSRF_PROTECTION.md](CSRF_PROTECTION.md).

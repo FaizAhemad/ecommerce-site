@@ -1,6 +1,6 @@
 # Request limits and deployment
 
-Reviewed against current implementation on 2026-09-12. [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) owns completion; [PROJECT_STATUS.md](PROJECT_STATUS.md) records evidence. All 20 default automated tests pass, but live PostgreSQL/host verification remains pending. The new migration has not been applied by this agent, and no cleanup schedule was installed. Do not treat this document as a deployment confirmation.
+Reviewed against current implementation on 2026-09-12. [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) owns completion; [PROJECT_STATUS.md](PROJECT_STATUS.md) records evidence. All 38 default automated tests pass. E11 records passing live PostgreSQL temporary-table checks and migrate deploy with three migrations/no pending work: the database already had the counter migration. Production-host/browser acceptance remains pending and no cleanup schedule was installed. Do not treat this document as a deployment confirmation.
 
 The consolidated API dispatcher applies PostgreSQL-backed limits before write handlers run. Each scope has a fixed window starting with its first request. Attempts beyond the limit do not extend that window. Conflicting counter updates use an atomic PostgreSQL upsert and database time, so separate Vercel instances share the same limit.
 
@@ -41,3 +41,11 @@ The shared client throws `ApiRateLimitError` on 429; writes are never automatica
 `npm test` includes deterministic policy, expiry, user/IP isolation, forged-cookie, outage, proxy-address, and client retry tests. Shared-store tests use an injected in-memory test double; they do not prove live PostgreSQL concurrency. `npm run test:rate-limits:db` exercises the real SQL on a temporary table. Live multi-instance behavior and browser checks are separate rollout acceptance criteria.
 
 Design references: [Vercel request headers](https://vercel.com/docs/headers/request-headers) and [PostgreSQL atomic INSERT/ON CONFLICT](https://www.postgresql.org/docs/18/sql-insert.html).
+
+E11 local SQL evidence: network-enabled test passes increments, saturation, isolated buckets, expiry and recovery without changing application records. Local Vercel startup/health/API routing passes in E12. These checks do not certify a different deployment database or real customer sign-in flow.
+
+Latest environment caveat: after the passing checks, Vercel observed .env edits and DATABASE_URL was absent. The latest SQL retest returns P1012 and health returns 503. The local limiter returned 429 with Retry-After after ten validation-only login attempts before that change; expiry recovery is unverified because subsequent requests correctly fail closed with 503 RATE_LIMIT_UNAVAILABLE. Restore local configuration and rerun SQL/health/recovery; do not interpret the earlier passing result as current availability.
+
+Current workflow: the owner now validates in production and has instructed Codex not to inspect .env or run live checks. Keep the rollout commands above as owner reference; do not run them automatically during backlog implementation. E13 does not change limiter policies or migrations. Database/host evidence from E11/E12 remains historical; further production acceptance awaits owner evidence.
+
+E14 runs CSRF validation before rate-limit counters and handlers for unsafe browser requests. Valid requests retain existing quota policies and typed 429 handling. The private GET /api/auth/csrf bootstrap has no database access or rate-limit counter; it requires a non-simple header and source checks. The exact signed Razorpay webhook exception is unchanged. See [CSRF_PROTECTION.md](CSRF_PROTECTION.md) for the new request contract.

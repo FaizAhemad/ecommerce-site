@@ -8,7 +8,13 @@ export const appConfig = {
   contact: {
     supportEmail: 'support@gadgify.com',
     phone: '+1 (000) 000-0000',
-    social: { instagram: 'https://instagram.com', youtube: 'https://youtube.com', whatsapp: 'https://wa.me/10000000000', twitter: 'https://twitter.com', facebook: 'https://facebook.com' },
+    social: {
+      instagram: 'https://instagram.com',
+      youtube: 'https://youtube.com',
+      whatsapp: 'https://wa.me/10000000000',
+      twitter: 'https://twitter.com',
+      facebook: 'https://facebook.com',
+    },
   },
   localization: {
     locale: 'en-IN',
@@ -50,7 +56,18 @@ const starterProducts = [
     reviewCount: 124,
     tone: 'sage',
     badge: 'Best seller',
-    media: { images: [{ id: 'accessory-01-main', url: heroArt, alt: 'Everyday Canvas Tote', isPrimary: true }, { id: 'accessory-01-detail', url: heroArt, alt: 'Everyday Canvas Tote detail', isPrimary: false }], videos: [] },
+    media: {
+      images: [
+        { id: 'accessory-01-main', url: heroArt, alt: 'Everyday Canvas Tote', isPrimary: true },
+        {
+          id: 'accessory-01-detail',
+          url: heroArt,
+          alt: 'Everyday Canvas Tote detail',
+          isPrimary: false,
+        },
+      ],
+      videos: [],
+    },
   },
   {
     id: 'accessory-02',

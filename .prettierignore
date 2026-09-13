@@ -1,0 +1,16 @@
+# Dependencies, generated output, private/local configuration and archived docs.
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.git/
+.vercel/
+.codex/
+.env*
+*.local
+package-lock.json
+*.tsbuildinfo
+docs/history/
+requirement.md
+src/assets/
+prisma/migrations/

@@ -18,7 +18,11 @@ void i18n.use(initReactI18next).init({
   fallbackLng: 'en',
   supportedLngs: ['en', 'hi', 'mr'],
   interpolation: { escapeValue: false },
-  resources: { en: { common, cart, products, wishlist }, hi: { common: hiCommon, cart: hiCart, products: hiProducts, wishlist: hiWishlist }, mr: { common: mrCommon, cart: mrCart, products: mrProducts, wishlist: mrWishlist } },
+  resources: {
+    en: { common, cart, products, wishlist },
+    hi: { common: hiCommon, cart: hiCart, products: hiProducts, wishlist: hiWishlist },
+    mr: { common: mrCommon, cart: mrCart, products: mrProducts, wishlist: mrWishlist },
+  },
 })
 
 export default i18n

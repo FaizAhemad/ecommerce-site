@@ -4,6 +4,8 @@ Reviewed: 2026-09-12. This is the desired architecture/product specification, no
 
 ## Implementation alignment
 
+The shared layout, spacing, typography, colors, action states and security-first remediation standard are consolidated in [ARCHITECTURE_UI_UX_AUDIT.md](ARCHITECTURE_UI_UX_AUDIT.md). Apply one layout with deliberate width variants across all pages. These are target requirements; the audit does not establish completed UI or security remediation.
+
 The wishlist page is deferred by user request. Hide its navigation entry and redirect /wishlist to /products until reconsidered; saved-item APIs and product heart actions remain available.
 
 The current app uses React/Vite/TypeScript, one Vercel API dispatcher, Prisma/PostgreSQL, Blob, Resend and Razorpay handler code. It uses a custom History API router and a light-only theme. React Query adoption is partial; private cache isolation and several customer page integrations remain open. Client/provider timeouts are 30 seconds by default with a 60-second long-running override. Shared snackbars auto-dismiss after five seconds.
@@ -180,6 +182,8 @@ Support a permission model that can evolve beyond one unrestricted admin. Candid
 
 ## Reliability, UX, and Security
 
+Most customers use mobile, as confirmed by the owner. Design phone layouts first and enhance the same shared components for tablet/desktop. Every page needs mobile touch, software-keyboard, safe-area, orientation, accessibility and slow/offline-network acceptance. Follow the mobile-first matrix in [ARCHITECTURE_UI_UX_AUDIT.md](ARCHITECTURE_UI_UX_AUDIT.md); desktop checks alone cannot complete responsiveness. Security and customer isolation remain prerequisites.
+
 - Use centralized structured errors with error code, safe localized message, request ID, and optional validation details.
 - Never expose stack traces, SQL exceptions, provider exceptions, secrets, or internal implementation details.
 - Prevent visual overlap with a centralized layering system and responsive layout constraints.
@@ -189,6 +193,8 @@ Support a permission model that can evolve beyond one unrestricted admin. Candid
 - Do not invent business rules when requirements affect money, legal rights, delivery promises, or eligibility. Raise a `CLARIFICATION NEEDED` decision instead.
 
 ## Verification Requirements
+
+Keep source readable using the pinned project formatter and editor configuration. Run npm run format after edits and npm run format:check before handoff, alongside relevant lint/types/tests/build. Prefer focused components, named handlers and typed API contracts; formatting alone does not establish maintainable architecture or correct behavior.
 
 Before production readiness, test success and failure paths for authentication, authorization, products and media, cart, checkout, payment and webhooks, orders, cancellation, returns, refunds, reviews, tracking, email events, policies, localization, AI, and admin.
 
@@ -216,3 +222,9 @@ Implement -> format -> lint -> type check -> test -> build
 ## Page and route inventory
 
 See [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md) for the complete implemented page and route list. Page-level requirements and status changes must update that inventory and `PROJECT_STATUS.md`.
+
+Implementation update E11/E12: address ownership, account/session-scoped caches, guarded logout/stale responses, shared optimistic cart state, catalog/tracking/admin feedback and shared mobile PageContainer foundations are implemented with bounded regression evidence. The configured database has no pending migrations and live temporary-table rate-limit SQL passes. Local Vercel routing/module transport is repaired. These do not complete the remaining security, provider, Orders/Checkout/Support integration or real-device/browser acceptance requirements. PROJECT_STATUS.md supplies current evidence; APPLICATION_BACKLOG.md remains the only completion checklist. Playwright installation remains deferred.
+
+E13 implements the inventory-integrity task: serializable order/cart/stock changes, conditional stock reservation, one-time customer/admin cancellation restock and protection against reopening closed orders through admin edits or late capture callbacks. No automatic retries or provider refunds are implied. Production concurrency/payment acceptance remains with the owner. Codex continues requirements/backlog implementation using offline checks and synchronized documentation, without .env inspection or live environment checks.
+
+E14 implements central CSRF proof for current browser writes, including guest auth forms, with session-scoped in-memory tokens, source checks and a narrow signed-webhook exception. This is offline-verified scope, not production security certification. New page actions must use apiFetch; future handlers must preserve authorization and avoid state-changing GETs. See [CSRF_PROTECTION.md](CSRF_PROTECTION.md); remaining requirements and owner acceptance stay in APPLICATION_BACKLOG.

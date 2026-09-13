@@ -25,11 +25,17 @@ export class ApiTimeoutError extends Error {
 /** Fetch wrapper for server-side providers (Resend, Twilio, payment gateways). */
 export type ApiRequestInit = RequestInit & { timeoutMs?: number }
 
-export async function fetchWithTimeout(input: RequestInfo | URL, init: ApiRequestInit = {}): Promise<Response> {
+export async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: ApiRequestInit = {},
+): Promise<Response> {
   const controller = new AbortController()
   let timedOut = false
   const { timeoutMs = API_TIMEOUT_MS, ...requestInit } = init
-  const timer = setTimeout(() => { timedOut = true; controller.abort() }, timeoutMs)
+  const timer = setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, timeoutMs)
   if (init.signal) {
     if (init.signal.aborted) controller.abort()
     else init.signal.addEventListener('abort', () => controller.abort(), { once: true })
@@ -45,7 +51,9 @@ export async function fetchWithTimeout(input: RequestInfo | URL, init: ApiReques
 }
 
 export function bodyRecord(request: VercelRequest): Record<string, unknown> {
-  return request.body && typeof request.body === 'object' ? request.body as Record<string, unknown> : {}
+  return request.body && typeof request.body === 'object'
+    ? (request.body as Record<string, unknown>)
+    : {}
 }
 
 export function requestId(request: VercelRequest): string {
@@ -53,12 +61,24 @@ export function requestId(request: VercelRequest): string {
   return typeof value === 'string' && value ? value : crypto.randomUUID()
 }
 
-export function sendError(response: VercelResponse, status: number, code: string, message: string, id: string) {
+export function sendError(
+  response: VercelResponse,
+  status: number,
+  code: string,
+  message: string,
+  id: string,
+) {
+  setCacheControl(response, 'private')
   return response.status(status).json({ error: { code, message, requestId: id } })
 }
 
 export function setCacheControl(response: VercelResponse, value: 'public' | 'private') {
-  response.setHeader?.('Cache-Control', value === 'public' ? 'public, max-age=30, stale-while-revalidate=60' : 'private, no-store, max-age=0')
+  response.setHeader?.(
+    'Cache-Control',
+    value === 'public'
+      ? 'public, max-age=30, stale-while-revalidate=60'
+      : 'private, no-store, max-age=0',
+  )
 }
 
 export function isSafeHttpUrl(value: string): boolean {

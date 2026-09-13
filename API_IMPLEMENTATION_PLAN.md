@@ -4,6 +4,8 @@ Reviewed: 2026-09-12. This describes current files and known gaps. [APPLICATION_
 
 ## Current layout
 
+E10 formats the dispatcher/handlers/helpers and adds a shared development formatter. Endpoint URLs, authorization, response contracts and deployment consolidation are unchanged; the security/integration findings below remain pending.
+
 ```text
 api/[...route].ts          Single Vercel entry point and route dispatcher
 server/api/
@@ -25,7 +27,7 @@ prisma/
   seed.mjs                Ten default categories
 ```
 
-Keep implementation helpers outside root api. Current Vercel configuration rewrites /api/:path* to the catch-all dispatcher and other paths to index.html. Vite alone does not execute these handlers. Runtime setup is documented in [README.md](README.md).
+Keep implementation helpers outside root api. Current Vercel routes use /api/(.*) to the dispatcher with route=$1, then filesystem handling and an extensionless SPA fallback excluding Vite virtual modules/source/dependencies/assets. E12 verifies local HTML/JavaScript/JSON content types. Vite alone does not execute these handlers. Runtime setup is documented in [README.md](README.md).
 
 ## Existing endpoint groups
 
@@ -78,8 +80,32 @@ Product/review uploads accept supported image/video formats after MIME agreement
 
 ## Next implementation and verification
 
+The current source audit is consolidated in [ARCHITECTURE_UI_UX_AUDIT.md](ARCHITECTURE_UI_UX_AUDIT.md). It identifies unchecked order-address ownership, pre-transaction stock/cancellation eligibility checks, database-only refunds, error cache headers, private query/session isolation and missing action/error states as priorities. These findings require remediation and tests; no API contract was changed by the audit.
+
 Prioritize the open security gates, then complete the customer commerce and administration flows already described in REQUIREMENTS.md. In particular, connect real Orders/Order Details/Checkout and tracking identifiers; verify address ownership, stock concurrency, amounts and provider refunds; implement support/customer messaging and durable notifications; complete business settings, policy management, roles and localization.
 
 Use npm test, npm run lint and npm run build for local verification. The build includes Prisma generation and both type-check targets. The database-specific test and deployment/migration/cleanup order are in RATE_LIMITING.md. Tests/build alone do not establish live provider, authorization, multi-instance, delivery or checkout correctness.
 
 Page consumers and missing routes are listed in [PAGE_INVENTORY.md](PAGE_INVENTORY.md). Keep this file synchronized when routes, environment usage, data models or response contracts change.
+
+## E11/E12 contract changes
+
+POST /api/orders requires a nonempty owned addressId. Missing, malformed, unknown and foreign addresses return the same 400 INVALID_ADDRESS before cart reads or order writes. GET order detail hides historical foreign shipping-address relations. Tracking matches internal ID or orderNumber while retaining userId scope. sendError always resets Cache-Control to private/no-store. Signup safely selects role alongside its already limited identity fields and returns id/email/name/role consistently with login and /me.
+
+Client private keys are ['private', userId-or-guest, sessionGeneration, ...resource]. Private HTTP requests abort/discard stale-session responses and JSON bodies. Header/cart share src/api/cart.ts; mutations merge only their affected row and reconcile after all current mutations settle. No optimistic payment/order/refund success is introduced. Account changes clear private queries and copied route state; wishlist IDs are memory-only. Public category/product bootstrap reads are parallel and fail explicitly; catalog consumes cursor pages and cancellation.
+
+Rate-limit SQL initialization now loads .env before dynamically importing Prisma. The configured database passes temporary-table SQL checks and migrate deploy reports no pending migrations. Other deployment databases, production host/browser acceptance and scheduled cleanup remain separate. Vercel routing uses one function throughout; implementation files remain under server/api.
+
+## E13 order transaction contract
+
+Order POST uses one Serializable transaction for owned-address/cart/price reads, conditional active-stock reservation, order/payment creation and cart clearing. Failed reservation returns 409 OUT_OF_STOCK; invalid cart returns 409 INVALID_CART; P2034 returns 409 CONFLICT with refresh guidance. No automatic transaction/write replay occurs. UUID order numbers replace timestamp-only numbers. No schema migration is required.
+
+Customer PATCH action=cancel and admin PATCH status=CANCELLED share atomic status/restock logic. Existing CANCELLED is a 200 no-op; only PENDING/CONFIRMED is eligible for new cancellation. Other states or concurrent state changes produce 409; missing/foreign customer orders produce the same 404. Admin cannot reopen closed CANCELLED/REFUNDED orders through status editing. Generic admin fulfillment policy and true refunds remain separate requirements.
+
+Razorpay verification/capture callbacks update order status only when currently PENDING. Recording provider payment status remains distinct; late captured funds on a cancelled order still require provider reconciliation/refund work. Existing payment signature/body/idempotency limitations are not certified by these guards.
+
+Production validation is user-owned. Offline tests use injected stores and synthetic provider signatures; do not inspect .env or call a live database/provider during ongoing implementation. Use build:offline for type/frontend compilation without environment-file loading.
+
+## E14 CSRF contract
+
+All browser API writes now require X-CSRF-Token, obtained from GET /api/auth/csrf with X-CSRF-Bootstrap: 1 and the same cookie jar. apiFetch handles this centrally, including guest auth/newsletter writes. The dispatcher rejects invalid proof with private/no-store 403 before limiter/handler work. Only exact POST /api/webhooks/razorpay is exempt and still requires the provider signature. Reads, route paths and existing authorization remain intact. See [CSRF_PROTECTION.md](CSRF_PROTECTION.md) for token lifecycle, same-origin requirements and owner rollout; production acceptance remains pending (E14).

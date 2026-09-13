@@ -39,53 +39,134 @@ import { currentUser } from '../server/api/_lib/auth.js'
 import { enforceRateLimit } from '../server/api/_lib/rate-limit.js'
 import { createRateLimitStore } from '../server/api/_lib/rate-limit-store.js'
 import { db } from '../server/api/_lib/db.js'
+import { csrfTokenResponse, validCsrf } from '../server/api/_lib/csrf.js'
+import { requestId, sendError } from '../server/api/_lib/http.js'
 
 const consumeRateLimit = createRateLimitStore(db)
 
-type RequestLike = { method?: string; body?: unknown; query?: Record<string, string | string[] | undefined>; headers?: Record<string, string | string[] | undefined>; url?: string }
-type ResponseLike = { status: (code: number) => ResponseLike; json: (body: unknown) => unknown; setHeader?: (name: string, value: string) => void }
+type RequestLike = {
+  method?: string
+  body?: unknown
+  query?: Record<string, string | string[] | undefined>
+  headers?: Record<string, string | string[] | undefined>
+  url?: string
+}
+type ResponseLike = {
+  status: (code: number) => ResponseLike
+  json: (body: unknown) => unknown
+  setHeader?: (name: string, value: string) => void
+}
 type Handler = (request: any, response: any) => unknown
 
 const routes: Record<string, Handler> = {
-  categories, health,
-  'admin/analytics': adminAnalytics, 'admin/audit': adminAudit, 'admin/categories': adminCategories, 'admin/customers': adminCustomers, 'admin/messages': adminMessages, 'admin/orders': adminOrders, 'admin/payments': adminPayments, 'admin/products': adminProducts, 'admin/returns': adminReturns, 'admin/settings': adminSettings, 'admin/upload': adminUpload,
-  'auth/login': authLogin, 'auth/logout': authLogout, 'auth/me': authMe, 'auth/mobile-request': authMobileRequest, 'auth/mobile-verify': authMobileVerify, 'auth/password-reset-request': authPasswordResetRequest, 'auth/password-reset': authPasswordReset, 'auth/signup': authSignup, 'auth/verify-email': authVerifyEmail,
-  cart, 'newsletter/subscribe': newsletterSubscribe, orders, 'payments/razorpay-order': razorpayOrder, 'payments/razorpay-verify': razorpayVerify, products, 'webhooks/razorpay': razorpayWebhook, wishlist
+  categories,
+  health,
+  'admin/analytics': adminAnalytics,
+  'admin/audit': adminAudit,
+  'admin/categories': adminCategories,
+  'admin/customers': adminCustomers,
+  'admin/messages': adminMessages,
+  'admin/orders': adminOrders,
+  'admin/payments': adminPayments,
+  'admin/products': adminProducts,
+  'admin/returns': adminReturns,
+  'admin/settings': adminSettings,
+  'admin/upload': adminUpload,
+  'auth/login': authLogin,
+  'auth/logout': authLogout,
+  'auth/me': authMe,
+  'auth/mobile-request': authMobileRequest,
+  'auth/mobile-verify': authMobileVerify,
+  'auth/password-reset-request': authPasswordResetRequest,
+  'auth/password-reset': authPasswordReset,
+  'auth/signup': authSignup,
+  'auth/verify-email': authVerifyEmail,
+  cart,
+  'newsletter/subscribe': newsletterSubscribe,
+  orders,
+  'payments/razorpay-order': razorpayOrder,
+  'payments/razorpay-verify': razorpayVerify,
+  products,
+  'webhooks/razorpay': razorpayWebhook,
+  wishlist,
 }
 
 function pathSegments(request: RequestLike) {
   const wildcard = request.query?.route
   if (wildcard) {
     const route = Array.isArray(wildcard) ? wildcard.join('/') : wildcard
-    return route.split('/').filter(Boolean).map((segment) => decodeURIComponent(segment))
+    return route
+      .split('/')
+      .filter(Boolean)
+      .map((segment) => decodeURIComponent(segment))
   }
   const raw = request.url ?? ''
   const pathname = raw.startsWith('http') ? new URL(raw).pathname : raw.split('?')[0]
-  return pathname.replace(/^\/api\/?/, '').split('/').filter(Boolean).map((segment) => decodeURIComponent(segment))
+  return pathname
+    .replace(/^\/api\/?/, '')
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => decodeURIComponent(segment))
 }
 
 function findRoute(segments: string[]) {
   const key = segments.join('/')
   if (routes[key]) return { handler: routes[key], query: {} }
-  if (segments[0] === 'admin' && segments[1] === 'products' && segments.length === 3) return { handler: adminProduct, query: { id: segments[2] } }
-  if (segments[0] === 'orders' && segments.length === 2) return { handler: order, query: { id: segments[1] } }
-  if (segments[0] === 'orders' && segments[2] === 'tracking' && segments.length === 3) return { handler: orderTracking, query: { id: segments[1] } }
-  if (segments[0] === 'products' && segments.length === 2) return { handler: product, query: { id: segments[1] } }
-  if (segments[0] === 'products' && segments.length === 3 && segments[2] === 'review-upload') return { handler: reviewUpload, query: { id: segments[1] } }
-  if (segments[0] === 'products' && segments.length === 3 && segments[2] === 'reviews') return { handler: reviews, query: { id: segments[1] } }
-  if (segments[0] === 'products' && segments.length === 4 && segments[2] === 'reviews' && segments[3] === 'mine') return { handler: myReview, query: { id: segments[1] } }
+  if (segments[0] === 'admin' && segments[1] === 'products' && segments.length === 3)
+    return { handler: adminProduct, query: { id: segments[2] } }
+  if (segments[0] === 'orders' && segments.length === 2)
+    return { handler: order, query: { id: segments[1] } }
+  if (segments[0] === 'orders' && segments[2] === 'tracking' && segments.length === 3)
+    return { handler: orderTracking, query: { id: segments[1] } }
+  if (segments[0] === 'products' && segments.length === 2)
+    return { handler: product, query: { id: segments[1] } }
+  if (segments[0] === 'products' && segments.length === 3 && segments[2] === 'review-upload')
+    return { handler: reviewUpload, query: { id: segments[1] } }
+  if (segments[0] === 'products' && segments.length === 3 && segments[2] === 'reviews')
+    return { handler: reviews, query: { id: segments[1] } }
+  if (
+    segments[0] === 'products' &&
+    segments.length === 4 &&
+    segments[2] === 'reviews' &&
+    segments[3] === 'mine'
+  )
+    return { handler: myReview, query: { id: segments[1] } }
   return null
 }
 
 export default async function handler(request: RequestLike, response: ResponseLike) {
   const segments = pathSegments(request)
+  const path = segments.join('/')
+  const production = process.env.NODE_ENV === 'production'
+  if (path === 'auth/csrf') return csrfTokenResponse(request, response, production)
   const match = findRoute(segments)
-  if (!match) return response.status(404).json({ error: { code: 'NOT_FOUND', message: 'API route not found.' } })
+  if (!match)
+    return response
+      .status(404)
+      .json({ error: { code: 'NOT_FOUND', message: 'API route not found.' } })
   const headers = request.headers ?? {}
-  if (!(await enforceRateLimit(request, response, segments.join('/'), {
-    consume: consumeRateLimit,
-    userId: async () => (await currentUser(request))?.id,
-    vercel: process.env.VERCEL === '1' && process.env.VERCEL_ENV !== 'development',
-  }))) return
-  return await match.handler({ ...request, headers: { ...headers, cookie: headers.cookie ?? headers.Cookie }, query: { ...(request.query ?? {}), ...match.query } }, response)
+  if (!validCsrf(request, path, production))
+    return sendError(
+      response,
+      403,
+      'CSRF_INVALID',
+      'Unable to verify this request. Refresh the page and try again.',
+      requestId(request),
+    )
+  if (
+    !(await enforceRateLimit(request, response, segments.join('/'), {
+      consume: consumeRateLimit,
+      userId: async () => (await currentUser(request))?.id,
+      vercel: process.env.VERCEL === '1' && process.env.VERCEL_ENV !== 'development',
+    }))
+  )
+    return
+  return await match.handler(
+    {
+      ...request,
+      headers: { ...headers, cookie: headers.cookie ?? headers.Cookie },
+      query: { ...(request.query ?? {}), ...match.query },
+    },
+    response,
+  )
 }

@@ -9,10 +9,10 @@ The app waits for storefront/session checks before rendering navigation and rout
 | Route | Component | Access | Current implementation and gaps |
 | --- | --- | --- | --- |
 | / | HomePage | Public | API catalog slices plus locally configured hero/story/sections and newsletter. Full section CMS pending. |
-| /products | ShopPage | Public | Query-backed search/category/sort/color/rating filtering. API returns nextCursor but UI does not load subsequent pages. Rating radios and CSS color swatches remain. |
-| /product/:id | ProductDetailPage | Public; review writes require session | Product/media/review reads, own-review edit pencil, media uploads. Generated fallback reviews remain. Live review ownership/media checks pending. |
+| /products | ShopPage | Public | Query-backed search/category/sort/color/rating filtering. 300ms debounced cancellable search, explicit error/retry and cursor Load more. Rating radios and CSS color swatches remain. |
+| /product/:id | ProductDetailPage | Public; review writes require session | Product/media/review reads, own-review edit pencil, media uploads. Only server reviews are displayed; compact product loader. Live review ownership/media checks pending. |
 | /support | SupportPage | Public | Email/phone links via mailto/tel. No support ticket form or Resend support submission. |
-| /track-order | TrackOrderPage | Public page; API requires session | Manual tracking query; UI prompts for order number while API expects internal order ID. Error handling/provider integration incomplete. |
+| /track-order | TrackOrderPage | Public page; API requires session | Guarded pending lookup accepts owned order number or internal ID; handles not-found and request errors. Provider integration remains incomplete. |
 | /privacy | PolicyPage (privacy) | Public | Placeholder asking for approved content. |
 | /returns | PolicyPage (returns) | Public | Placeholder asking for approved content. |
 | /refund-policy | PolicyPage (refund) | Public | Placeholder asking for approved content. |
@@ -20,7 +20,7 @@ The app waits for storefront/session checks before rendering navigation and rout
 | /terms-and-conditions | PolicyPage (terms) | Public | Terms alias. |
 | /login | AuthPage (login) | Public | Password login by email/mobile identifier. Authenticated visitors render HomePage at this path. |
 | /signup | AuthPage (signup) | Public | Registration with email/mobile selection. OTP/verification/reset customer UI incomplete. |
-| /cart | CartPage | Authenticated | API-backed line items and quantity/removal, query cache updates. |
+| /cart | CartPage | Authenticated | Shared header/page query with optimistic quantity/removal, per-product locks, affected-row rollback and checkout guard while saving. |
 | /wishlist | WishlistRedirect | Public redirect | Temporarily hidden by request; replaces the URL with /products. Header link removed. WishlistPage is retained but inactive; product hearts and saved-item APIs remain available. |
 | /checkout | PaymentPage | Authenticated | Placeholder totals from first catalog products; informational snackbar on submit, no payment/order creation. |
 | /orders | OrdersPage | Authenticated | Static empty state/count; does not query order history. |
@@ -31,7 +31,7 @@ The app waits for storefront/session checks before rendering navigation and rout
 
 Missing pages include profile/address management, password reset, email verification, support request tracking, AI/tour/help flows, and shipping/cancellation/cookie policy pages. Auth emails reference /reset-password and /verify-email, but those routes are not registered.
 
-The navbar includes Orders for authenticated users. Admin visibility currently uses authenticated state plus either admin state or current /admin path; the page/API still apply authorization. Final responsive/role-visibility verification is pending.
+The navbar includes Orders for authenticated users. Admin visibility now requires verified ADMIN role; the page/API still apply authorization. Final responsive/role-visibility verification is pending.
 
 ## Admin tabs
 
@@ -41,7 +41,7 @@ All tabs are component state under /admin, not separate URL routes.
 | --- | --- |
 | Overview / Analytics | Reads /api/admin/analytics; renders statistics. |
 | Products | Reads products; create/edit, strict category select/add, image/video upload, primary image, colors, stock, archive and immediate list updates. |
-| Orders | Reads orders; status controls use admin update handler. Full fulfillment verification pending. |
+| Orders | Reads orders; status selector keeps confirmed values on failure and reconciles on success. E13 guards cancellation/restock and closed states; full fulfillment/production verification pending. |
 | Payments | Reads payment data; refund handler currently changes database status only, not provider funds. |
 | Returns | Reads returns; complete workflow remains pending. |
 | Customers | Reads customer data/order counts; no full account-management UI. |
@@ -54,17 +54,29 @@ All tabs are component state under /admin, not separate URL routes.
 | --- | --- | --- |
 | Storefront/Home | ['storefront'] plus API categories/products merged with local config | Full catalog facets and independent CMS sections |
 | Shop | ['catalog', filters] | Progressive cursor consumption and robust error states |
-| Product/reviews | ['product', id], ['product-reviews', id], ['my-review', id] | Cached initial product fallback, account-scoped private key, remove generated feedback |
-| Cart/wishlist | ['cart'], ['wishlist'] and direct header/optimistic calls | Explicit user isolation, missing catalog items and cross-tab handling |
+| Product/reviews | ['product', id], ['product-reviews', id], privateKey('my-review', id) | Product revalidation and account-scoped own-review key implemented; live review/media acceptance remains |
+| Cart/wishlist | privateKey('cart') shared header/page hook; private wishlist query and memory-only hearts | Live browser account-switch acceptance; deferred wishlist page completeness |
 | Orders/detail/checkout | No page API read | Connect actual orders, totals and checkout |
-| Tracking | ['tracking', enteredId] | ID/number mapping, errors and authenticated isolation |
+| Tracking | privateKey('tracking', enteredId) | Owned ID/number mapping, pending/errors and private keys implemented; provider/browser verification remains |
 | Login/signup/session | Mutation/session state and direct /api/auth/me | Verification/reset pages and full session lifecycle tests |
-| Admin | ['admin', section] via fetchQuery, zero stale/gc retention | Functional messages/settings, role/account transition verification |
+| Admin | privateKey('admin', section) via fetchQuery, zero stale/gc retention | Functional messages/settings, role/account transition verification |
 
-React Query is the chosen strategy, not RTK. Logout clears the client; not all private keys are user-scoped. No claim of complete migration follows from this map.
+React Query is the chosen strategy. Existing private resources use account/generation keys; confirmed logout cancels/removes private cache and resets route-local/optimistic state. Orders/detail/checkout remain unintegrated, so complete migration is not claimed.
 
 ## Shared page behavior
+
+E10 source formatting covers all page components; routing, access rules and UI behavior in this inventory are unchanged. A formatter pass is not page integration or responsive verification.
+
+Mobile-first acceptance applies to every registered page and admin tab: phone widths 320–430px, portrait/landscape, software keyboard, touch controls, safe-area/overlay clearance and slow/offline states, followed by tablet/desktop checks. The owner confirms most customers use phones. Use the audit's detailed matrix and record per-page/device evidence before completing responsiveness.
+
+[ARCHITECTURE_UI_UX_AUDIT.md](ARCHITECTURE_UI_UX_AUDIT.md) supplies the target width variants, spacing scale and per-page migration/acceptance matrix for every route above and each admin tab. E11 implements PageContainer width variants and shared spacing/touch/mobile foundations across these routes; individual rendered acceptance remains pending. Source review alone does not establish rendered spacing, accessibility or responsive acceptance.
 
 Action outcomes use [five-second snackbars](NOTIFICATION_GUIDELINES.md). Failed inputs remain; successful product creation resets its form. Product/review uploads use shared byte/MIME/signature validation. Rate-limit errors use translated retry guidance and suppress automatic retries. See [required database rollout](RATE_LIMITING.md) before deploying these write policies.
 
 When a route, page, access rule or data boundary changes, update this inventory and [PROJECT_STATUS.md](PROJECT_STATUS.md) in the same change. Update the corresponding backlog status only after its acceptance criteria are implemented and verified.
+
+E11 applies the common layout to every registered route: wide for home/catalog/admin, content for cart/orders/checkout/product, reading for support/tracking/policies, form for authentication. Phone navigation wraps, filter fields collapse behind an accessible disclosure, social links move to footer, and form inputs use 16px text. Admin panels have explicit loading/error/retry and sequential upload progress with retry reuse. Auth no longer collects an unused address. These are implementation descriptions, not real-device certification.
+
+E13 changes the Admin Orders status interaction only; no new route or customer checkout integration is claimed. Closed-order selectors are disabled and new cancellation is offered only for PENDING/CONFIRMED orders. Server authorization and transactional state guards remain authoritative. The owner handles production/mobile acceptance; Codex uses offline validation without .env inspection.
+
+E14 adds shared CSRF preparation to existing login/signup, newsletter, cart/hearts, review/media and admin write interactions through apiFetch; no page route or layout changes. GET /api/auth/csrf is an API bootstrap, not a customer page. Reads including /me stay unchanged. Pending feedback, failed drafts and five-second snackbars remain under existing page controls. Owner production/mobile acceptance is pending; see [CSRF_PROTECTION.md](CSRF_PROTECTION.md).

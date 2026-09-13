@@ -6,7 +6,14 @@ const fetch = apiFetch
 export type StorefrontProduct = CatalogProduct
 
 export type ProductSort = 'newest' | 'price-low' | 'price-high'
-export type ProductQuery = { cursor?: string; search?: string; category?: string; sort?: ProductSort; colors?: readonly string[]; minRating?: number }
+export type ProductQuery = {
+  cursor?: string
+  search?: string
+  category?: string
+  sort?: ProductSort
+  colors?: readonly string[]
+  minRating?: number
+}
 export type ProductPage = { products: readonly StorefrontProduct[]; nextCursor: string | null }
 
 export type StorefrontApiResponse = {
@@ -16,10 +23,44 @@ export type StorefrontApiResponse = {
   branding: typeof appConfig.branding
   features: typeof appConfig.features
   categories: readonly string[]
-  facets: { categories: readonly string[]; colors: readonly string[]; ratings: readonly number[]; price: { min: number; max: number } }
+  facets: {
+    categories: readonly string[]
+    colors: readonly string[]
+    ratings: readonly number[]
+    price: { min: number; max: number }
+  }
   content: {
     errors: { unavailable: string; retryLabel: string; routeLabel: string }
-    auth: { loginEyebrow: string; signupEyebrow: string; loginTitle: string; signupTitle: string; loginDescription: string; signupDescription: string; googleLabel: string; emailDivider: string; fullNameLabel: string; mobileLabel: string; addressLabel: string; emailLabel: string; passwordLabel: string; passwordPlaceholder: string; loginAction: string; signupAction: string; loginSuccess: string; signupSuccess: string; googleSuccess: string; loginSwitch: string; signupSwitch: string; signupLink: string; loginLink: string; securityNote: string; consentPrefix: string; termsLabel: string; consentAnd: string; privacyLabel: string }
+    auth: {
+      loginEyebrow: string
+      signupEyebrow: string
+      loginTitle: string
+      signupTitle: string
+      loginDescription: string
+      signupDescription: string
+      googleLabel: string
+      emailDivider: string
+      fullNameLabel: string
+      mobileLabel: string
+      addressLabel: string
+      emailLabel: string
+      passwordLabel: string
+      passwordPlaceholder: string
+      loginAction: string
+      signupAction: string
+      loginSuccess: string
+      signupSuccess: string
+      googleSuccess: string
+      loginSwitch: string
+      signupSwitch: string
+      signupLink: string
+      loginLink: string
+      securityNote: string
+      consentPrefix: string
+      termsLabel: string
+      consentAnd: string
+      privacyLabel: string
+    }
     ui: {
       loadingLabel: string
       unavailableLabel: string
@@ -118,36 +159,68 @@ export type StorefrontApiResponse = {
   products: readonly StorefrontProduct[]
 }
 
-// Temporary local adapter. Replace this function with the HTTP client when the API is available.
+// Public API data combined with local business configuration.
 export async function getStorefront(): Promise<StorefrontApiResponse> {
-  let categories: string[] = []
-  try {
-    const categoryResponse = await fetch('/api/categories', { cache: 'no-store' })
-    const contentType = categoryResponse.headers.get('content-type') ?? ''
-    if (categoryResponse.ok && contentType.includes('application/json')) {
-      categories = (await categoryResponse.json() as { categories?: string[] }).categories ?? []
-    }
-  } catch {
-    // Local Vite does not execute Vercel API functions; the shell remains usable until the API is deployed.
-  }
-  let products: readonly CatalogProduct[] = []
-  try {
-    const response = await fetch('/api/products')
-    if (response.ok) {
-      const liveBody = await response.json() as { products?: readonly CatalogProduct[] }
-      products = liveBody.products ?? []
-    }
-  } catch {
-    // Vite's development server does not run Vercel functions. The shell can
-    // still render without catalog records until the API is deployed.
-  }
+  const [categoryResponse, productResponse] = await Promise.all([
+    fetch('/api/categories'),
+    fetch('/api/products'),
+  ])
+  if (!categoryResponse.ok || !productResponse.ok) throw new Error('Unable to load the storefront.')
+  const [categoryBody, productBody] = await Promise.all([
+    categoryResponse.json(),
+    productResponse.json(),
+  ])
+  const categories: string[] = categoryBody.categories ?? []
+  const products: readonly CatalogProduct[] = productBody.products ?? []
   return {
     ...appConfig,
     categories,
-    facets: { categories, colors: [...new Set(products.flatMap((product) => (product as CatalogProduct).colors ?? []))], ratings: [5, 4, 3, 2, 1], price: { min: Math.min(...products.map((product) => product.price)), max: Math.max(...products.map((product) => product.price)) } },
+    facets: {
+      categories,
+      colors: [...new Set(products.flatMap((product) => (product as CatalogProduct).colors ?? []))],
+      ratings: [5, 4, 3, 2, 1],
+      price: {
+        min: products.length ? Math.min(...products.map((product) => product.price)) : 0,
+        max: products.length ? Math.max(...products.map((product) => product.price)) : 0,
+      },
+    },
     content: {
-      errors: { unavailable: 'We could not load the storefront.', retryLabel: 'Try again', routeLabel: 'Something went wrong on this page.' },
-      auth: { loginEyebrow: 'Welcome back', signupEyebrow: 'Join Gadgify', loginTitle: 'Sign in', signupTitle: 'Create your account', loginDescription: 'Access your orders, saved details, and cart.', signupDescription: 'Save your details for a faster checkout.', googleLabel: 'Continue with Google', emailDivider: 'Or use email', fullNameLabel: 'Full name', mobileLabel: 'Mobile number', addressLabel: 'Delivery address', emailLabel: 'Email address', passwordLabel: 'Password', passwordPlaceholder: 'At least 8 characters', loginAction: 'Sign in', signupAction: 'Create account', loginSuccess: 'You are signed in securely.', signupSuccess: 'Your account has been created successfully.', googleSuccess: 'Google sign-in is not configured yet.', loginSwitch: 'New here?', signupSwitch: 'Already registered?', signupLink: 'Create an account', loginLink: 'Sign in', securityNote: 'Your account is protected with encrypted passwords and secure server sessions.', consentPrefix: 'By continuing, you agree to Gadgify’s', termsLabel: 'Terms & Conditions', consentAnd: 'and', privacyLabel: 'Privacy Policy' },
+      errors: {
+        unavailable: 'We could not load the storefront.',
+        retryLabel: 'Try again',
+        routeLabel: 'Something went wrong on this page.',
+      },
+      auth: {
+        loginEyebrow: 'Welcome back',
+        signupEyebrow: 'Join Gadgify',
+        loginTitle: 'Sign in',
+        signupTitle: 'Create your account',
+        loginDescription: 'Access your orders, saved details, and cart.',
+        signupDescription: 'Save your details for a faster checkout.',
+        googleLabel: 'Continue with Google',
+        emailDivider: 'Or use email',
+        fullNameLabel: 'Full name',
+        mobileLabel: 'Mobile number',
+        addressLabel: 'Delivery address',
+        emailLabel: 'Email address',
+        passwordLabel: 'Password',
+        passwordPlaceholder: 'At least 8 characters',
+        loginAction: 'Sign in',
+        signupAction: 'Create account',
+        loginSuccess: 'You are signed in securely.',
+        signupSuccess: 'Your account has been created successfully.',
+        googleSuccess: 'Google sign-in is not configured yet.',
+        loginSwitch: 'New here?',
+        signupSwitch: 'Already registered?',
+        signupLink: 'Create an account',
+        loginLink: 'Sign in',
+        securityNote:
+          'Your account is protected with encrypted passwords and secure server sessions.',
+        consentPrefix: 'By continuing, you agree to Gadgify’s',
+        termsLabel: 'Terms & Conditions',
+        consentAnd: 'and',
+        privacyLabel: 'Privacy Policy',
+      },
       ui: {
         loadingLabel: 'Loading storefront',
         unavailableLabel: 'Storefront unavailable',
@@ -167,17 +240,36 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
       hero: {
         eyebrow: 'Thoughtfully sourced / everyday use',
         title: 'Objects with a quiet point of view.',
-        description: 'Explore considered goods for slower mornings, clearer desks, and homes that feel like yours.',
+        description:
+          'Explore considered goods for slower mornings, clearer desks, and homes that feel like yours.',
         actionLabel: 'Explore the collection',
         artworkLabel: 'FORM / 01',
         artworkDescription: 'Still life of a cup, book, and ceramic vase',
       },
       promotions: [
-        { eyebrow: 'Featured edit', title: 'Small details, better days.', description: 'Explore useful pieces selected for everyday rituals.', artwork: 'sage' },
-        { eyebrow: 'New in the collection', title: 'Made to move with you.', description: 'Discover considered essentials for every part of your day.', artwork: 'clay' },
-        { eyebrow: 'Seasonal favorites', title: 'A little more considered.', description: 'Find timeless shapes and quietly useful design.', artwork: 'oak' },
+        {
+          eyebrow: 'Featured edit',
+          title: 'Small details, better days.',
+          description: 'Explore useful pieces selected for everyday rituals.',
+          artwork: 'sage',
+        },
+        {
+          eyebrow: 'New in the collection',
+          title: 'Made to move with you.',
+          description: 'Discover considered essentials for every part of your day.',
+          artwork: 'clay',
+        },
+        {
+          eyebrow: 'Seasonal favorites',
+          title: 'A little more considered.',
+          description: 'Find timeless shapes and quietly useful design.',
+          artwork: 'oak',
+        },
       ],
-      filterBenefits: { title: 'Shopping with us', items: ['Thoughtfully selected goods', 'Support when you need it', 'Secure checkout'] },
+      filterBenefits: {
+        title: 'Shopping with us',
+        items: ['Thoughtfully selected goods', 'Support when you need it', 'Secure checkout'],
+      },
       collection: {
         eyebrow: 'The collection',
         title: 'Made for the daily ritual',
@@ -205,11 +297,13 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
       story: {
         eyebrow: 'A little more intentional',
         title: 'Good things earn their place.',
-        description: 'We look for honest materials, useful shapes, and makers who care about the details you notice every day. Every item is chosen to be used, loved, and kept.',
+        description:
+          'We look for honest materials, useful shapes, and makers who care about the details you notice every day. Every item is chosen to be used, loved, and kept.',
       },
       support: {
         title: 'We are here to help.',
-        description: 'Reach the configured support team through the available support channels. Business hours, FAQs, and order assistance can be supplied by the API when available.',
+        description:
+          'Reach the configured support team through the available support channels. Business hours, FAQs, and order assistance can be supplied by the API when available.',
       },
       cart: {
         title: 'Your cart',
@@ -236,7 +330,8 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
         termsTitle: 'Terms & Conditions',
         missingContentLabel: 'Business input required',
         missingContentStatus: 'Approved policy content has not been supplied.',
-        missingContentAction: 'The business owner must provide and review the approved policy content before launch.',
+        missingContentAction:
+          'The business owner must provide and review the approved policy content before launch.',
         backToHomeLabel: 'Back to home',
       },
       footer: {
@@ -251,7 +346,10 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
   }
 }
 
-export async function getProducts(query: ProductQuery = {}): Promise<ProductPage> {
+export async function getProducts(
+  query: ProductQuery = {},
+  signal?: AbortSignal,
+): Promise<ProductPage> {
   const params = new URLSearchParams()
   if (query.cursor) params.set('cursor', query.cursor)
   if (query.search) params.set('search', query.search)
@@ -259,15 +357,15 @@ export async function getProducts(query: ProductQuery = {}): Promise<ProductPage
   if (query.sort) params.set('sort', query.sort)
   if (query.colors?.length) params.set('colors', query.colors.join(','))
   if (query.minRating) params.set('minRating', String(query.minRating))
-  const response = await fetch(`/api/products?${params.toString()}`)
-  if (!response.ok) return { products: [], nextCursor: null }
-  return await response.json() as ProductPage
+  const response = await fetch(`/api/products?${params.toString()}`, { signal })
+  if (!response.ok) throw new Error('Unable to load products. Please try again.')
+  return (await response.json()) as ProductPage
 }
 
 export async function getProduct(id: string): Promise<StorefrontProduct | null> {
   const response = await fetch(`/api/products/${encodeURIComponent(id)}`)
   if (response.status === 404) return null
   if (!response.ok) throw new Error('Unable to load product')
-  const body = await response.json() as { product?: StorefrontProduct }
+  const body = (await response.json()) as { product?: StorefrontProduct }
   return body.product ?? null
 }
