@@ -30,6 +30,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       id,
     )
   let saved = false
+  let phase = 'audience'
   try {
     if (audienceId) {
       const result = await fetchWithTimeout(
@@ -40,7 +41,15 @@ export default async function handler(request: VercelRequest, response: VercelRe
           body: JSON.stringify({ email, unsubscribed: false }),
         },
       )
-      if (!result.ok)
+      if (!result.ok) {
+        console.error(
+          JSON.stringify({
+            event: 'newsletter_provider_rejected',
+            phase,
+            status: result.status,
+            requestId: id,
+          }),
+        )
         return sendError(
           response,
           502,
@@ -48,13 +57,16 @@ export default async function handler(request: VercelRequest, response: VercelRe
           'Newsletter service unavailable.',
           id,
         )
+      }
     }
+    phase = 'subscription'
     await db.newsletterSubscription.upsert({
       where: { email },
       create: { email },
       update: { status: 'ACTIVE', unsubscribedAt: null },
     })
     saved = true
+    phase = 'confirmation'
     let emailSent = false
     if (fromEmail) {
       const emailResponse = await fetchWithTimeout('https://api.resend.com/emails', {
@@ -67,7 +79,15 @@ export default async function handler(request: VercelRequest, response: VercelRe
           html: '<p>Thanks for subscribing to Field &amp; Form.</p><p><a href="/">Return to the home page</a> for considered goods and useful ideas.</p>',
         }),
       })
-      if (!emailResponse.ok)
+      if (!emailResponse.ok) {
+        console.error(
+          JSON.stringify({
+            event: 'newsletter_provider_rejected',
+            phase,
+            status: emailResponse.status,
+            requestId: id,
+          }),
+        )
         return sendError(
           response,
           502,
@@ -75,10 +95,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
           'Subscription saved, but the confirmation email could not be sent.',
           id,
         )
+      }
       emailSent = true
     }
     return response.status(202).json({ subscribed: true, emailSent })
   } catch {
+    console.error(JSON.stringify({ event: 'newsletter_operation_failed', phase, requestId: id }))
     return sendError(
       response,
       502,

@@ -1,6 +1,8 @@
 import { apiFetch } from './http.ts'
 
-export async function subscribeToNewsletter(email: string): Promise<{ emailSent: boolean }> {
+export async function subscribeToNewsletter(
+  email: string,
+): Promise<{ emailSent: boolean; confirmationFailed?: boolean }> {
   const response = await apiFetch('/api/newsletter/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -10,6 +12,17 @@ export async function subscribeToNewsletter(email: string): Promise<{ emailSent:
   const record = result && typeof result === 'object' ? result : undefined
   if (!response.ok) {
     const error = record && 'error' in record ? record.error : undefined
+    // This specific server code is emitted only after the subscription was saved.
+    // Reconcile that outcome without replaying the write or claiming email delivery.
+    if (
+      response.status === 502 &&
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'CONFIRMATION_EMAIL_FAILED'
+    ) {
+      return { emailSent: false, confirmationFailed: true }
+    }
     // Accept the previous string contract during a frontend/server rollout.
     const message =
       typeof error === 'string'

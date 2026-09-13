@@ -121,3 +121,6 @@ The boundary follows [OWASP error-handling guidance](https://cheatsheetseries.ow
 ## E16 password recovery
 
 Forgot/reset customer routes now call the existing POST /api/auth/password-reset-request and /api/auth/password-reset endpoints through apiFetch. Request acknowledgment is neutral and does not establish delivery. Existing APP_URL supplies a validated HTTPS origin for new fragment-token links; Resend settings remain unchanged. Reset claims a token once, changes the password, invalidates other reset links and revokes existing owner sessions in one Serializable transaction. Email/mobile verification shares that claim helper. Success DTOs are preserved; all responses are private/no-store. See [PASSWORD_RECOVERY.md](PASSWORD_RECOVERY.md) for payloads, validation, security limits and owner acceptance; 108 offline tests pass.
+
+
+E17 newsletter clarification: the existing 502 CONFIRMATION_EMAIL_FAILED contract explicitly denotes a saved subscription. The client treats only that status/code combination as saved with unconfirmed email, without retrying. All other failures remain errors. Operational logs include phase, provider HTTP status when available and requestId only; consult the corresponding protected Resend logs for its actual reason. Do not expose provider bodies or recipient details to clients. No new environment variable or migration is required.

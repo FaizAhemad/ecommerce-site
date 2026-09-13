@@ -361,6 +361,73 @@ test('newsletter client rejects unconfirmed success and accepts existing 202 con
   assert.deepEqual(await subscribeToNewsletter('draft@example.test'), { emailSent: true })
 })
 
+test('newsletter client reconciles only the explicit saved-subscription failure without replay', async () => {
+  const calls = browser({ error: { code: 'CONFIRMATION_EMAIL_FAILED' } })
+  assert.deepEqual(await subscribeToNewsletter('draft@example.test'), {
+    emailSent: false,
+    confirmationFailed: true,
+  })
+  assert.equal(calls(), 1)
+  browser({ error: { code: 'NEWSLETTER_UNAVAILABLE' } })
+  await assert.rejects(subscribeToNewsletter('draft@example.test'), /could not subscribe/)
+  browser({ error: { code: 'CONFIRMATION_EMAIL_FAILED' } }, 401)
+  await assert.rejects(subscribeToNewsletter('draft@example.test'), /could not subscribe/)
+})
+
+test('newsletter diagnostic logs expose only phase, status and correlation', async () => {
+  const original = console.error,
+    logs = []
+  console.error = (value) => logs.push(JSON.parse(value))
+  try {
+    await newsletter({ sender: true, providerFails: true })
+    await newsletter({ sender: true, providerThrows: true })
+    assert.equal(logs.length, 2)
+    assert.deepEqual(Object.keys(logs[0]).sort(), ['event', 'phase', 'requestId', 'status'])
+    assert.equal(logs[0].status, 503)
+    assert.equal(logs[0].phase, 'confirmation')
+    assert.deepEqual(Object.keys(logs[1]).sort(), ['event', 'phase', 'requestId'])
+    assert.doesNotMatch(JSON.stringify(logs), /example|synthetic|provider-debug|private-secret/)
+  } finally {
+    console.error = original
+  }
+})
+
+test('subscription form shows saved state and an informational notice after email failure', async () => {
+  const states = ['draft@example.test', 'idle'],
+    notices = []
+  let index = 0
+  globalThis.subscribeFormFixture = {
+    useRef: () => ({ current: false }),
+    useState: () => {
+      const slot = index++
+      return [
+        states[slot],
+        (value) => {
+          states[slot] = value
+        },
+      ]
+    },
+    useNotification:
+      () =>
+      (...args) =>
+        notices.push(args),
+    subscribeToNewsletter: async () => ({ emailSent: false, confirmationFailed: true }),
+  }
+  const { SubscribeSection } = await load(
+    '../src/components/SubscribeSection.tsx',
+    (binding, path) => {
+      if (path === 'react/jsx-runtime')
+        return `import ${binding} from ${JSON.stringify(import.meta.resolve(path))}`
+      return `const ${binding} = globalThis.subscribeFormFixture`
+    },
+  )
+  await SubscribeSection().props.children[1].props.onSubmit({ preventDefault() {} })
+  assert.equal(states[1], 'success')
+  assert.equal(states[0], '')
+  assert.match(notices[0][0], /No need to subscribe again/)
+  assert.equal(notices[0][1], 'info')
+})
+
 test('real limiter keeps the dispatcher correlation ID and existing retry metadata', async () => {
   const result = response(),
     request = { method: 'POST' }

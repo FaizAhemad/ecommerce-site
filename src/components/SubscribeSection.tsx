@@ -16,10 +16,12 @@ export function SubscribeSection() {
       setStatus('success')
       setEmail('')
       notify(
-        result?.emailSent
-          ? 'You are subscribed. A confirmation email is on its way.'
-          : 'You are subscribed.',
-        'success',
+        result.confirmationFailed
+          ? 'You are subscribed, but we could not confirm the email was sent. No need to subscribe again.'
+          : result.emailSent
+            ? 'You are subscribed. A confirmation email is on its way.'
+            : 'You are subscribed.',
+        result.confirmationFailed ? 'info' : 'success',
       )
     } catch (error) {
       setStatus('error')
