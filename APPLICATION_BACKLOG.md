@@ -6,7 +6,14 @@ Reviewed against the current workspace on 2026-09-13. This is the single complet
 
 Completion convention: `- [ ]` means pending, partial, blocked or awaiting required verification; `- [x] ✅` means the stated scope is implemented and verified, with evidence in [PROJECT_STATUS.md](PROJECT_STATUS.md). A code implementation or build alone does not complete a live integration. Preserve unverified work and business dependencies. Evidence IDs below refer to that status document.
 
-## Current task: safe API errors (E15)
+## Current task: password recovery and token claims (E16)
+
+Owner: Codex for offline implementation; product owner for production/provider/device acceptance. Contract and acceptance scenarios: [PASSWORD_RECOVERY.md](PASSWORD_RECOVERY.md).
+
+- [x] ✅ Implement Forgot password and Reset password pages, login entry, neutral email-request acknowledgment, one-time transactional reset/verification claims and reset-session revocation. Shared mobile form layout, failed drafts, duplicate guards and URL-token handling are implemented; all 108 offline tests, formatting and environment-disabled build pass with three existing lint warnings (PROJECT_STATUS E16).
+- [ ] Product owner: verify delivery/opening of reset emails, new/old password login, revoked sessions, reused/expired links, simultaneous requests and Android/iOS recovery flows on production. Timing-enumeration resistance, recipient-level abuse controls and post-reset notification delivery remain security/notification work.
+
+## Previous task: safe API errors (E15)
 
 Owner: Codex for offline implementation and evidence; product owner for production acceptance.
 
@@ -102,7 +109,7 @@ These requirements from REQUIREMENTS.md and the original brief remain in scope a
 - [ ] Add API-configured independent home sections and complete catalog cursor loading, full facets and large-catalog performance verification.
 - [ ] Fetch real Orders/Order Details data and use actual cart totals in Checkout; remove hardcoded delivered/paid dates and catalog-derived placeholder orders.
 - [ ] Wishlist page deferred by user request: navigation is hidden and /wishlist redirects to /products. Reconsider the page later; before restoring it, render saved products outside the initial catalog and verify empty/error/account-switch states. Product heart actions remain available.
-- [ ] Complete password-reset/email-verification customer routes and profile/address workflows using the existing backend where appropriate.
+- [ ] Complete email/mobile-verification customer routes and profile/address workflows. E16 adds forgot/reset-password pages and atomic token claims; production password-recovery acceptance and mobile-only account recovery remain pending.
 - [ ] Define verified-purchase/moderation eligibility. E11 removes generated fallback reviews; verify live customer review/error/empty states.
 - [ ] Integrate actual provider refunds and complete configurable cancellation/returns/refund workflows, amounts, idempotency and auditability.
 - [ ] Finish shipment/tracking integration and resolve the order-number versus internal-ID mismatch; add a configurable map/GPS provider only after confirmation.

@@ -35,7 +35,7 @@ Keep implementation helpers outside root api. Current Vercel routes use /api/(.*
 | --- | --- |
 | health; categories; products; products/:id | Connectivity, database categories, active products/detail. Catalog returns pages of up to 24 and nextCursor; UI pagination incomplete. |
 | auth/login, signup, logout, me | Password/session implementation, configured-admin bootstrap; user reports login working. Complete session/security verification pending. |
-| auth/verify-email, mobile-request, mobile-verify, password-reset-request, password-reset | Backend handlers exist; customer verification/reset routes and complete flows missing. |
+| auth/verify-email, mobile-request, mobile-verify, password-reset-request, password-reset | E16 adds forgot/reset pages and atomic one-time token claims; customer verification pages and live recovery acceptance remain pending. |
 | cart; wishlist | Authenticated persistence; optimistic client updates. Concurrency/isolation/storage review pending. |
 | products/:id/reviews; products/:id/reviews/mine; products/:id/review-upload | Public approved reviews and authenticated create/own edit/upload; one review per user/product. Upload byte checks implemented, live verification pending. |
 | orders; orders/:id; orders/:id/tracking | User-scoped list/detail/tracking and create/cancel handlers. Customer order pages are not integrated. Address ownership, inventory concurrency and order rules need review. |
@@ -62,7 +62,7 @@ Application identity/content largely comes from src/config.ts and src/api/storef
 | RESEND_AUDIENCE_ID | Optional newsletter audience contact synchronization |
 | TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER | Mobile verification transport |
 | RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET | Payment requests/verification and webhook authentication |
-| APP_URL | Base URL in verification/reset email links; destination pages still missing |
+| APP_URL | Configured link origin; reset destination implemented in E16, email-verification page still missing |
 | BLOB_READ_WRITE_TOKEN | Vercel Blob SDK credential for upload access |
 | NODE_ENV, VERCEL, VERCEL_ENV | Runtime cookie/security and proxy-address behavior |
 
@@ -84,7 +84,7 @@ The current source audit is consolidated in [ARCHITECTURE_UI_UX_AUDIT.md](ARCHIT
 
 Prioritize the open security gates, then complete the customer commerce and administration flows already described in REQUIREMENTS.md. In particular, connect real Orders/Order Details/Checkout and tracking identifiers; verify address ownership, stock concurrency, amounts and provider refunds; implement support/customer messaging and durable notifications; complete business settings, policy management, roles and localization.
 
-Use npm test, npm run lint and npm run build for local verification. The build includes Prisma generation and both type-check targets. The database-specific test and deployment/migration/cleanup order are in RATE_LIMITING.md. Tests/build alone do not establish live provider, authorization, multi-instance, delivery or checkout correctness.
+Under the current owner workflow, use npm test, formatting, npm run lint and npm run build:offline. Do not inspect .env or run live/migration/provider checks; the owner validates production. The database-specific test and deployment/migration/cleanup order are in RATE_LIMITING.md. Tests/build alone do not establish live provider, authorization, multi-instance, delivery or checkout correctness.
 
 Page consumers and missing routes are listed in [PAGE_INVENTORY.md](PAGE_INVENTORY.md). Keep this file synchronized when routes, environment usage, data models or response contracts change.
 
@@ -117,3 +117,7 @@ API errors use `{ error: { code, message, requestId } }` with private/no-store c
 Newsletter now uses structured 400 VALIDATION_ERROR, 405 METHOD_NOT_ALLOWED, 503/502 NEWSLETTER_UNAVAILABLE and 502 CONFIRMATION_EMAIL_FAILED. The latter explicitly means persistence completed but confirmation failed; no automatic retry is performed. Success stays 202 `{ subscribed: true, emailSent }`. The client accepts old string errors during rollout, rejects unconfirmed success and retains failed drafts. Shared auth/method/CSRF errors include IDs/messages; health failure keeps its previous monitoring fields and adds error details. Existing 429 metadata and neutral password-reset acceptance are preserved. See PROJECT_STATUS E15 for 94-test evidence; full localization and owner production acceptance remain pending.
 
 The boundary follows [OWASP error-handling guidance](https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html) on generic external failures; privacy limits these logs to correlation events rather than raw exceptions. Keep successes unchanged, use sendError for known failures, and never expose a caught error.message or replay an ambiguous write.
+
+## E16 password recovery
+
+Forgot/reset customer routes now call the existing POST /api/auth/password-reset-request and /api/auth/password-reset endpoints through apiFetch. Request acknowledgment is neutral and does not establish delivery. Existing APP_URL supplies a validated HTTPS origin for new fragment-token links; Resend settings remain unchanged. Reset claims a token once, changes the password, invalidates other reset links and revokes existing owner sessions in one Serializable transaction. Email/mobile verification shares that claim helper. Success DTOs are preserved; all responses are private/no-store. See [PASSWORD_RECOVERY.md](PASSWORD_RECOVERY.md) for payloads, validation, security limits and owner acceptance; 108 offline tests pass.

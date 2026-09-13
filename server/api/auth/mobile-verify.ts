@@ -1,15 +1,18 @@
 import { createHash } from 'node:crypto'
 import { db } from '../_lib/db.js'
+import { consumeVerification } from '../_lib/verification.js'
 import {
   bodyRecord,
   requestId,
   sendError,
+  setCacheControl,
   type VercelRequest,
   type VercelResponse,
 } from '../_lib/http.js'
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   const id = requestId(request)
+  setCacheControl(response, 'private')
   if (request.method !== 'POST')
     return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Only POST is supported.', id)
   const body = bodyRecord(request)
@@ -25,23 +28,21 @@ export default async function handler(request: VercelRequest, response: VercelRe
     )
   try {
     const user = await db.user.findUnique({ where: { phone } })
-    const token =
+    const verified =
       user &&
-      (await db.verificationToken.findFirst({
-        where: {
+      (await consumeVerification(
+        db,
+        {
           userId: user.id,
           purpose: 'MOBILE_VERIFICATION',
           tokenHash: createHash('sha256').update(code).digest('hex'),
-          usedAt: null,
-          expiresAt: { gt: new Date() },
         },
-      }))
-    if (!user || !token)
+        async (tx, userId) => {
+          await tx.user.update({ where: { id: userId }, data: { phoneVerifiedAt: new Date() } })
+        },
+      ))
+    if (!verified)
       return sendError(response, 400, 'INVALID_TOKEN', 'The mobile code is invalid or expired.', id)
-    await db.$transaction([
-      db.verificationToken.update({ where: { id: token.id }, data: { usedAt: new Date() } }),
-      db.user.update({ where: { id: user.id }, data: { phoneVerifiedAt: new Date() } }),
-    ])
     return response.status(200).json({ verified: true, requestId: id })
   } catch {
     return sendError(

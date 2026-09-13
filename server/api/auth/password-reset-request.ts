@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { db } from '../_lib/db.js'
 import { sendTransactionalEmail } from '../_lib/email.js'
+import { passwordResetLink } from '../_lib/reset-link.js'
 import {
   bodyRecord,
   requestId,
@@ -17,23 +18,29 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Only POST is supported.', id)
   const rawEmail = bodyRecord(request).email
   const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : ''
-  if (!email) return response.status(200).json({ accepted: true, requestId: id })
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return response.status(200).json({ accepted: true, requestId: id })
   try {
+    const token = randomBytes(32).toString('hex')
+    const url = passwordResetLink(process.env.APP_URL, token, process.env.NODE_ENV === 'production')
     const user = await db.user.findUnique({ where: { email } })
     if (user) {
-      const token = randomBytes(32).toString('hex')
-      await db.verificationToken.deleteMany({
-        where: { userId: user.id, purpose: 'PASSWORD_RESET' },
-      })
-      await db.verificationToken.create({
-        data: {
-          userId: user.id,
-          tokenHash: createHash('sha256').update(token).digest('hex'),
-          purpose: 'PASSWORD_RESET',
-          expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      await db.$transaction(
+        async (tx) => {
+          await tx.verificationToken.deleteMany({
+            where: { userId: user.id, purpose: 'PASSWORD_RESET' },
+          })
+          await tx.verificationToken.create({
+            data: {
+              userId: user.id,
+              tokenHash: createHash('sha256').update(token).digest('hex'),
+              purpose: 'PASSWORD_RESET',
+              expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+            },
+          })
         },
-      })
-      const url = `${process.env.APP_URL ?? ''}/reset-password?token=${encodeURIComponent(token)}`
+        { isolationLevel: 'Serializable', maxWait: 5000, timeout: 10000 },
+      )
       await sendTransactionalEmail(
         email,
         'Reset your Gadgify password',

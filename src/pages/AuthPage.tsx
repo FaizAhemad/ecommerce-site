@@ -69,6 +69,10 @@ export function AuthPage({ mode, storefront, onNavigate, onLogin }: Props) {
         <p className="eyebrow">{signup ? copy.signupEyebrow : copy.loginEyebrow}</p>
         <h1 id="auth-title">{signup ? copy.signupTitle : copy.loginTitle}</h1>
         <p className="hero-text">{signup ? copy.signupDescription : copy.loginDescription}</p>
+        {!signup &&
+          new URLSearchParams(window.location.search).get('passwordReset') === 'success' && (
+            <p role="status">Your password has been reset. Sign in with your new password.</p>
+          )}
         <div className="auth-verification-tabs" role="tablist" aria-label="Verification method">
           <button
             type="button"
@@ -138,6 +142,13 @@ export function AuthPage({ mode, storefront, onNavigate, onLogin }: Props) {
             <span aria-hidden="true">→</span>
           </button>
         </form>
+        {!signup && (
+          <p className="auth-switch">
+            <a href="/forgot-password" onClick={onNavigate('/forgot-password')}>
+              Forgot password?
+            </a>
+          </p>
+        )}
         <p className="auth-consent">
           {copy.consentPrefix}{' '}
           <a href="/terms" onClick={onNavigate('/terms')}>

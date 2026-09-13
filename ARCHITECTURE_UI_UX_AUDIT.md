@@ -230,3 +230,9 @@ SEC-04 now has centralized CSRF token validation and Origin/Referer/Fetch Metada
 ## E15 remediation update - 2026-09-13
 
 SEC-04 runtime exception handling is now implemented: safe private/no-store errors, sanitized correlation, malformed-path handling and own-property route lookup. Existing auth/method/health/newsletter errors now follow the common contract; successful DTOs and CSRF/limiter behavior remain. Newsletter action handling retains failed drafts and blocks duplicates. All 94 offline tests, build/types and formatting pass with three existing lint warnings. Real browser/provider/device acceptance, full localization, protected operational diagnostics and broader session/security review remain pending; platform/module initialization failures are outside the dispatcher boundary. See PROJECT_STATUS E15 and API_IMPLEMENTATION_PLAN.
+
+## E16 recovery implementation - 2026-09-13
+
+Added /forgot-password and /reset-password with shared form-width PageContainer and existing auth spacing/colors/controls. No global layout overrides or new UI dependency were introduced. Conditional token claims and password/session changes are transactional; failed drafts and synchronous duplicate guards are preserved. New links carry tokens in fragments, the page strips token material from the visible URL, and no-referrer metadata protects outgoing requests including legacy links.
+
+All 108 offline tests, build/types and formatting pass with three existing warnings. The page inventory adds both routes to the phone keyboard/focus/loading/error/success matrix. No rendered/device/provider verification was performed under the owner-production workflow. Neutral response timing, per-recipient abuse controls, login/reset races, post-reset notifications and full localization remain open. See PASSWORD_RECOVERY.md and PROJECT_STATUS E16.

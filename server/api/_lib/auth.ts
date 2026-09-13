@@ -87,6 +87,10 @@ export async function requireAdmin(request: VercelRequest, response: VercelRespo
 export async function clearSession(request: VercelRequest, response: VercelResponse) {
   const token = sessionToken(request)
   if (token) await db.session.deleteMany({ where: { tokenHash: hashToken(token) } })
+  expireSessionCookie(response)
+}
+
+export function expireSessionCookie(response: VercelResponse) {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
   response.setHeader?.(
     'Set-Cookie',

@@ -10,6 +10,7 @@ import { PolicyPage } from './pages/PolicyPage'
 import { PaymentPage } from './pages/PaymentPage'
 import { TrackOrderPage } from './pages/TrackOrderPage'
 import { AuthPage } from './pages/AuthPage'
+import { PasswordRecoveryPage } from './pages/PasswordRecoveryPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
 import { AdminPage } from './pages/AdminPage'
@@ -58,6 +59,10 @@ export function StorefrontRoute({
 }: RouteProps) {
   const normalizedPath = path.length > 1 ? path.replace(/\/+$/, '') : path
   switch (normalizedPath) {
+    case '/forgot-password':
+      return <PasswordRecoveryPage key="forgot" mode="forgot" onNavigate={navigate} />
+    case '/reset-password':
+      return <PasswordRecoveryPage key="reset" mode="reset" onNavigate={navigate} />
     case '/debug-error':
       return <DebugErrorPage />
     case '/cart':

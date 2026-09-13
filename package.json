@@ -7,7 +7,7 @@
     "dev": "node scripts/check-node.mjs && vite",
     "build": "prisma generate && tsc -b && tsc -p tsconfig.api.json --pretty false && vite build",
     "build:offline": "tsc -b && tsc -p tsconfig.api.json --pretty false && node scripts/build-offline.mjs",
-    "test": "node --experimental-strip-types --test tests/http-timeout.test.mjs tests/media-upload.test.mjs tests/rate-limit.test.mjs tests/customer-isolation.test.mjs tests/wishlist-optimistic.test.mjs tests/vercel-routing.test.mjs tests/order-transactions.test.mjs tests/payment-order-state.test.mjs tests/csrf.test.mjs tests/api-errors.test.mjs",
+    "test": "node --experimental-strip-types --test tests/http-timeout.test.mjs tests/media-upload.test.mjs tests/rate-limit.test.mjs tests/customer-isolation.test.mjs tests/wishlist-optimistic.test.mjs tests/vercel-routing.test.mjs tests/order-transactions.test.mjs tests/payment-order-state.test.mjs tests/csrf.test.mjs tests/api-errors.test.mjs tests/password-recovery.test.mjs",
     "rate-limits:cleanup": "node scripts/cleanup-rate-limits.mjs",
     "test:rate-limits:db": "node --experimental-strip-types tests/rate-limit-postgres.mjs",
     "lint": "oxlint",
