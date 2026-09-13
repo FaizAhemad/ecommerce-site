@@ -21,6 +21,7 @@ import authPasswordResetRequest from '../server/api/auth/password-reset-request.
 import authPasswordReset from '../server/api/auth/password-reset.js'
 import authSignup from '../server/api/auth/signup.js'
 import authVerifyEmail from '../server/api/auth/verify-email.js'
+import authEmailVerificationRequest from '../server/api/auth/email-verification-request.js'
 import cart from '../server/api/cart/index.js'
 import newsletterSubscribe from '../server/api/newsletter/subscribe.js'
 import orders from '../server/api/orders/index.js'
@@ -84,6 +85,7 @@ const routes: Record<string, Handler> = {
   'auth/password-reset': authPasswordReset,
   'auth/signup': authSignup,
   'auth/verify-email': authVerifyEmail,
+  'auth/email-verification-request': authEmailVerificationRequest,
   cart,
   'newsletter/subscribe': newsletterSubscribe,
   orders,

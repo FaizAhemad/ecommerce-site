@@ -16,6 +16,8 @@ export function rateLimitRule(path: string, method = 'GET'): Rule | null {
   )
     return null
   if (path.startsWith('auth/')) {
+    if (path === 'auth/email-verification-request' && method === 'POST')
+      return { scope: 'email-verification-send', seconds: 600, ip: 5, user: 3 }
     if (method !== 'POST' && path !== 'auth/verify-email') return null
     if (path === 'auth/login') return { scope: 'login', seconds: 60, ip: 10 }
     if (['auth/signup', 'auth/password-reset-request', 'auth/mobile-request'].includes(path))

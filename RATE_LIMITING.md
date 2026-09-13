@@ -53,3 +53,6 @@ E14 runs CSRF validation before rate-limit counters and handlers for unsafe brow
 E15 keeps quota policies, failure-closed 503s and 429/Retry-After behavior intact. The dispatcher supplies a UUID request ID used by limiter errors and X-Request-Id. Invalid caller ID text is replaced; raw headers and customer data are not logged. Unexpected errors escaping policy code are caught by the runtime dispatcher boundary without calling downstream handlers.
 
 E16 uses existing auth-send and auth-verify quotas for forgot/reset and verification; CSRF and safe failure behavior remain. Token claims are now atomic. Existing IP limits do not complete per-recipient flooding protection or timing-enumeration resistance; those remain security acceptance/remediation work. No limiter migration or live check was performed.
+
+
+E18 adds auth/email-verification-request POST: 5 per IP and 3 per authenticated account per 600 seconds under email-verification-send. Existing verification submission quota is unchanged. Central CSRF, private 429/Retry-After and fail-closed 503 behavior remain. No migration is added; owner validates existing counter storage and new quota on production.

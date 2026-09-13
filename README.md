@@ -49,7 +49,7 @@ npm run build
 
 Source formatting uses the pinned development-only Prettier version and shared .prettierrc.json/.editorconfig rules: two spaces, single quotes, no optional semicolons, 100-column preferred wrapping and LF line endings. The commands cover frontend/server/dispatcher code, CSS/locales, scripts/tests, the seed and root code/JSON configuration. They skip generated output, the lockfile, secrets, media and migration/history files. Run format after edits and format:check before handing off changes. Oxlint checks code issues separately; formatting does not fix application logic or replace tests. See [Prettier installation guidance](https://prettier.io/docs/install) for the pinned-version approach.
 
-The build generates Prisma Client, type-checks client/server code and builds the frontend into `dist`. The current default suite contains 111 timeout, upload, rate-limit, customer-isolation/cart, wishlist, routing, order-transaction, payment-order-state, CSRF, API-error and password-recovery tests. It is not an end-to-end suite.
+The build generates Prisma Client, type-checks client/server code and builds the frontend into `dist`. The current default suite contains 120 timeout, upload, rate-limit, customer-isolation/cart, wishlist, routing, order-transaction, payment-order-state, CSRF, API-error and password-recovery tests. It is not an end-to-end suite.
 
 ## Database and deployment
 
@@ -87,3 +87,6 @@ Password recovery (E16): Login now links to /forgot-password, and emailed links 
 
 
 E17 fixes home newsletter feedback when a subscription is saved but confirmation email fails. The UI shows Subscribed with an informational notice; safe server diagnostics aid owner investigation. This does not establish email delivery. See PROJECT_STATUS E17.
+
+
+E18 adds Account email and /verify-email with authenticated rate-limited resend, single-use links and verification status. Offline scope passes; owner delivery/mobile acceptance remains pending. See [EMAIL_VERIFICATION.md](EMAIL_VERIFICATION.md).

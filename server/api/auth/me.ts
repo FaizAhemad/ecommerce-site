@@ -15,7 +15,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const user = await currentUser(request)
   if (!user) return sendError(response, 401, 'UNAUTHORIZED', 'Sign in is required.', id)
   return response.status(200).json({
-    user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      emailVerified: Boolean(user.emailVerifiedAt),
+    },
     requestId: id,
   })
 }

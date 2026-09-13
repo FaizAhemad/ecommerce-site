@@ -127,6 +127,15 @@ export function SiteLayout({
             </a>
           )}
 
+          {isAuthenticated && (
+            <a
+              className={currentPath === '/verify-email' ? 'is-active' : ''}
+              href="/verify-email"
+              onClick={navigate('/verify-email')}
+            >
+              Account email
+            </a>
+          )}
           {isAuthenticated && isAdmin && (
             <a
               className={currentPath === '/admin' ? 'is-active' : ''}

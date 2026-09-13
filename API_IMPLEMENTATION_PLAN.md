@@ -124,3 +124,6 @@ Forgot/reset customer routes now call the existing POST /api/auth/password-reset
 
 
 E17 newsletter clarification: the existing 502 CONFIRMATION_EMAIL_FAILED contract explicitly denotes a saved subscription. The client treats only that status/code combination as saved with unconfirmed email, without retrying. All other failures remain errors. Operational logs include phase, provider HTTP status when available and requestId only; consult the corresponding protected Resend logs for its actual reason. Do not expose provider bodies or recipient details to clients. No new environment variable or migration is required.
+
+
+E18: POST /api/auth/email-verification-request requires session + CSRF, ignores recipient/body IDs and sends only to the stored account email; returns 202 accepted:true, 200 verified:true for already-verified accounts, 400 EMAIL_REQUIRED or safe 503 VERIFICATION_UNAVAILABLE. Existing POST /api/auth/verify-email consumes a one-time token. GET /api/auth/me adds emailVerified:boolean. Signup shares configured-origin fragment link issuance; mail failure does not undo account creation. No login restriction or additional serverless function. See EMAIL_VERIFICATION.md and PROJECT_STATUS E18.

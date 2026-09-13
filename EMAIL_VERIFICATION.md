@@ -1,0 +1,13 @@
+# Email verification
+
+Customer entry: Account email in the signed-in header, or the /verify-email link in email. A guest may confirm the token; only signed-in accounts can read their own email status or request another link. Confirming a token does not switch the current account or sign anyone in. Already-used/expired links return a safe error; sign in and request a fresh link.
+
+New links use configured APP_URL with /verify-email#token=..., require HTTPS in production and reject embedded credentials. Legacy query links remain readable. Tokens are random 32-byte values, stored hashed, expire after 24 hours and are claimed once with the account update in a Serializable transaction. Resend replaces previous email tokens for that owner. Existing sessions/login eligibility stay unchanged. No new migration, environment variable or serverless function is introduced.
+
+Resend: POST /api/auth/email-verification-request with an empty object through apiFetch. The server ignores any supplied recipient or account identifier. CSRF and 5/IP + 3/account per ten-minute quotas apply. No automatic write replay. Provider failure is a safe 503 and may have an uncertain sending outcome; the newly generated link remains current. A later explicit resend replaces it. APP_URL, RESEND_API_KEY and RESEND_FROM_EMAIL must already be configured by the owner. Do not expose these secrets or put tokens in logs/storage.
+
+Status: GET /api/auth/me adds emailVerified:boolean. The page uses a private account-generation query, cancellation and refetch after successful actions. Missing email is displayed honestly; email changes and full profile editing are not implemented here. Future email changes must invalidate all outstanding verification tokens and reset emailVerifiedAt in the same transaction, otherwise old links could verify a replacement email.
+
+Security basis: [OWASP email validation and verification](https://cheatsheetseries.owasp.org/cheatsheets/Email_Validation_and_Verification_Cheat_Sheet.html) recommends random, single-use, time-limited proof. This implementation does not claim full signup abuse/enumeration resistance, full localization, durable mail delivery or enforcement of verification before purchases.
+
+Validation: PROJECT_STATUS E18 records 120 passing offline tests and offline build/types; the single completion checklist is APPLICATION_BACKLOG. Owner production acceptance covers new signup, received links, expired/used links, explicit resend and quota rejection, account switching, existing login and Android Chrome/iOS Safari at 320-430px with keyboard/focus/error states. No .env, live API/database/provider, migration or deployment checks were performed by Codex.

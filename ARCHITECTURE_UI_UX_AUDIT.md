@@ -239,3 +239,6 @@ All 108 offline tests, build/types and formatting pass with three existing warni
 
 
 E17 corrects newsletter partial-success feedback: confirmed persistence is reconciled even when its subsequent email fails. No optimistic persistence, automatic replay or global styling changes. Provider failure is still observable through safe logs and the existing error contract. Offline fixtures pass; rendered and delivery acceptance remain pending.
+
+
+E18 adds the email-verification form using existing shared width/classes; account status uses private generation-scoped React Query. Explicit confirmation, immediate pending state, duplicate locks, cancellation and persistent recovery are covered by offline fixtures. Header gains Account email. No rendered/device validation was performed under owner workflow; phone wrapping, focus and keyboard acceptance remain pending.

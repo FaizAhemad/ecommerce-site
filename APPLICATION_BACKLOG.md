@@ -6,7 +6,12 @@ Reviewed against the current workspace on 2026-09-13. This is the single complet
 
 Completion convention: `- [ ]` means pending, partial, blocked or awaiting required verification; `- [x] ✅` means the stated scope is implemented and verified, with evidence in [PROJECT_STATUS.md](PROJECT_STATUS.md). A code implementation or build alone does not complete a live integration. Preserve unverified work and business dependencies. Evidence IDs below refer to that status document.
 
-## Current task: password recovery and token claims (E16)
+## Current task: email verification (E18)
+
+- [x] ? Implement verification page, account-email status, session-owned resend with IP/account quotas, secure signup links and duplicate/pending/error handling. All 120 offline tests and offline build/types pass; see PROJECT_STATUS E18 for scope.
+- [ ] Owner production acceptance: signup and resend delivery, expired/used links, 429s, status refresh, existing login and Android/iOS interaction/accessibility. Full profile/email-change/mobile verification and durable notifications remain pending.
+
+## Previous task: password recovery and token claims (E16)
 
 Owner: Codex for offline implementation; product owner for production/provider/device acceptance. Contract and acceptance scenarios: [PASSWORD_RECOVERY.md](PASSWORD_RECOVERY.md).
 
@@ -148,4 +153,4 @@ Each item needs an owner/priority, implementation notes, API/data changes, secur
 ## Newsletter partial-success repair - E17
 
 - [x] ? Saved-subscription confirmation failures reconcile to Subscribed with informational feedback and no replay; privacy-safe failure diagnostics and 111 offline tests verify the bounded behavior (PROJECT_STATUS E17).
-- [ ] Owner verifies newsletter provider rejection reason and email delivery on production. The reported 502 does not establish the underlying Resend cause; email delivery is not fixed or verified by this UI repair.
+- [x] ? Owner reports newsletter working on 2026-09-14 (PROJECT_STATUS E17 owner report). Exact provider configuration fix and independent delivery/device evidence were not supplied; this does not verify every notification flow.

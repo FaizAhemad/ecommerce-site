@@ -59,3 +59,6 @@ E14 implements central CSRF proof for current browser writes, including guest au
 E15 implements the offline-verified API error foundation: safe runtime dispatcher failures, structured error details, request correlation and compatible newsletter recovery without write replay. Existing success responses remain intact. Full localized errors, rendered/mobile/provider acceptance and protected operational diagnostics remain requirements tracked in APPLICATION_BACKLOG; see PROJECT_STATUS E15.
 
 E16 implements email-based Forgot password and Reset password customer pages with neutral acknowledgment, matching new passwords, atomic one-time token use and revocation of existing owner sessions. Full profile/address, mobile-only recovery, verification UI, localization, delivery and security acceptance remain tracked in APPLICATION_BACKLOG. See PASSWORD_RECOVERY.md and PROJECT_STATUS E16; 108 offline tests do not establish provider/mobile production readiness.
+
+
+E18 implements email verification and authenticated resend within the shared account form layout, preserving existing login eligibility. Full profile/address/email-change/mobile verification and production/provider/device acceptance remain in APPLICATION_BACKLOG. See EMAIL_VERIFICATION.md and PROJECT_STATUS E18.

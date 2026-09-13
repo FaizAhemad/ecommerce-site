@@ -64,3 +64,6 @@ E16 account recovery uses the same five-second snackbar for request acknowledgme
 
 
 E17 supersedes the E15 failed-draft behavior specifically for 502 CONFIRMATION_EMAIL_FAILED: persistence is already confirmed, so show Subscribed, clear the completed input and notify with info: "You are subscribed, but we could not confirm the email was sent. No need to subscribe again." Other errors preserve failed drafts. Keep five-second dismissal; the Subscribed button remains visible after the notice closes. Email delivery and durable retry handling remain unverified/pending.
+
+
+E18: verification/resend use five-second snackbars plus persistent page results/errors. Resend acceptance means the provider accepted sending, not delivery. Explicit confirmation changes verified state only after server success. Never replay writes, store/log tokens or imply an email-less account is verified. Signup mail failure can be recovered through Account email after sign-in.

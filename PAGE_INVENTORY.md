@@ -19,9 +19,10 @@ The app waits for storefront/session checks before rendering navigation and rout
 | /terms | PolicyPage (terms) | Public | Placeholder asking for approved content. |
 | /terms-and-conditions | PolicyPage (terms) | Public | Terms alias. |
 | /login | AuthPage (login) | Public | Password login by email/mobile identifier. Authenticated visitors render HomePage at this path. |
-| /signup | AuthPage (signup) | Public | Registration with email/mobile selection. OTP/verification/reset customer UI incomplete. |
+| /signup | AuthPage (signup) | Public | Registration with email/mobile selection. Email-verification and password-recovery pages exist; mobile OTP UI remains pending. |
 | /forgot-password | PasswordRecoveryPage (forgot) | Public | Email-based recovery request, neutral acknowledgment, pending/error states and failed draft retention; owner delivery/mobile acceptance pending (E16). |
 | /reset-password | PasswordRecoveryPage (reset) | Public; one-time token authorizes reset | New/confirmed password, missing-link recovery, fragment/legacy query support, session revocation and normal login after success; owner acceptance pending (E16). |
+| /verify-email | EmailVerificationPage | Public token confirmation; session required for status/resend | Explicit confirmation, safe token URL cleanup, verified status, owned resend, pending/errors; owner mobile/provider acceptance pending (E18). |
 | /cart | CartPage | Authenticated | Shared header/page query with optimistic quantity/removal, per-product locks, affected-row rollback and checkout guard while saving. |
 | /wishlist | WishlistRedirect | Public redirect | Temporarily hidden by request; replaces the URL with /products. Header link removed. WishlistPage is retained but inactive; product hearts and saved-item APIs remain available. |
 | /checkout | PaymentPage | Authenticated | Placeholder totals from first catalog products; informational snackbar on submit, no payment/order creation. |
@@ -31,7 +32,7 @@ The app waits for storefront/session checks before rendering navigation and rout
 | /debug-error | DebugErrorPage | Intentional throw only in development | In production renders a development-only notice. |
 | Any unmatched path | HomePage fallback | Public fallback | Includes unknown /admin/* paths. No parent-route redirect/not-found handling yet. |
 
-Missing pages include profile/address management, email verification, support request tracking, AI/tour/help flows, and shipping/cancellation/cookie policy pages. Reset emails now resolve to /reset-password (E16); /verify-email remains unregistered.
+Missing pages include profile/address management, support request tracking, AI/tour/help flows, and shipping/cancellation/cookie policy pages. Reset emails now resolve to /reset-password (E16); /verify-email is registered in E18.
 
 The navbar includes Orders for authenticated users. Admin visibility now requires verified ADMIN role; the page/API still apply authorization. Final responsive/role-visibility verification is pending.
 
@@ -96,3 +97,6 @@ These states have source/component-fixture evidence, not rendered Android/iOS or
 
 
 E17 home newsletter: persisted subscriptions with failed confirmation now show Subscribed and an informational notice. Other signup failures preserve the address. No route or layout changes. Component-fixture evidence covers reconciliation; owner phone/browser/provider acceptance remains pending.
+
+
+E18 adds the Account email header link for signed-in customers/admins. Verify /verify-email as guest, unverified/verified account, email-less mobile account, invalid/expired/used token and slow/429/offline responses. Header wrapping and new page keyboard/focus/320-430px acceptance are owner-owned and pending.

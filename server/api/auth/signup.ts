@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomInt } from 'node:crypto'
+import { createHash, randomInt } from 'node:crypto'
 import { db } from '../_lib/db.js'
 import {
   bodyRecord,
@@ -8,6 +8,7 @@ import {
   type VercelResponse,
 } from '../_lib/http.js'
 import { createSession, hashPassword } from '../_lib/auth.js'
+import { issueEmailVerification } from '../_lib/email-verification.js'
 import { sendTransactionalEmail } from '../_lib/email.js'
 import { sendVerificationSms } from '../_lib/sms.js'
 
@@ -45,21 +46,17 @@ export default async function handler(request: VercelRequest, response: VercelRe
       select: { id: true, email: true, phone: true, name: true, role: true },
     })
     if (method === 'email') {
-      const token = randomBytes(32).toString('hex')
-      await db.verificationToken.create({
-        data: {
-          userId: user.id,
-          tokenHash: createHash('sha256').update(token).digest('hex'),
-          purpose: 'EMAIL_VERIFICATION',
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        },
-      })
-      const verificationUrl = `${process.env.APP_URL ?? ''}/verify-email?token=${encodeURIComponent(token)}`
-      await sendTransactionalEmail(
-        email,
-        'Verify your Gadgify email',
-        `<p>Welcome to Gadgify.</p><p><a href="${verificationUrl}">Verify your email</a></p>`,
-      )
+      try {
+        await issueEmailVerification(
+          db,
+          user.id,
+          process.env.APP_URL,
+          process.env.NODE_ENV === 'production',
+          sendTransactionalEmail,
+        )
+      } catch {
+        // The account exists. Let the customer sign in and request a new link.
+      }
     } else {
       const code = String(randomInt(100000, 1000000))
       await db.verificationToken.create({
