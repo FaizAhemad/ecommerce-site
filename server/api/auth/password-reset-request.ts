@@ -1,12 +1,20 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { db } from '../_lib/db.js'
 import { sendTransactionalEmail } from '../_lib/email.js'
-import { bodyRecord, requestId, type VercelRequest, type VercelResponse } from '../_lib/http.js'
+import {
+  bodyRecord,
+  requestId,
+  sendError,
+  setCacheControl,
+  type VercelRequest,
+  type VercelResponse,
+} from '../_lib/http.js'
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   const id = requestId(request)
+  setCacheControl(response, 'private')
   if (request.method !== 'POST')
-    return response.status(405).json({ error: { code: 'METHOD_NOT_ALLOWED', requestId: id } })
+    return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Only POST is supported.', id)
   const rawEmail = bodyRecord(request).email
   const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : ''
   if (!email) return response.status(200).json({ accepted: true, requestId: id })

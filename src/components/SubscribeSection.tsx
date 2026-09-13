@@ -1,30 +1,24 @@
 import { useNotification } from './NotificationProvider'
-import { apiFetch } from '../api/http'
-import { useState, type FormEvent } from 'react'
+import { subscribeToNewsletter } from '../api/newsletter'
+import { useRef, useState, type FormEvent } from 'react'
 export function SubscribeSection() {
   const notify = useNotification()
+  const submitting = useRef(false)
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (submitting.current || status === 'success') return
+    submitting.current = true
     setStatus('loading')
     try {
-      const response = await apiFetch('/api/newsletter/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
-      const result = (await response.json().catch(() => null)) as {
-        emailSent?: boolean
-        error?: string
-      } | null
-      if (!response.ok) throw new Error(result?.error || 'Subscription failed')
+      const result = await subscribeToNewsletter(email)
       setStatus('success')
       setEmail('')
       notify(
         result?.emailSent
           ? 'You are subscribed. A confirmation email is on its way.'
-          : 'You are subscribed. Configure the email sender to receive a confirmation message.',
+          : 'You are subscribed.',
         'success',
       )
     } catch (error) {
@@ -32,6 +26,8 @@ export function SubscribeSection() {
       notify(
         error instanceof Error ? error : 'We could not subscribe you right now. Please try again.',
       )
+    } finally {
+      submitting.current = false
     }
   }
   return (
@@ -59,12 +55,7 @@ export function SubscribeSection() {
           <button
             className="primary-button"
             type="submit"
-            disabled={status === 'loading'}
-            onClick={() => {
-              if (status === 'success') {
-                setStatus('idle')
-              }
-            }}
+            disabled={status === 'loading' || status === 'success'}
           >
             {status === 'loading' ? 'Joining…' : status === 'success' ? 'Subscribed' : 'Subscribe'}{' '}
             <span aria-hidden="true">→</span>

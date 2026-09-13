@@ -41,6 +41,7 @@ import { createRateLimitStore } from '../server/api/_lib/rate-limit-store.js'
 import { db } from '../server/api/_lib/db.js'
 import { csrfTokenResponse, validCsrf } from '../server/api/_lib/csrf.js'
 import { requestId, sendError } from '../server/api/_lib/http.js'
+import { withApiErrorBoundary } from '../server/api/_lib/http.js'
 
 const consumeRateLimit = createRateLimitStore(db)
 
@@ -52,11 +53,13 @@ type RequestLike = {
   url?: string
 }
 type ResponseLike = {
+  headersSent?: boolean
+  writableEnded?: boolean
   status: (code: number) => ResponseLike
   json: (body: unknown) => unknown
   setHeader?: (name: string, value: string) => void
 }
-type Handler = (request: any, response: any) => unknown
+type Handler = (request: RequestLike, response: ResponseLike) => unknown
 
 const routes: Record<string, Handler> = {
   categories,
@@ -111,7 +114,7 @@ function pathSegments(request: RequestLike) {
 
 function findRoute(segments: string[]) {
   const key = segments.join('/')
-  if (routes[key]) return { handler: routes[key], query: {} }
+  if (Object.hasOwn(routes, key)) return { handler: routes[key], query: {} }
   if (segments[0] === 'admin' && segments[1] === 'products' && segments.length === 3)
     return { handler: adminProduct, query: { id: segments[2] } }
   if (segments[0] === 'orders' && segments.length === 2)
@@ -135,38 +138,62 @@ function findRoute(segments: string[]) {
 }
 
 export default async function handler(request: RequestLike, response: ResponseLike) {
-  const segments = pathSegments(request)
-  const path = segments.join('/')
-  const production = process.env.NODE_ENV === 'production'
-  if (path === 'auth/csrf') return csrfTokenResponse(request, response, production)
-  const match = findRoute(segments)
-  if (!match)
-    return response
-      .status(404)
-      .json({ error: { code: 'NOT_FOUND', message: 'API route not found.' } })
-  const headers = request.headers ?? {}
-  if (!validCsrf(request, path, production))
-    return sendError(
-      response,
-      403,
-      'CSRF_INVALID',
-      'Unable to verify this request. Refresh the page and try again.',
-      requestId(request),
+  return withApiErrorBoundary(request, response, async () => {
+    let segments: string[]
+    try {
+      segments = pathSegments(request)
+      if (
+        segments.some(
+          (segment) =>
+            /[/\\]/.test(segment) ||
+            [...segment].some(
+              (character) => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127,
+            ) ||
+            segment === '.' ||
+            segment === '..',
+        )
+      )
+        throw new URIError('Invalid segment')
+    } catch {
+      return sendError(
+        response,
+        400,
+        'INVALID_PATH',
+        'The API request path is invalid.',
+        requestId(request),
+      )
+    }
+    const path = segments.join('/')
+    const production = process.env.NODE_ENV === 'production'
+    if (path === 'auth/csrf')
+      return csrfTokenResponse(request, response, production, requestId(request))
+    const match = findRoute(segments)
+    if (!match)
+      return sendError(response, 404, 'NOT_FOUND', 'API route not found.', requestId(request))
+    const headers = request.headers ?? {}
+    if (!validCsrf(request, path, production))
+      return sendError(
+        response,
+        403,
+        'CSRF_INVALID',
+        'Unable to verify this request. Refresh the page and try again.',
+        requestId(request),
+      )
+    if (
+      !(await enforceRateLimit(request, response, segments.join('/'), {
+        consume: consumeRateLimit,
+        userId: async () => (await currentUser(request))?.id,
+        vercel: process.env.VERCEL === '1' && process.env.VERCEL_ENV !== 'development',
+      }))
     )
-  if (
-    !(await enforceRateLimit(request, response, segments.join('/'), {
-      consume: consumeRateLimit,
-      userId: async () => (await currentUser(request))?.id,
-      vercel: process.env.VERCEL === '1' && process.env.VERCEL_ENV !== 'development',
-    }))
-  )
-    return
-  return await match.handler(
-    {
-      ...request,
-      headers: { ...headers, cookie: headers.cookie ?? headers.Cookie },
-      query: { ...(request.query ?? {}), ...match.query },
-    },
-    response,
-  )
+      return
+    return await match.handler(
+      {
+        ...request,
+        headers: { ...headers, cookie: headers.cookie ?? headers.Cookie },
+        query: { ...(request.query ?? {}), ...match.query },
+      },
+      response,
+    )
+  })
 }

@@ -2,16 +2,25 @@
 
 The current page and route inventory is maintained in [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md). Any page or route change must update that inventory and the relevant status documentation in the same change.
 
-Reviewed against the current workspace on 2026-09-12. This is the single completion checklist for product requirements, security gates and UI work. Other documents describe scope and evidence; they must not maintain competing completion lists.
+Reviewed against the current workspace on 2026-09-13. This is the single completion checklist for product requirements, security gates and UI work. Other documents describe scope and evidence; they must not maintain competing completion lists.
 
 Completion convention: `- [ ]` means pending, partial, blocked or awaiting required verification; `- [x] ✅` means the stated scope is implemented and verified, with evidence in [PROJECT_STATUS.md](PROJECT_STATUS.md). A code implementation or build alone does not complete a live integration. Preserve unverified work and business dependencies. Evidence IDs below refer to that status document.
 
-## Current task: CSRF protection (E14)
+## Current task: safe API errors (E15)
+
+Owner: Codex for offline implementation and evidence; product owner for production acceptance.
+
+- [x] ✅ Add safe dispatcher exception handling, malformed-path rejection, explicit route lookup and consistent error details; standardize newsletter/auth/method/health errors and preserve newsletter drafts and success responses. All 94 offline tests, formatting and environment-disabled build pass; three existing lint warnings remain (PROJECT_STATUS E15).
+- [ ] Product owner: validate E15 on the deployed revision: existing success flows, newsletter error/confirmation feedback, safe unknown-route responses and matching error/request IDs. Provider/browser/mobile acceptance remains pending; no deliberate production failures were triggered by Codex.
+
+## Previous task: CSRF protection (E14)
 
 Owner: Codex for offline implementation; product owner for production acceptance. See [CSRF_PROTECTION.md](CSRF_PROTECTION.md) for the shared API contract and rollout.
 
 - [x] ✅ Implement central CSRF bootstrap/token validation, session-scoped client handling and exact signed-webhook exception; 75 offline tests pass including existing regressions and E14 security cases. Evidence: PROJECT_STATUS E14.
 - [ ] Product owner: validate E14 on production/preview hosts and mobile browsers, including login/logout, existing write flows, expired sessions, cross-tab behavior and provider callbacks. Deploy frontend/server together and refresh old tabs.
+
+- [x] ✅ Owner reports CSRF working on the deployed application; supplied screenshot confirms X-CSRF-Token is attached to a same-origin request (E14 owner report, 2026-09-13). Broader rejection/device/provider acceptance above remains pending.
 
 ## Previous task: order inventory integrity (E13)
 
@@ -40,7 +49,7 @@ Additional release checks:
 - [ ] Re-run dependency/security checks against the release lockfile and record the result; historical audits do not certify a new release.
 - [ ] Verify database/function execution budgets, client cancellation, retry/idempotency and ambiguous outcomes end to end.
 - [ ] E11 verifies no pending migrations and passing live temporary-table SQL. Finish production-host/browser concurrency/429 recovery acceptance and schedule expired-counter cleanup.
-- [ ] Standardize remaining API error shapes and localized recovery; newsletter still returns legacy string errors.
+- [ ] Complete API error localization and production recovery acceptance. E15 implements structured errors and safe dispatcher exception handling, including newsletter errors; offline scope is verified above. Full localized messages and live acceptance remain pending.
 - [ ] Review CSRF protection, signup/verification/account enumeration, remaining ownership/CSRF and payment/webhook replay/state-transition gaps; E13 adds stock/cancellation concurrency guards with production acceptance still pending.
 - [ ] Remediate and verify source-audit findings SEC-01 through SEC-06 in ARCHITECTURE_UI_UX_AUDIT.md against the security gates above; E11 repairs order-address validation, account/session scoping and error caching; retain full browser/customer-isolation and remaining security verification. These are detailed findings within the existing gates, not separate security completion claims.
 

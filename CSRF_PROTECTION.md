@@ -33,3 +33,5 @@ Deploy frontend and server changes together. Already-open tabs running an old bu
 | Android Chrome and iOS Safari | Same-origin cookies/headers and action feedback work; owner records device evidence. |
 
 Do not record cookies, tokens or customer payloads in evidence. No live checks, .env inspection, migrations or deployment were performed during this implementation, per the owner's workflow.
+
+E15 supplements this contract with safe runtime dispatcher errors and correlated UUIDs. Bootstrap failures now include requestId; token generation, source checks, cookie flags, client lifecycle and signed-webhook exception are unchanged. Malformed API routes return structured 400 before guards/handlers; valid unsafe routes still require CSRF proof. Owner-reported E14 positive-path success remains separate from E15 production acceptance.

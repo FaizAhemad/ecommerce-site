@@ -49,7 +49,7 @@ npm run build
 
 Source formatting uses the pinned development-only Prettier version and shared .prettierrc.json/.editorconfig rules: two spaces, single quotes, no optional semicolons, 100-column preferred wrapping and LF line endings. The commands cover frontend/server/dispatcher code, CSS/locales, scripts/tests, the seed and root code/JSON configuration. They skip generated output, the lockfile, secrets, media and migration/history files. Run format after edits and format:check before handing off changes. Oxlint checks code issues separately; formatting does not fix application logic or replace tests. See [Prettier installation guidance](https://prettier.io/docs/install) for the pinned-version approach.
 
-The build generates Prisma Client, type-checks client/server code and builds the frontend into `dist`. The current default suite contains 75 timeout, upload, rate-limit, customer-isolation/cart, wishlist, routing, order-transaction, payment-order-state and CSRF tests. It is not an end-to-end suite.
+The build generates Prisma Client, type-checks client/server code and builds the frontend into `dist`. The current default suite contains 94 timeout, upload, rate-limit, customer-isolation/cart, wishlist, routing, order-transaction, payment-order-state, CSRF and API-error tests. It is not an end-to-end suite.
 
 ## Database and deployment
 
@@ -80,3 +80,5 @@ Editable business data should move into configuration/database management. Curre
 Local recovery evidence E12: Vercel CLI 58.9.0 starts successfully with Node 22.13.0 on `http://localhost:3100` using `vercel dev --listen 3100`. This test server avoids colliding with an existing port-3000 process. Restart Vercel dev after changing routing configuration; do not add HTML to Vite assetsInclude to hide routing errors. No deployment was performed.
 
 CSRF protection (E14) is centralized in apiFetch and the sole dispatcher. No new environment variable or migration is needed. Deploy frontend/server together and refresh old tabs before testing writes; existing sessions remain subject to normal authentication. Read [CSRF_PROTECTION.md](CSRF_PROTECTION.md) for the API contract and owner production acceptance.
+
+E15 adds safe dispatcher errors and structured newsletter/auth/method/health errors with request correlation. Newsletter preserves saved-versus-confirmation-failed outcomes and failed drafts. No new environment variable or migration is needed; owner production acceptance remains pending. See [API_IMPLEMENTATION_PLAN.md](API_IMPLEMENTATION_PLAN.md#e15-safe-error-contract).

@@ -68,7 +68,13 @@ export async function enforceRateLimit(
 ) {
   const rule = rateLimitRule(path, request.method)
   if (!rule) return true
-  const id = randomUUID()
+  // The dispatcher supplies a sanitized ID; standalone callers still get a fresh ID.
+  const suppliedId = request.headers?.['x-request-id']
+  const id =
+    typeof suppliedId === 'string' &&
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(suppliedId)
+      ? suppliedId
+      : randomUUID()
   const consume = async (kind: string, identity: string, limit: number) => {
     const key = createHash('sha256').update(`${rule.scope}:${kind}:${identity}`).digest('hex')
     const result = await dependencies.consume(key, limit, rule.seconds)

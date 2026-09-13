@@ -61,18 +61,22 @@ export function csrfTokenResponse(
   request: VercelRequest,
   response: VercelResponse,
   production: boolean,
+  id: string = crypto.randomUUID(),
 ) {
   response.setHeader?.('Cache-Control', 'private, no-store, max-age=0')
   response.setHeader?.('Vary', 'Cookie, Origin, Sec-Fetch-Site')
   if (request.method !== 'GET') {
     response.setHeader?.('Allow', 'GET')
-    return response.status(405).json({ error: { code: 'METHOD_NOT_ALLOWED', message: 'Use GET.' } })
+    return response
+      .status(405)
+      .json({ error: { code: 'METHOD_NOT_ALLOWED', message: 'Use GET.', requestId: id } })
   }
   if (!trustedSource(request, production) || header(request, 'x-csrf-bootstrap') !== '1') {
     return response.status(403).json({
       error: {
         code: 'CSRF_INVALID',
         message: 'Unable to verify this request. Refresh the page and try again.',
+        requestId: id,
       },
     })
   }

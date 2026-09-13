@@ -1,6 +1,6 @@
 # Project status
 
-Reviewed: 2026-09-12. This describes the current workspace, including staged implementation. It does not certify the deployed revision or production readiness.
+Reviewed: 2026-09-13. This describes the current workspace, including staged implementation. It does not certify the deployed revision or production readiness.
 
 [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) is the only completion checklist. A checked item needs implementation and relevant verification evidence. A build alone does not establish live behavior. Earlier snapshots are preserved in [historical status](docs/history/PROJECT_STATUS_BEFORE_SYNC.md); contradictions there are superseded by this document.
 
@@ -17,7 +17,21 @@ Reviewed: 2026-09-12. This describes the current workspace, including staged imp
 | E7 — source audit | Router, page components, API handlers, schema/migrations, scripts, query keys, config, Vite/Vercel configuration and all project Markdown inspected. Documentation claims corrected against those files. |
 | E8 — documentation validation | Relative Markdown links, registered route inventory, script/handler references, completion formatting and stale active-document claims checked during this pass. Historical documents are explicitly labelled. |
 
+## Safe API errors - E15 - 2026-09-13
+
+The sole dispatcher now wraps runtime routing, CSRF, limiter and handler execution in a safe exception boundary. Malformed percent encodings, decoded separators/control characters and dot segments return private/no-store 400 INVALID_PATH; unknown/prototype names return 404 NOT_FOUND using explicit own-property route lookup. Successful route matching, decoded IDs, query filters, cookie forwarding, CSRF and rate-limit behavior are preserved. The dispatcher Handler type no longer uses loose any.
+
+Unexpected runtime exceptions return 500 INTERNAL_ERROR with safe guidance to check current state before retrying. They do not expose thrown messages, stacks, database URLs or provider details. Logging records only a fixed event and a sanitized request ID, with matching X-Request-Id/error correlation. Already-sent responses are not written again. This boundary cannot repair module initialization errors, platform body-parser failures, terminated functions or broken network transport; protected operational diagnostics remain a separate requirement.
+
+Newsletter, shared auth authorization, method errors and CSRF-bootstrap failures now provide code/message/requestId. Health failures retain ok:false and database:unavailable while adding error details. Password-reset requests keep their existing neutral accepted:true response and gain private caching. Newsletter 202 success remains subscribed/emailSent; confirmation-provider rejection or exceptions after persistence report CONFIRMATION_EMAIL_FAILED with the saved outcome. Provider values and configuration names are not exposed in those errors. Quota policies/statuses/Retry-After remain intact and use dispatcher correlation IDs.
+
+SubscribeSection uses a focused newsletter client helper that accepts structured and legacy error contracts during rollout. Malformed/unconfirmed responses do not claim success. It retains failed email input, blocks synchronous duplicate submissions and keeps the successful Subscribed action disabled. Customer success copy no longer asks customers to configure an email sender. Existing five-second snackbars, request budgets and no automatic write replay remain. This does not implement confirmation retries, change email branding or complete localization.
+
+Verification: all 94 tests pass (75 prior regressions plus 19 E15 cases). New tests execute actual dispatcher/helper/handlers with injected synthetic stores/providers and a component hook fixture; coverage includes failure isolation, sanitized logs/IDs, route validation and forwarding, quota metadata, unauthorized/admin rejection, health compatibility, newsletter partial success and duplicate/failed-draft behavior. Frontend/API types and Vite compilation pass via npm run build:offline; formatting passes; lint retains exactly the same three existing React warnings. No .env inspection, live API/database/provider/browser check, migration or deployment was performed. Real rendered/mobile/provider acceptance belongs to the owner and remains open. Full API/localized recovery and broader security release gates are not marked complete.
+
 ## CSRF protection - E14 - 2026-09-13
+
+Owner follow-up, 2026-09-13: reports CSRF working on the deployed application. The supplied Network screenshot shows X-CSRF-Token on a same-origin request. This is owner-reported positive-path evidence; the screenshot does not establish response status, forged-token rejection, complete mobile/cross-tab behavior or provider acceptance. No cookie/token values were copied into documentation. Broader acceptance remains pending. This follow-up selected consistent safe API errors as the next task; subsequent implementation and evidence are recorded in E15 above.
 
 Central protection now covers current browser writes through the existing single dispatcher and apiFetch. The new /api/auth/csrf bootstrap uses a custom header and private/no-store response. Tokens are derived from a random HttpOnly session/guest seed, retained only in generation-scoped memory, and checked with timing-safe comparison. Login/signup and other guest writes are included. Origin/Referer and Fetch Metadata provide additional checks. No database/session schema, environment variable, dependency, CSP or Vercel route configuration change was required.
 

@@ -1,20 +1,35 @@
 import { db } from '../_lib/db.js'
-import { fetchWithTimeout } from '../_lib/http.js'
-
-type VercelRequest = { method?: string; body?: { email?: unknown } }
-type VercelResponse = { status: (code: number) => { json: (body: unknown) => unknown } }
+import {
+  bodyRecord,
+  fetchWithTimeout,
+  requestId,
+  sendError,
+  setCacheControl,
+  type VercelRequest,
+  type VercelResponse,
+} from '../_lib/http.js'
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
-  if (request.method !== 'POST') return response.status(405).json({ error: 'Method not allowed' })
-  const email =
-    typeof request.body?.email === 'string' ? request.body.email.trim().toLowerCase() : ''
+  const id = requestId(request)
+  setCacheControl(response, 'private')
+  if (request.method !== 'POST')
+    return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Only POST is supported.', id)
+  const body = bodyRecord(request)
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    return response.status(400).json({ error: 'Enter a valid email address.' })
+    return sendError(response, 400, 'VALIDATION_ERROR', 'Enter a valid email address.', id)
   const apiKey = process.env.RESEND_API_KEY
   const audienceId = process.env.RESEND_AUDIENCE_ID
   const fromEmail = process.env.RESEND_FROM_EMAIL
   if (!apiKey)
-    return response.status(503).json({ error: 'Newsletter email service is not configured.' })
+    return sendError(
+      response,
+      503,
+      'NEWSLETTER_UNAVAILABLE',
+      'Newsletter signup is temporarily unavailable. Please try again later.',
+      id,
+    )
+  let saved = false
   try {
     if (audienceId) {
       const result = await fetchWithTimeout(
@@ -25,13 +40,21 @@ export default async function handler(request: VercelRequest, response: VercelRe
           body: JSON.stringify({ email, unsubscribed: false }),
         },
       )
-      if (!result.ok) return response.status(502).json({ error: 'Newsletter service unavailable.' })
+      if (!result.ok)
+        return sendError(
+          response,
+          502,
+          'NEWSLETTER_UNAVAILABLE',
+          'Newsletter service unavailable.',
+          id,
+        )
     }
     await db.newsletterSubscription.upsert({
       where: { email },
       create: { email },
       update: { status: 'ACTIVE', unsubscribedAt: null },
     })
+    saved = true
     let emailSent = false
     if (fromEmail) {
       const emailResponse = await fetchWithTimeout('https://api.resend.com/emails', {
@@ -45,13 +68,25 @@ export default async function handler(request: VercelRequest, response: VercelRe
         }),
       })
       if (!emailResponse.ok)
-        return response
-          .status(502)
-          .json({ error: 'Subscription saved, but the confirmation email could not be sent.' })
+        return sendError(
+          response,
+          502,
+          'CONFIRMATION_EMAIL_FAILED',
+          'Subscription saved, but the confirmation email could not be sent.',
+          id,
+        )
       emailSent = true
     }
     return response.status(202).json({ subscribed: true, emailSent })
   } catch {
-    return response.status(502).json({ error: 'Newsletter service unavailable.' })
+    return sendError(
+      response,
+      502,
+      saved ? 'CONFIRMATION_EMAIL_FAILED' : 'NEWSLETTER_UNAVAILABLE',
+      saved
+        ? 'Subscription saved, but the confirmation email could not be sent.'
+        : 'Newsletter service unavailable.',
+      id,
+    )
   }
 }

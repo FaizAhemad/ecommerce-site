@@ -40,7 +40,7 @@ Keep implementation helpers outside root api. Current Vercel routes use /api/(.*
 | products/:id/reviews; products/:id/reviews/mine; products/:id/review-upload | Public approved reviews and authenticated create/own edit/upload; one review per user/product. Upload byte checks implemented, live verification pending. |
 | orders; orders/:id; orders/:id/tracking | User-scoped list/detail/tracking and create/cancel handlers. Customer order pages are not integrated. Address ownership, inventory concurrency and order rules need review. |
 | payments/razorpay-order; payments/razorpay-verify; webhooks/razorpay | Provider request/signature/status handling exists. Checkout, raw-body verification, idempotency, replay/state ordering, money and refunds require end-to-end verification. |
-| newsletter/subscribe | Persists subscription; optional audience/contact and confirmation email. Uses legacy string errors and some hardcoded branding. |
+| newsletter/subscribe | Persists subscription; optional audience/contact and confirmation email. Uses structured errors with saved/confirmation-failed distinction (E15); email branding is still hardcoded. |
 | admin/products; admin/products/:id; admin/categories; admin/upload | Product create/edit/archive/stock, category creation and public media uploads. |
 | admin/orders; payments; returns; customers; analytics; messages; settings; audit | Protected handlers. Refund changes DB flags only; audit returns an empty list; messages/settings UI incomplete. |
 
@@ -109,3 +109,11 @@ Production validation is user-owned. Offline tests use injected stores and synth
 ## E14 CSRF contract
 
 All browser API writes now require X-CSRF-Token, obtained from GET /api/auth/csrf with X-CSRF-Bootstrap: 1 and the same cookie jar. apiFetch handles this centrally, including guest auth/newsletter writes. The dispatcher rejects invalid proof with private/no-store 403 before limiter/handler work. Only exact POST /api/webhooks/razorpay is exempt and still requires the provider signature. Reads, route paths and existing authorization remain intact. See [CSRF_PROTECTION.md](CSRF_PROTECTION.md) for token lifecycle, same-origin requirements and owner rollout; production acceptance remains pending (E14).
+
+## E15 safe error contract
+
+API errors use `{ error: { code, message, requestId } }` with private/no-store caching. The dispatcher adds X-Request-Id, rejects malformed routes with 400 INVALID_PATH, returns 404 NOT_FOUND for unregistered routes and catches unexpected runtime exceptions as 500 INTERNAL_ERROR. It logs only the fixed api_unhandled_error event and a sanitized UUID; raw error/customer/provider data is omitted. Responses already sent are not rewritten. Module initialization, platform parsing and terminated transports remain outside this boundary.
+
+Newsletter now uses structured 400 VALIDATION_ERROR, 405 METHOD_NOT_ALLOWED, 503/502 NEWSLETTER_UNAVAILABLE and 502 CONFIRMATION_EMAIL_FAILED. The latter explicitly means persistence completed but confirmation failed; no automatic retry is performed. Success stays 202 `{ subscribed: true, emailSent }`. The client accepts old string errors during rollout, rejects unconfirmed success and retains failed drafts. Shared auth/method/CSRF errors include IDs/messages; health failure keeps its previous monitoring fields and adds error details. Existing 429 metadata and neutral password-reset acceptance are preserved. See PROJECT_STATUS E15 for 94-test evidence; full localization and owner production acceptance remain pending.
+
+The boundary follows [OWASP error-handling guidance](https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html) on generic external failures; privacy limits these logs to correlation events rather than raw exceptions. Keep successes unchanged, use sendError for known failures, and never expose a caught error.message or replay an ambiguous write.

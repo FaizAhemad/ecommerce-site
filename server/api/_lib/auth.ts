@@ -1,7 +1,13 @@
 import { createHash, randomBytes, scrypt as nodeScrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 import { db } from './db.js'
-import { setCacheControl, type VercelRequest, type VercelResponse } from './http.js'
+import {
+  requestId,
+  sendError,
+  setCacheControl,
+  type VercelRequest,
+  type VercelResponse,
+} from './http.js'
 
 const scrypt = promisify(nodeScrypt)
 const SESSION_COOKIE = 'gadgify_session'
@@ -62,7 +68,7 @@ export async function requireUser(request: VercelRequest, response: VercelRespon
   setCacheControl(response, 'private')
   const user = await currentUser(request)
   if (!user) {
-    response.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Sign in is required.' } })
+    sendError(response, 401, 'UNAUTHORIZED', 'Sign in is required.', requestId(request))
     return null
   }
   return user
@@ -72,9 +78,7 @@ export async function requireAdmin(request: VercelRequest, response: VercelRespo
   const user = await requireUser(request, response)
   if (!user) return null
   if (user.role !== 'ADMIN') {
-    response
-      .status(403)
-      .json({ error: { code: 'FORBIDDEN', message: 'Administrator access is required.' } })
+    sendError(response, 403, 'FORBIDDEN', 'Administrator access is required.', requestId(request))
     return null
   }
   return user

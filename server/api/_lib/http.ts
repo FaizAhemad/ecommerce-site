@@ -6,6 +6,8 @@ export type VercelRequest = {
 }
 
 export type VercelResponse = {
+  headersSent?: boolean
+  writableEnded?: boolean
   status: (code: number) => VercelResponse
   json: (body: unknown) => unknown
   setHeader?: (name: string, value: string) => void
@@ -56,9 +58,44 @@ export function bodyRecord(request: VercelRequest): Record<string, unknown> {
     : {}
 }
 
+const requestIds = new WeakMap<VercelRequest, string>()
+
 export function requestId(request: VercelRequest): string {
+  const existing = requestIds.get(request)
+  if (existing) return existing
   const value = request.headers?.['x-request-id']
-  return typeof value === 'string' && value ? value : crypto.randomUUID()
+  const id =
+    typeof value === 'string' &&
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value)
+      ? value
+      : crypto.randomUUID()
+  requestIds.set(request, id)
+  return id
+}
+
+/** Runtime failures only: module initialization/platform failures remain outside this boundary. */
+export async function withApiErrorBoundary(
+  request: VercelRequest,
+  response: VercelResponse,
+  action: () => unknown,
+) {
+  const id = requestId(request)
+  request.headers = { ...request.headers, 'x-request-id': id }
+  try {
+    response.setHeader?.('X-Request-Id', id)
+    return await action()
+  } catch {
+    // Do not log raw errors, URLs, bodies, headers or customer/provider details.
+    console.error(JSON.stringify({ event: 'api_unhandled_error', requestId: id }))
+    if (response.headersSent || response.writableEnded) return
+    return sendError(
+      response,
+      500,
+      'INTERNAL_ERROR',
+      'We could not complete this request. Check its current status before trying again.',
+      id,
+    )
+  }
 }
 
 export function sendError(
@@ -69,6 +106,7 @@ export function sendError(
   id: string,
 ) {
   setCacheControl(response, 'private')
+  response.setHeader?.('X-Request-Id', id)
   return response.status(status).json({ error: { code, message, requestId: id } })
 }
 
