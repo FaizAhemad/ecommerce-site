@@ -242,3 +242,21 @@ E17 corrects newsletter partial-success feedback: confirmed persistence is recon
 
 
 E18 adds the email-verification form using existing shared width/classes; account status uses private generation-scoped React Query. Explicit confirmation, immediate pending state, duplicate locks, cancellation and persistent recovery are covered by offline fixtures. Header gains Account email. No rendered/device validation was performed under owner workflow; phone wrapping, focus and keyboard acceptance remain pending.
+
+
+E19 adds a common Profile page within existing form-width/auth layout. Focused ProfileForms and server validation/transaction modules avoid adding account editing to AdminPage. Private reads, shared write locks, cancellation, bounded validation and guarded phone changes precede confirmed UI reconciliation. Action groups wrap; checkbox sizing is scoped. All 129 offline tests pass. Phone/device rendering and keyboard/focus acceptance remain owner-owned and pending.
+
+
+E20 replaces Orders placeholder with private paginated history and recorded item/total/status summaries using existing styles. Errors have persistent recovery. No optimistic financial outcome or placeholder-detail links are added. Four new synthetic cases pass; rendered/mobile acceptance remains owner-owned.
+
+
+E21/E22 implement truthful detail/checkout reads, explicit not-found/connectivity feedback, rating/hex controls and support request states. Owner now requests visual polish and full responsiveness review after functional backlog. Existing shared layouts remain; no device/rendered acceptance claimed. 145 checkpoint tests pass. Payments, full facets, attachments/durable notifications and release security gates remain pending.
+
+
+E23 partially remediates SEC-03: explicit server checkout charges, UUID recovery, provider capture matching and conditional payment state changes. Checkout/settings/payment controls use private queries, duplicate guards, cancellation and non-optimistic financial feedback. Original-byte webhook handling is implemented but Vercel acceptance remains unverified. Full refunds/reconciliation, device/layout and other release gates remain open; see CHECKOUT_PAYMENTS.md and PROJECT_STATUS.
+
+
+E24 replaces the disconnected admin Messages form with a focused component/private query and idempotent saved-before-send handler. Pending guards, preserved drafts and accepted/unconfirmed semantics are implemented; mobile/browser/provider behavior is still unverified.
+
+
+E25 removes the database-only refund shortcut from SEC-03. Admin verification now checks provider full-refund proof before atomic financial status changes; manual order/return refund edits are blocked. This does not complete actual refund initiation, eligibility, audit or live reconciliation acceptance.

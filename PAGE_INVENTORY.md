@@ -9,9 +9,11 @@ The app waits for storefront/session checks before rendering navigation and rout
 | Route | Component | Access | Current implementation and gaps |
 | --- | --- | --- | --- |
 | / | HomePage | Public | API catalog slices plus locally configured hero/story/sections and newsletter. Full section CMS pending. |
-| /products | ShopPage | Public | Query-backed search/category/sort/color/rating filtering. 300ms debounced cancellable search, explicit error/retry and cursor Load more. Rating radios and CSS color swatches remain. |
+| /products | ShopPage | Public | Query-backed search/category/sort/color/rating filtering. 300ms debounced cancellable search, explicit error/retry and cursor Load more. Multiple rating bands and database-backed hex swatches implemented (E21); complete catalog facets remain pending. |
 | /product/:id | ProductDetailPage | Public; review writes require session | Product/media/review reads, own-review edit pencil, media uploads. Only server reviews are displayed; compact product loader. Live review ownership/media checks pending. |
-| /support | SupportPage | Public | Email/phone links via mailto/tel. No support ticket form or Resend support submission. |
+| /support | SupportPage | Public | Authenticated support form with saved-ticket and conditional receipt handling (E22); migration/provider acceptance and attachments pending. |
+| /support-requests | SupportPage list | Authenticated for API; guest login guidance | Owned paginated tickets, status/reason and open cancellation; migration/device acceptance pending. |
+| /admin/support | SupportPage admin | Administrator | Paginated tickets and guarded status/resolution updates; migration/device acceptance pending. |
 | /track-order | TrackOrderPage | Public page; API requires session | Guarded pending lookup accepts owned order number or internal ID; handles not-found and request errors. Provider integration remains incomplete. |
 | /privacy | PolicyPage (privacy) | Public | Placeholder asking for approved content. |
 | /returns | PolicyPage (returns) | Public | Placeholder asking for approved content. |
@@ -23,18 +25,19 @@ The app waits for storefront/session checks before rendering navigation and rout
 | /forgot-password | PasswordRecoveryPage (forgot) | Public | Email-based recovery request, neutral acknowledgment, pending/error states and failed draft retention; owner delivery/mobile acceptance pending (E16). |
 | /reset-password | PasswordRecoveryPage (reset) | Public; one-time token authorizes reset | New/confirmed password, missing-link recovery, fragment/legacy query support, session revocation and normal login after success; owner acceptance pending (E16). |
 | /verify-email | EmailVerificationPage | Public token confirmation; session required for status/resend | Explicit confirmation, safe token URL cleanup, verified status, owned resend, pending/errors; owner mobile/provider acceptance pending (E18). |
+| /profile | ProfilePage / ProfileForms | Signed-in customers and admins; guests see login | Personal details, password-confirmed phone change, read-only email/status/recovery links, owned address CRUD/default and order-use protection. Offline scope E19; owner device/production acceptance pending. |
 | /cart | CartPage | Authenticated | Shared header/page query with optimistic quantity/removal, per-product locks, affected-row rollback and checkout guard while saving. |
 | /wishlist | WishlistRedirect | Public redirect | Temporarily hidden by request; replaces the URL with /products. Header link removed. WishlistPage is retained but inactive; product hearts and saved-item APIs remain available. |
-| /checkout | PaymentPage | Authenticated | Placeholder totals from first catalog products; informational snackbar on submit, no payment/order creation. |
-| /orders | OrdersPage | Authenticated | Static empty state/count; does not query order history. |
-| /orders/:id | OrderDetailPage | Authenticated | Catalog-derived placeholder items and hardcoded delivered/paid details; does not fetch this order. |
+| /checkout | PaymentPage | Authenticated | Real cart/address selection, private server quote and idempotent order submission when explicitly configured; navigates to order payment (E23). |
+| /orders | OrdersPage | Authenticated | Private paginated customer history with stored totals/items/status and loading/empty/error/retry states (E20); owner mobile/production acceptance pending. |
+| /orders/:id | OrderDetailPage | Authenticated | Private real order/items/totals/address/payment/shipment query; eligible pending Razorpay orders have guarded payment controls (E23). |
 | /admin | AdminPage | Administrator for page content | Products/categories CRUD subset and operational reads; see tab map below. Unauthorized users get login or access-required content. |
 | /debug-error | DebugErrorPage | Intentional throw only in development | In production renders a development-only notice. |
-| Any unmatched path | HomePage fallback | Public fallback | Includes unknown /admin/* paths. No parent-route redirect/not-found handling yet. |
+| Any unmatched path | NotFoundPage / AdminRedirect | Public fallback | Unknown /admin/* redirects to /admin; other unknown routes show not-found. Invalid encoded IDs are rejected. |
 
-Missing pages include profile/address management, support request tracking, AI/tour/help flows, and shipping/cancellation/cookie policy pages. Reset emails now resolve to /reset-password (E16); /verify-email is registered in E18.
+Missing pages include AI/tour/help flows, and shipping/cancellation/cookie policy pages. Reset emails now resolve to /reset-password (E16); /verify-email is registered in E18.
 
-The navbar includes Orders for authenticated users. Admin visibility now requires verified ADMIN role; the page/API still apply authorization. Final responsive/role-visibility verification is pending.
+The navbar includes Orders and Profile for authenticated users. Admin visibility now requires verified ADMIN role; the page/API still apply authorization. Final responsive/role-visibility verification is pending.
 
 ## Admin tabs
 
@@ -45,11 +48,11 @@ All tabs are component state under /admin, not separate URL routes.
 | Overview / Analytics | Reads /api/admin/analytics; renders statistics. |
 | Products | Reads products; create/edit, strict category select/add, image/video upload, primary image, colors, stock, archive and immediate list updates. |
 | Orders | Reads orders; status selector keeps confirmed values on failure and reconciles on success. E13 guards cancellation/restock and closed states; full fulfillment/production verification pending. |
-| Payments | Reads payment data; refund handler currently changes database status only, not provider funds. |
+| Payments | Reads payments and verifies a provider-reported full Razorpay refund (E25); never issues refunds. Legacy manual status action rejected; initiation/partial refunds and live acceptance pending. |
 | Returns | Reads returns; complete workflow remains pending. |
 | Customers | Reads customer data/order counts; no full account-management UI. |
-| Messages | Unconnected form; Send message button has no handler. |
-| Settings | Fetches settings; informational panel rather than full settings editor. |
+| Messages | Private latest-100 history and transactional email form for verified customers; UUID duplicate protection and accepted/unconfirmed feedback (E24). Provider/device acceptance and durable delivery tracking remain pending. |
+| Settings | Private settings query and validated checkout fee/tax/availability editor (E23); broader store configuration remains incomplete. |
 
 ## Server-state coverage
 
@@ -59,12 +62,12 @@ All tabs are component state under /admin, not separate URL routes.
 | Shop | ['catalog', filters] | Progressive cursor consumption and robust error states |
 | Product/reviews | ['product', id], ['product-reviews', id], privateKey('my-review', id) | Product revalidation and account-scoped own-review key implemented; live review/media acceptance remains |
 | Cart/wishlist | privateKey('cart') shared header/page hook; private wishlist query and memory-only hearts | Live browser account-switch acceptance; deferred wishlist page completeness |
-| Orders/detail/checkout | No page API read | Connect actual orders, totals and checkout |
+| Orders/detail/checkout | Orders uses privateKey(orders) and paginated API history | Detail uses privateKey(order,id); checkout uses shared cart/profile plus privateKey(checkout,cartRevision). Provider/device acceptance pending |
 | Tracking | privateKey('tracking', enteredId) | Owned ID/number mapping, pending/errors and private keys implemented; provider/browser verification remains |
 | Login/signup/session | Mutation/session state and direct /api/auth/me | Verification pages, mobile-only recovery and full session lifecycle acceptance |
 | Admin | privateKey('admin', section) via fetchQuery, zero stale/gc retention | Functional messages/settings, role/account transition verification |
 
-React Query is the chosen strategy. Existing private resources use account/generation keys; confirmed logout cancels/removes private cache and resets route-local/optimistic state. Orders/detail/checkout remain unintegrated, so complete migration is not claimed.
+React Query is the chosen strategy. Existing private resources use account/generation keys; confirmed logout cancels/removes private cache and resets route-local/optimistic state. Orders/detail/checkout now use private queries; full migration and live account/device acceptance are not claimed.
 
 ## Shared page behavior
 
@@ -100,3 +103,6 @@ E17 home newsletter: persisted subscriptions with failed confirmation now show S
 
 
 E18 adds the Account email header link for signed-in customers/admins. Verify /verify-email as guest, unverified/verified account, email-less mobile account, invalid/expired/used token and slow/429/offline responses. Header wrapping and new page keyboard/focus/320-430px acceptance are owner-owned and pending.
+
+
+E19: Profile replaces the Account email header link; email verification remains reachable from Profile and email links. Admin Settings continues to configure the store. Profile uses the existing form-width PageContainer. Owner matrix includes customer/admin/guest, no email/phone/address, default switching, addresses referenced by orders, wrong password, conflicts, pending/duplicate actions, account switch and phone keyboard/focus/reflow. Source and synthetic fixtures do not certify rendered responsiveness.

@@ -16,6 +16,10 @@ import { sendError, setCacheControl } from '../server/api/_lib/http.ts'
 
 // Execute the actual order handler with synthetic auth/store boundaries; no customer DB is used.
 const source = readFileSync(new URL('../server/api/orders/index.ts', import.meta.url), 'utf8')
+  .replaceAll(
+    "'../_lib/order-history.js'",
+    JSON.stringify(new URL('../server/api/_lib/order-history.ts', import.meta.url).href),
+  )
   .replace("import { db } from '../_lib/db.js'", 'const db = globalThis.orderFixture.db')
   .replace(
     "import { requireUser } from '../_lib/auth.js'",

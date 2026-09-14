@@ -6,6 +6,7 @@ import {
 import { db } from '../_lib/db.js'
 import { requireUser } from '../_lib/auth.js'
 import { ownedOrderAddress } from '../_lib/order-address.js'
+import { orderHistory } from '../_lib/order-history.js'
 import {
   bodyRecord,
   requestId,
@@ -22,12 +23,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
   if (!user) return
   try {
     if (request.method === 'GET') {
-      const orders = await db.order.findMany({
-        where: { userId: user.id },
-        include: { items: true, payment: true, shipment: true },
-        orderBy: { createdAt: 'desc' },
-      })
-      return response.status(200).json({ orders, requestId: id })
+      const rawPage = request.query?.page ?? '0'
+      if (typeof rawPage !== 'string' || !/^\d{1,5}$/.test(rawPage))
+        return sendError(response, 400, 'VALIDATION_ERROR', 'Invalid order page.', id)
+      const result = await orderHistory(db, user.id, Number(rawPage))
+      return response.status(200).json({ ...result, requestId: id })
     }
     if (request.method !== 'POST')
       return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET or POST.', id)

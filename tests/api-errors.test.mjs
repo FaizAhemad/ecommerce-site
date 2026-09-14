@@ -56,7 +56,11 @@ async function load(relative, resolveImport, transform = (source) => source) {
 async function dispatcher() {
   return (
     await load('../api/[...route].ts', (binding, path) => {
-      if (path.endsWith('/http.js') || path.endsWith('/csrf.js'))
+      if (
+        path.endsWith('/http.js') ||
+        path.endsWith('/csrf.js') ||
+        path.endsWith('/webhook-body.js')
+      )
         return `import ${binding} from ${JSON.stringify(new URL(path.replace('.js', '.ts'), new URL('../api/', import.meta.url)).href)}`
       if (binding === '{ db }') return 'const db = {}'
       if (binding === '{ currentUser }') return 'const currentUser = async () => null'

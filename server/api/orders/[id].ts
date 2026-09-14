@@ -29,18 +29,42 @@ export default async function handler(request: VercelRequest, response: VercelRe
       return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET or PATCH.', id)
     const order = await db.order.findFirst({
       where: { id: orderId, userId: user.id },
-      include: {
-        items: true,
-        payment: true,
-        shipment: { include: { events: { orderBy: { occurredAt: 'desc' } } } },
-        shippingAddress: true,
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        createdAt: true,
+        currency: true,
+        subtotalMinor: true,
+        shippingMinor: true,
+        taxMinor: true,
+        totalMinor: true,
+        items: { select: { id: true, productName: true, quantity: true, unitPriceMinor: true } },
+        payment: { select: { status: true, provider: true } },
+        shipment: { select: { status: true, carrier: true, trackingCode: true } },
+        shippingAddress: {
+          select: {
+            userId: true,
+            name: true,
+            line1: true,
+            line2: true,
+            city: true,
+            state: true,
+            postalCode: true,
+            country: true,
+            phone: true,
+          },
+        },
       },
     })
     if (!order) return sendError(response, 404, 'NOT_FOUND', 'Order not found.', id)
     // Protect historical orders that may have been linked before ownership validation.
     if (order.shippingAddress && order.shippingAddress.userId !== user.id)
       order.shippingAddress = null
-    return response.status(200).json({ order, requestId: id })
+    const shippingAddress = order.shippingAddress
+      ? (({ userId: _owner, ...address }) => address)(order.shippingAddress)
+      : null
+    return response.status(200).json({ order: { ...order, shippingAddress }, requestId: id })
   } catch (error) {
     if (error instanceof OrderActionError)
       return sendError(response, error.status, error.code, error.message, id)

@@ -67,3 +67,21 @@ E17 supersedes the E15 failed-draft behavior specifically for 502 CONFIRMATION_E
 
 
 E18: verification/resend use five-second snackbars plus persistent page results/errors. Resend acceptance means the provider accepted sending, not delivery. Explicit confirmation changes verified state only after server success. Never replay writes, store/log tokens or imply an email-less account is verified. Signup mail failure can be recovered through Account email after sign-in.
+
+
+E19 Profile: all writes share a synchronous lock and immediate pending feedback. Confirmed saves notify through the five-second snackbar; failures have persistent inline guidance and retain drafts. Delete requires inline confirmation. Do not automatically replay ambiguous/timed-out writes; a refresh may reveal that the server already saved. Email changes and mobile-code notifications remain separate.
+
+
+E20 Orders reads use persistent loading/error/retry and load-more feedback; failed reads never become empty history or payment success. Existing rows remain on pagination failure. Retry/load-more use non-cancelling fetch options to join active requests. No financial mutation changed.
+
+
+E21 adds browser offline status and five-second online notice without queued writes. E22 ticket creation reports saved reference even when email is unconfirmed; only verified stored customer email receives a receipt. Failed drafts retain their UUID for explicit retry, preventing duplicate mail. Status errors remain inline; provider acceptance is not delivery. Status-change email/attachments/threading remain pending.
+
+
+E23: order creation reports payment pending; only verified server capture reports payment confirmed. SDK failure/dismissal/uncertainty requests order refresh. No automatic payment replay. Support destination/verified-customer receipts run concurrently with settled results; saved ticket and email acceptance remain distinct.
+
+
+E24 admin transactional messages distinguish saved UNCONFIRMED from provider ACCEPTED. UUID retries do not resend, and altered saved drafts are rejected. Only existing verified customer addresses are supported. No durable retry queue or inbox-delivery events are implemented; do not display delivered/queued promises.
+
+
+E25 refund reconciliation success says Provider full refund verified. It must never say a refund was issued by this action or settled in a bank. Partial/unconfirmed proof is an error without status mutation; legacy manual-refund records need owner audit.

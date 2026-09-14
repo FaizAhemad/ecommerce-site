@@ -16,8 +16,9 @@ type Props = {
   priceHighSortLabel: string
   clearLabel: string
   selectedColors: readonly string[]
-  minRating: number
+  selectedRatings: readonly number[]
   colorOptions: readonly string[]
+  colorValues?: Readonly<Record<string, string>>
   ratingLabel: string
   colorsLabel: string
   benefits?: { title: string; items: readonly string[] }
@@ -41,8 +42,9 @@ export function FilterSidebar({
   priceHighSortLabel,
   clearLabel,
   selectedColors,
-  minRating,
+  selectedRatings,
   colorOptions,
+  colorValues = {},
   ratingLabel,
   colorsLabel,
   benefits = {
@@ -74,7 +76,13 @@ export function FilterSidebar({
         >
           {mobileExpanded ? 'Hide filters' : 'Show filters'}
         </button>
-        {Boolean(search || category || sort !== 'newest' || selectedColors.length || minRating) && (
+        {Boolean(
+          search ||
+          category ||
+          sort !== 'newest' ||
+          selectedColors.length ||
+          selectedRatings.length,
+        ) && (
           <button className="clear-filters" type="button" onClick={onClear}>
             {clearLabel}
           </button>
@@ -116,12 +124,12 @@ export function FilterSidebar({
           {[5, 4, 3, 2, 1].map((r) => (
             <label className="check-option" key={r}>
               <input
-                type="radio"
+                type="checkbox"
                 name="rating"
-                checked={minRating === r}
+                checked={selectedRatings.includes(r)}
                 onChange={() => onRating(r)}
               />
-              <span>{r === 5 ? '5 stars only' : `${r} stars & up`}</span>
+              <span>{r === 5 ? '5 stars' : `${r} to under ${r + 1} stars`}</span>
             </label>
           ))}
         </fieldset>
@@ -134,8 +142,21 @@ export function FilterSidebar({
                 checked={selectedColors.includes(c)}
                 onChange={() => onColorToggle(c)}
               />
-              <span className={`color-swatch color-${c.toLowerCase()}`} />
-              <span>{c}</span>
+              <span
+                className="color-swatch"
+                aria-hidden="true"
+                style={
+                  /^#[\da-f]{6}$/i.test(colorValues[c] ?? '')
+                    ? { backgroundColor: colorValues[c] }
+                    : undefined
+                }
+              />
+              <span>
+                {c}{' '}
+                {/^#[\da-f]{6}$/i.test(colorValues[c] ?? '')
+                  ? colorValues[c].toUpperCase()
+                  : '(swatch unavailable)'}
+              </span>
             </label>
           ))}
         </fieldset>

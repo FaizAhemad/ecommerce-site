@@ -1,5 +1,7 @@
 import { privateKey, sessionGeneration, assertCurrentSession } from '../api/sessionScope'
 import { useNotification } from '../components/NotificationProvider'
+import { CheckoutSettings } from '../components/CheckoutSettings'
+import { CustomerMessages } from '../components/CustomerMessages'
 import { apiFetch as fetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
 import { queryClient } from '../api/queryClient'
 import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
@@ -123,7 +125,6 @@ export function AdminPage({ storefront, onNavigate }: Props) {
       payments: ['/api/admin/payments', 'payments'],
       returns: ['/api/admin/returns', 'returns'],
       customers: ['/api/admin/customers', 'customers'],
-      settings: ['/api/admin/settings', 'settings'],
     }
     const item = map[section]
     let active = true
@@ -734,7 +735,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                                 >
                                   CANCELLED
                                 </option>
-                                <option>REFUNDED</option>
+                                <option disabled>REFUNDED</option>
                               </select>
                             </td>
                           </tr>
@@ -749,7 +750,12 @@ export function AdminPage({ storefront, onNavigate }: Props) {
             )}
             {section === 'payments' && (
               <>
-                <Title title="Payments" text="Monitor payments and record refunds." />
+                <Title title="Payments" text="Monitor payments and verify provider refunds." />
+                <p>
+                  Process approved refunds through Razorpay, then verify their recorded status here.
+                  Verification does not issue a refund. Partial refunds and automated refund
+                  requests are not available yet.
+                </p>
                 {payments.length ? (
                   <Table>
                     <table className="admin-table">
@@ -760,19 +766,19 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                             <td>₹{(p.amountMinor / 100).toLocaleString('en-IN')}</td>
                             <td>{p.status}</td>
                             <td>
-                              {p.status !== 'REFUNDED' && (
+                              {p.provider === 'RAZORPAY' && p.providerPaymentId && (
                                 <button
                                   className="admin-text-button danger"
                                   disabled={busy}
                                   onClick={() =>
                                     patch(
                                       '/api/admin/payments',
-                                      { orderId: p.orderId, action: 'refund' },
-                                      'Refund recorded.',
+                                      { orderId: p.orderId, action: 'reconcile-refund' },
+                                      'Provider full refund verified.',
                                     )
                                   }
                                 >
-                                  Refund
+                                  Verify refund
                                 </button>
                               )}
                             </td>
@@ -818,23 +824,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
             {section === 'messages' && (
               <>
                 <Title title="Customer messages" text="Send support and order update emails." />
-                <form className="admin-form">
-                  <label>
-                    Recipient email
-                    <input type="email" required />
-                  </label>
-                  <label>
-                    Subject
-                    <input required />
-                  </label>
-                  <label className="full">
-                    Message
-                    <textarea rows={6} required />
-                  </label>
-                  <button className="primary-button" type="button">
-                    Send message
-                  </button>
-                </form>
+                <CustomerMessages />
               </>
             )}
             {section === 'analytics' && (
@@ -849,7 +839,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                   title="Store settings"
                   text="Configure branding, currency, locale, and announcements."
                 />
-                <Panel text="Settings are managed through the protected settings API." />
+                <CheckoutSettings />
               </>
             )}
           </div>

@@ -27,7 +27,7 @@ export function SiteLayout({
   const notify = useNotification()
   const logoutLock = useRef(false)
   const [loggingOut, setLoggingOut] = useState(false)
-  const { content, identity, contact } = storefront
+  const { content, identity } = storefront
   const { t } = useTranslation()
   const [showStickyHeader, setShowStickyHeader] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
@@ -129,11 +129,11 @@ export function SiteLayout({
 
           {isAuthenticated && (
             <a
-              className={currentPath === '/verify-email' ? 'is-active' : ''}
-              href="/verify-email"
-              onClick={navigate('/verify-email')}
+              className={currentPath === '/profile' ? 'is-active' : ''}
+              href="/profile"
+              onClick={navigate('/profile')}
             >
-              Account email
+              Profile
             </a>
           )}
           {isAuthenticated && isAdmin && (
@@ -143,6 +143,11 @@ export function SiteLayout({
               onClick={navigate('/admin')}
             >
               Admin
+            </a>
+          )}
+          {isAuthenticated && isAdmin && (
+            <a href="/admin/support" onClick={navigate('/admin/support')}>
+              Support requests
             </a>
           )}
         </nav>
@@ -226,8 +231,9 @@ export function SiteLayout({
         </div>
         <div>
           <p className="footer-label">{content.footer.customerCareLabel}</p>
-          <a href={`mailto:${contact.supportEmail}`}>{contact.supportEmail}</a>
-          <a href={`tel:${contact.phone}`}>{contact.phone}</a>
+          <a href="/support" onClick={navigate('/support')}>
+            Contact support
+          </a>
         </div>
         <div>
           <p className="footer-label">{content.footer.policiesLabel}</p>

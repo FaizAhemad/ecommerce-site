@@ -6,7 +6,7 @@ Reviewed: 2026-09-12. Deliver the configurable commerce platform described in [R
 
 Vite/React/TypeScript UI, Node.js handlers consolidated behind one Vercel function, Prisma/PostgreSQL models/migrations, Blob uploads, Resend helpers and Razorpay handlers are present. Catalog/category reads, login, cart/wishlist mutations and product/review administration have implementations. The theme is light-only Ink and Citron (#28313b / #c7d866).
 
-Backend existence is not end-to-end completion. Customer order/checkout pages remain placeholders, Support opens email/phone links, settings/messages are incomplete, API cursor pagination is not consumed by the shop, and much business content/localization remains hardcoded. See [all pages](PAGE_INVENTORY.md).
+Backend existence is not end-to-end completion. Customer order pages use private records; E23 adds configured checkout/payment controls. Support tickets replace email links. Full settings/messages, provider acceptance and business content/localization remain incomplete. Shop consumes cursor pages. See [all pages](PAGE_INVENTORY.md).
 
 ## Delivery sequence
 
@@ -62,3 +62,18 @@ E16 implements email-based Forgot password and Reset password customer pages wit
 
 
 E18 implements email verification and authenticated resend within the shared account form layout, preserving existing login eligibility. Full profile/address/email-change/mobile verification and production/provider/device acceptance remain in APPLICATION_BACKLOG. See EMAIL_VERIFICATION.md and PROJECT_STATUS E18.
+
+
+E19 implements the common Profile page for customers/admins with name/login-phone and saved delivery-address management. Email remains read-only pending verified replacement; mobile verification/full localization and production/device acceptance remain in APPLICATION_BACKLOG. Existing admin store Settings is separate. See PROFILE_MANAGEMENT.md.
+
+
+E20 implements customer Orders history only, with session-owned pagination and minimal stored order/item/payment status fields. E21/E23 subsequently add Order Details and configured Checkout; production/provider acceptance remains pending in APPLICATION_BACKLOG.
+
+
+Owner scope (2026-09-14): Gadgify sells household gadgets in India, primarily Maharashtra, using INR; other Indian states can be served. Reuse for separate family/friend stores is future configurability, not approved marketplace scope. Legal policies/reward rates/AI provider and regulated products are undecided. Complete functionality continuously, updating tests/docs; visual polish follows. E21/E22 implement detail/checkout preview/support core; full payments, attachments and release acceptance remain pending.
+
+
+E24 connects admin transactional messaging and private latest-100 history for verified customer recipients; remaining messaging work is durable retries, delivery events, deeper history and owner acceptance.
+
+
+E25 replaces manual refund status changes with provider full-refund verification only. Initiation, partial refunds, approved eligibility, legacy data audit and live acceptance remain open.

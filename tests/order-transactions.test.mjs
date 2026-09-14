@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { checkoutRules, checkoutTotal } from '../server/api/_lib/checkout.ts'
 import {
   createCartOrder,
   cancelOrder,
@@ -14,6 +15,8 @@ function storeFixture({
   orderStatus,
   failRestock = false,
   failCreate = false,
+  checkout = { enabled: true, shippingMinor: 25, taxBps: 1000 },
+  country = 'IN',
 } = {}) {
   let state = {
     products: {
@@ -44,12 +47,17 @@ function storeFixture({
         const draft = structuredClone(state)
         const findOrder = (where) =>
           draft.orders.find(
-            (order) => order.id === where.id && (!where.userId || order.userId === where.userId),
+            (order) =>
+              (where.orderNumber
+                ? order.orderNumber === where.orderNumber
+                : order.id === where.id) &&
+              (!where.userId || order.userId === where.userId),
           ) ?? null
         const tx = {
+          storeSetting: { findUnique: async () => ({ value: JSON.stringify(checkout) }) },
           address: {
             findFirst: async ({ where }) =>
-              where.id === `address-${where.userId}` ? { id: where.id } : null,
+              where.id === `address-${where.userId}` ? { id: where.id, country } : null,
           },
           cart: {
             findUnique: async ({ where }) => ({
@@ -192,4 +200,85 @@ test('Prisma serialization/deadlock errors are identified without automatic writ
   assert.equal(isTransactionConflict({ code: 'P2034' }), true)
   assert.equal(isTransactionConflict({ code: 'P1001' }), false)
   assert.equal(isTransactionConflict(null), false)
+})
+
+test('manual status editing cannot mark money refunded without provider reconciliation', async () => {
+  const fixture = storeFixture({ orderStatus: 'CONFIRMED' })
+  await assert.rejects(updateOrderStatus(fixture.store, 'existing', 'REFUNDED'), {
+    code: 'REFUND_UNCONFIRMED',
+  })
+  assert.equal(fixture.state().orders[0].status, 'CONFIRMED')
+})
+
+const checkoutOptions = {
+  requestId: '11111111-1111-4111-8111-111111111111',
+  expectedTotalMinor: 135,
+  rules: checkoutRules,
+  calculate: checkoutTotal,
+}
+test('checkout validates configured minor amounts and does not assume free delivery or tax', () => {
+  for (const value of [
+    undefined,
+    '{}',
+    'null',
+    '{"enabled":true,"shippingMinor":-1,"taxBps":0}',
+    '{"enabled":true,"shippingMinor":0,"taxBps":10001}',
+  ])
+    assert.equal(checkoutRules(value), null)
+  assert.deepEqual(checkoutTotal(101, { enabled: true, shippingMinor: 25, taxBps: 1000 }), {
+    subtotalMinor: 101,
+    shippingMinor: 25,
+    taxMinor: 10,
+    totalMinor: 136,
+    currency: 'INR',
+  })
+  assert.throws(() => checkoutTotal(2147483647, { enabled: true, shippingMinor: 1, taxBps: 0 }))
+})
+test('checkout calculates stored prices/charges and repeats return the same order without reserving again', async () => {
+  const fixture = storeFixture({ stock: 10 })
+  const first = await createCartOrder(fixture.store, 'a', 'address-a', checkoutOptions)
+  const second = await createCartOrder(fixture.store, 'a', 'address-a', checkoutOptions)
+  assert.equal(first.id, second.id)
+  assert.equal(first.totalMinor, 135)
+  assert.equal(first.payment.create.provider, 'RAZORPAY')
+  assert.equal(fixture.state().orders.length, 1)
+  assert.equal(fixture.state().products.p.stock, 9)
+})
+test('checkout rejects a changed total atomically and retains cart and inventory', async () => {
+  const fixture = storeFixture({ stock: 10 })
+  await assert.rejects(
+    createCartOrder(fixture.store, 'a', 'address-a', {
+      ...checkoutOptions,
+      expectedTotalMinor: 100,
+    }),
+    { code: 'PRICE_CHANGED' },
+  )
+  assert.equal(fixture.state().orders.length, 0)
+  assert.equal(fixture.state().products.p.stock, 10)
+  assert.equal(fixture.state().carts.a.length, 1)
+})
+test('checkout is disabled without explicit valid rules or an India delivery address', async () => {
+  for (const options of [
+    { checkout: null },
+    { checkout: { enabled: false, shippingMinor: 0, taxBps: 0 } },
+    { country: 'US' },
+  ]) {
+    const fixture = storeFixture(options)
+    await assert.rejects(createCartOrder(fixture.store, 'a', 'address-a', checkoutOptions), {
+      code: 'CHECKOUT_UNAVAILABLE',
+    })
+    assert.equal(fixture.state().orders.length, 0)
+    assert.equal(fixture.state().products.p.stock, 1)
+  }
+})
+test('checkout request IDs cannot disclose another customer order or accept changed address', async () => {
+  const fixture = storeFixture({ stock: 10 })
+  await createCartOrder(fixture.store, 'a', 'address-a', checkoutOptions)
+  await assert.rejects(createCartOrder(fixture.store, 'b', 'address-b', checkoutOptions), {
+    code: 'CONFLICT',
+  })
+  await assert.rejects(createCartOrder(fixture.store, 'a', 'different-address', checkoutOptions), {
+    code: 'CONFLICT',
+  })
+  assert.equal(fixture.state().orders.length, 1)
 })

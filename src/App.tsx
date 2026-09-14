@@ -21,6 +21,7 @@ import {
   type SessionUser,
 } from './api/sessionScope'
 import { useCart, updateCart, resetCart } from './api/cart'
+import { ConnectionStatus } from './components/ConnectionStatus'
 import { SiteLayout } from './components/SiteLayout'
 import { StorefrontRoute } from './router'
 import './App.css'
@@ -193,29 +194,35 @@ function App() {
   }
   if (storefrontQuery.isError || sessionError)
     return (
-      <main className="state-panel" role="alert">
-        <p>
-          {sessionError
-            ? 'We could not verify your session. Please check your connection and retry.'
-            : 'We could not load the storefront.'}
-        </p>
-        <button
-          className="primary-button"
-          onClick={() => {
-            if (sessionError) void checkSession()
-            else void storefrontQuery.refetch()
-          }}
-        >
-          Try again
-        </button>
-      </main>
+      <NotificationProvider>
+        <ConnectionStatus />
+        <main className="state-panel" role="alert">
+          <p>
+            {sessionError
+              ? 'We could not verify your session. Please check your connection and retry.'
+              : 'We could not load the storefront.'}
+          </p>
+          <button
+            className="primary-button"
+            onClick={() => {
+              if (sessionError) void checkSession()
+              else void storefrontQuery.refetch()
+            }}
+          >
+            Try again
+          </button>
+        </main>
+      </NotificationProvider>
     )
   if (!storefront || loading)
     return (
-      <main className="app-loading" aria-busy="true">
-        <span className="loading-spinner" aria-hidden="true" />
-        <p role="status">{loading ? 'Checking your session...' : 'Loading the store...'}</p>
-      </main>
+      <NotificationProvider>
+        <ConnectionStatus />
+        <main className="app-loading" aria-busy="true">
+          <span className="loading-spinner" aria-hidden="true" />
+          <p role="status">{loading ? 'Checking your session...' : 'Loading the store...'}</p>
+        </main>
+      </NotificationProvider>
     )
   const addToCart = async (id: string) => {
     if (!sessionUser()) throw new Error('Please sign in to update your cart.')
@@ -237,6 +244,7 @@ function App() {
   return (
     <AppErrorBoundary>
       <NotificationProvider key={sessionGeneration()}>
+        <ConnectionStatus />
         <SiteLayout
           storefront={storefront}
           cartCount={(cart.data ?? []).reduce((sum, item) => sum + item.quantity, 0)}

@@ -6,9 +6,34 @@ Reviewed against the current workspace on 2026-09-13. This is the single complet
 
 Completion convention: `- [ ]` means pending, partial, blocked or awaiting required verification; `- [x] ✅` means the stated scope is implemented and verified, with evidence in [PROJECT_STATUS.md](PROJECT_STATUS.md). A code implementation or build alone does not complete a live integration. Preserve unverified work and business dependencies. Evidence IDs below refer to that status document.
 
-## Current task: email verification (E18)
+## Current work: continuous functional backlog (E21 onward)
 
-- [x] ? Implement verification page, account-email status, session-owned resend with IP/account quotas, secure signup links and duplicate/pending/error handling. All 120 offline tests and offline build/types pass; see PROJECT_STATUS E18 for scope.
+Owner requests continuous implementation without per-item permission pauses; visual polish review follows functionality. Confirmed business: Gadgify household products, India/INR, primarily Maharashtra. Rewards/policies/AI provider/medicines still need decisions.
+
+- [x] ✅ E21 offline implementation: owned real Order Details, cart/address checkout preview, multi-rating and hex filters, safe route fallback, connectivity notices and footer placeholder removal. Checkpoint: 145 tests/build/types/format pass (PROJECT_STATUS E21/E22).
+- [x] ✅ E22 offline implementation: support ticket creation/tracking/admin statuses, owned cancellation, idempotent request IDs and conditional Resend notifications, with prepared migration. See PROJECT_STATUS for bounded evidence.
+- [ ] Owner applies support migration/configures SUPPORT_EMAIL and validates support/customer receipt/privacy/device behavior. Attachments, durable retries, threaded replies/status notifications remain incomplete.
+- [ ] Finish payment initiation/reconciliation/checkout submission, charges, refunds, business rules and remaining roadmap; never mark provider acceptance complete from offline checks.
+- [x] ✅ E23 bounded offline implementation: configured checkout quote/submission, atomic UUID retry protection, admin charge controls, customer Razorpay controls, strict capture matching and original-body webhook handling. 157 synthetic tests pass; see PROJECT_STATUS E23 and CHECKOUT_PAYMENTS.md.
+- [ ] E23 owner acceptance: approve charges/policies, validate provider capture and Vercel raw webhooks, stock/retry concurrency and mobile behavior. Refunds, reconciliation jobs and remaining commerce rules are still pending.
+- [x] ✅ E24 bounded offline implementation: connected admin message composition/history, verified-recipient validation, saved-before-send records and duplicate-ID protection. 161 synthetic tests pass; see PROJECT_STATUS E24.
+- [ ] E24 owner acceptance: admin authorization, provider delivery/rejection, interrupted sends, account switching and phone form/history behavior. Durable retries, delivery events and history beyond the latest 100 remain incomplete.
+- [x] ✅ E25 bounded offline refund integrity: replace manual refund status mutation with provider-backed full-refund reconciliation and reject manual REFUNDED edits through order/return controls. 164 synthetic tests pass; see PROJECT_STATUS E25.
+- [ ] E25 owner acceptance and remaining refunds: verify provider full/partial/failed outcomes, audit legacy manually-refunded records, implement approved refund initiation/eligibility, partial refunds and durable audit/reconciliation. Verification does not issue refunds or establish bank settlement.
+
+## Previous task: customer order history (E20)
+
+- [x] ✅ Connect Orders to private paginated customer history with minimal selected fields and loading/empty/error/retry states. 133 offline tests, types/build and formatting pass; evidence in PROJECT_STATUS E20.
+- [ ] Owner production/mobile acceptance: own-account history, pagination, account switching, slow/error states and stored totals/status. E21/E23 subsequently implement Order Details and configured Checkout; their acceptance is tracked separately.
+
+## Previous task: Profile page and saved addresses (E19)
+
+- [x] ✅ Implement shared signed-in /profile for customers and admins, personal-details/password-confirmed phone updates, verification/recovery links and owned address create/edit/delete/default management. Nine new synthetic regressions pass; 129 total tests, offline build/types and formatting pass. See PROJECT_STATUS E19.
+- [ ] Owner production acceptance: customer/admin profile, login phone changes, address mutations/defaults/order-reference conflicts, account isolation, 429/slow/offline failures and mobile keyboard/focus/layout. Email-address replacement, mobile verification and full localization remain separate work.
+
+## Previous task: email verification (E18)
+
+- [x] ✅ Implement verification page, account-email status, session-owned resend with IP/account quotas, secure signup links and duplicate/pending/error handling. All 120 offline tests and offline build/types pass; see PROJECT_STATUS E18 for scope.
 - [ ] Owner production acceptance: signup and resend delivery, expired/used links, 429s, status refresh, existing login and Android/iOS interaction/accessibility. Full profile/email-change/mobile verification and durable notifications remain pending.
 
 ## Previous task: password recovery and token claims (E16)
@@ -45,7 +70,7 @@ Owner: Codex for implementation and offline regression evidence; product owner f
 
 These must be addressed before calling the application stable or production-ready:
 
-- [ ] Complete the React Query server-state strategy across required page reads, private user-scoped cache keys, invalidation, stale data, optimistic rollback and deduplication. React Query is adopted for many reads; session/wishlist restoration remains guarded effects; E11 scopes private keys and shares header/cart reads, and Orders/Order Details/Checkout have no integrated page reads. Earlier full-migration completion was overstated (E7).
+- [ ] Complete the React Query server-state strategy across required page reads, private user-scoped cache keys, invalidation, stale data, optimistic rollback and deduplication. React Query is adopted for many reads; session/wishlist restoration remains guarded effects; E11 scopes private keys and shares header/cart reads, and E20-E23 integrate Orders/Order Details/Checkout reads with private scope. Earlier full-migration completion was overstated (E7).
 - [ ] Complete and verify safe caching at API/client layers. Public/private headers and logout cache clearing exist; E11 adds private scoping, delayed-response guards and no-store errors; live account-switch/browser acceptance remains unverified (E7).
 - [x] ✅ Prior production dependency-audit remediation: earlier recorded `npm audit --omit=dev` reported 0 vulnerabilities after aligning Prisma packages at 6.12.0 (historical evidence E6). A fresh release audit is tracked separately below.
 - [ ] Complete user-input/rendered-content XSS review. HTTP(S) URL filtering and upload signature/MIME/base64/size checks exist. Current CSP is absent, including report-only mode; controlled CSP, external media, full content validation and live verification remain (E1, E7).
@@ -152,5 +177,5 @@ Each item needs an owner/priority, implementation notes, API/data changes, secur
 
 ## Newsletter partial-success repair - E17
 
-- [x] ? Saved-subscription confirmation failures reconcile to Subscribed with informational feedback and no replay; privacy-safe failure diagnostics and 111 offline tests verify the bounded behavior (PROJECT_STATUS E17).
-- [x] ? Owner reports newsletter working on 2026-09-14 (PROJECT_STATUS E17 owner report). Exact provider configuration fix and independent delivery/device evidence were not supplied; this does not verify every notification flow.
+- [x] ✅ Saved-subscription confirmation failures reconcile to Subscribed with informational feedback and no replay; privacy-safe failure diagnostics and 111 offline tests verify the bounded behavior (PROJECT_STATUS E17).
+- [x] ✅ Owner reports newsletter working on 2026-09-14 (PROJECT_STATUS E17 owner report). Exact provider configuration fix and independent delivery/device evidence were not supplied; this does not verify every notification flow.

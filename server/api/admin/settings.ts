@@ -1,5 +1,6 @@
 import { db } from '../_lib/db.js'
 import { requireAdmin } from '../_lib/auth.js'
+import { checkoutRules } from '../_lib/checkout.js'
 import {
   bodyRecord,
   requestId,
@@ -19,6 +20,17 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (request.method !== 'PUT')
       return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET or PUT.', id)
     const values = bodyRecord(request)
+    if (
+      'checkout' in values &&
+      (typeof values.checkout !== 'string' || !checkoutRules(values.checkout))
+    )
+      return sendError(
+        response,
+        400,
+        'VALIDATION_ERROR',
+        'Provide valid checkout charges and availability.',
+        id,
+      )
     const entries = Object.entries(values).filter(([, value]) => typeof value === 'string')
     await db.$transaction(
       entries.map(([key, value]) =>

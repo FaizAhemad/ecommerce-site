@@ -29,6 +29,21 @@ model User {
   messagesSent      CustomerMessage[] @relation("SentMessages")
   messagesReceived  CustomerMessage[] @relation("ReceivedMessages")
   returnRequests    ReturnRequest[]
+  supportTickets    SupportTicket[]
+}
+
+model SupportTicket {
+  id          String   @id
+  userId      String
+  subject     String
+  body        String
+  status      String   @default("OPEN")
+  resolution  String?
+  emailStatus String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
 }
 
 enum UserRole {

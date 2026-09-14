@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { db } from '../_lib/db.js'
+import { matchesCapturedPayment, recordCapturedPayment } from '../_lib/payment-confirmation.js'
 import { requestId, sendError, type VercelRequest, type VercelResponse } from '../_lib/http.js'
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
@@ -10,8 +11,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
     ? request.headers?.['x-razorpay-signature'][0]
     : request.headers?.['x-razorpay-signature']
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET
-  const raw = typeof request.body === 'string' ? request.body : JSON.stringify(request.body ?? {})
-  if (!signature || !secret)
+  const raw = typeof request.body === 'string' ? request.body : ''
+  if (!signature || !secret || !raw)
     return sendError(response, 400, 'INVALID_WEBHOOK', 'Webhook signature is missing.', id)
   const expected = createHmac('sha256', secret).update(raw).digest('hex')
   if (
@@ -22,7 +23,17 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const payload = JSON.parse(raw) as {
       event?: string
-      payload?: { payment?: { entity?: { order_id?: string; id?: string } } }
+      payload?: {
+        payment?: {
+          entity?: {
+            order_id?: string
+            id?: string
+            status?: string
+            amount?: number
+            currency?: string
+          }
+        }
+      }
     }
     const entity = payload.payload?.payment?.entity
     if (entity?.order_id) {
@@ -32,19 +43,55 @@ export default async function handler(request: VercelRequest, response: VercelRe
           : payload.event === 'payment.failed'
             ? 'FAILED'
             : undefined
-      if (status)
+      if (status === 'FAILED')
         await db.payment.updateMany({
-          where: { providerOrderId: entity.order_id },
-          data: { providerPaymentId: entity.id, status },
+          where: {
+            providerOrderId: entity.order_id,
+            status: { in: ['PENDING', 'AUTHORIZED', 'FAILED'] },
+          },
+          data: { status },
         })
-      if (status === 'CAPTURED')
-        await db.order.updateMany({
-          where: { status: 'PENDING', payment: { providerOrderId: entity.order_id } },
-          data: { status: 'CONFIRMED' },
+      if (status === 'CAPTURED') {
+        const order = await db.order.findFirst({
+          where: { payment: { providerOrderId: entity.order_id } },
         })
+        if (!order)
+          return sendError(
+            response,
+            503,
+            'PAYMENT_UNAVAILABLE',
+            'Payment order is not available yet.',
+            id,
+          )
+        if (
+          !entity.id ||
+          !matchesCapturedPayment(entity, {
+            id: entity.id,
+            orderId: entity.order_id,
+            amount: order.totalMinor,
+            currency: order.currency,
+          })
+        )
+          return sendError(
+            response,
+            400,
+            'INVALID_WEBHOOK',
+            'Payment details do not match the order.',
+            id,
+          )
+        await recordCapturedPayment(db, order.id, entity.order_id, entity.id)
+      }
     }
     return response.status(200).json({ received: true, requestId: id })
-  } catch {
-    return sendError(response, 400, 'INVALID_WEBHOOK', 'Webhook payload is invalid.', id)
+  } catch (error) {
+    if (error instanceof SyntaxError)
+      return sendError(response, 400, 'INVALID_WEBHOOK', 'Webhook payload is invalid.', id)
+    return sendError(
+      response,
+      503,
+      'WEBHOOK_UNAVAILABLE',
+      'Webhook processing is temporarily unavailable.',
+      id,
+    )
   }
 }

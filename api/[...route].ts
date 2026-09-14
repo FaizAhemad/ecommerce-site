@@ -1,4 +1,10 @@
 import categories from '../server/api/categories.js'
+import checkout from '../server/api/checkout.js'
+import { webhookBody } from '../server/api/_lib/webhook-body.js'
+import support from '../server/api/support.js'
+import adminSupport from '../server/api/admin/support.js'
+import profile from '../server/api/profile.js'
+import addresses from '../server/api/addresses.js'
 import health from '../server/api/health.js'
 import adminAnalytics from '../server/api/admin/analytics.js'
 import adminAudit from '../server/api/admin/audit.js'
@@ -63,7 +69,10 @@ type ResponseLike = {
 type Handler = (request: RequestLike, response: ResponseLike) => unknown
 
 const routes: Record<string, Handler> = {
+  support,
+  'admin/support': adminSupport,
   categories,
+  checkout,
   health,
   'admin/analytics': adminAnalytics,
   'admin/audit': adminAudit,
@@ -85,6 +94,8 @@ const routes: Record<string, Handler> = {
   'auth/password-reset': authPasswordReset,
   'auth/signup': authSignup,
   'auth/verify-email': authVerifyEmail,
+  profile,
+  addresses,
   'auth/email-verification-request': authEmailVerificationRequest,
   cart,
   'newsletter/subscribe': newsletterSubscribe,
@@ -166,6 +177,19 @@ export default async function handler(request: RequestLike, response: ResponseLi
       )
     }
     const path = segments.join('/')
+    if (path === 'webhooks/razorpay' && request.method === 'POST') {
+      try {
+        request.body = await webhookBody(request)
+      } catch {
+        return sendError(
+          response,
+          400,
+          'INVALID_WEBHOOK',
+          'Original webhook payload is required.',
+          requestId(request),
+        )
+      }
+    }
     const production = process.env.NODE_ENV === 'production'
     if (path === 'auth/csrf')
       return csrfTokenResponse(request, response, production, requestId(request))

@@ -49,7 +49,7 @@ npm run build
 
 Source formatting uses the pinned development-only Prettier version and shared .prettierrc.json/.editorconfig rules: two spaces, single quotes, no optional semicolons, 100-column preferred wrapping and LF line endings. The commands cover frontend/server/dispatcher code, CSS/locales, scripts/tests, the seed and root code/JSON configuration. They skip generated output, the lockfile, secrets, media and migration/history files. Run format after edits and format:check before handing off changes. Oxlint checks code issues separately; formatting does not fix application logic or replace tests. See [Prettier installation guidance](https://prettier.io/docs/install) for the pinned-version approach.
 
-The build generates Prisma Client, type-checks client/server code and builds the frontend into `dist`. The current default suite contains 120 timeout, upload, rate-limit, customer-isolation/cart, wishlist, routing, order-transaction, payment-order-state, CSRF, API-error and password-recovery tests. It is not an end-to-end suite.
+The build generates Prisma Client, type-checks client/server code and builds the frontend into `dist`. The current default suite contains 164 timeout, upload, rate-limit, customer-isolation/cart, wishlist, routing, order-transaction, payment-order-state, CSRF, API-error and password-recovery tests. It is not an end-to-end suite.
 
 ## Database and deployment
 
@@ -73,7 +73,7 @@ Mobile is the primary customer experience. The [consolidated audit](ARCHITECTURE
 
 Catalog/categories, session login, cart/wishlist mutations, product administration and review create/edit are connected to APIs. The wishlist page is temporarily hidden: its header link is removed and /wishlist redirects to /products; product hearts remain available. React Query handles many page reads; header/cart share a query, existing private keys use account/session generation, and session/wishlist synchronization uses guarded effects. Full browser isolation acceptance remains pending.
 
-Orders currently renders an empty shell. Order Details and Checkout use placeholder catalog-derived content, and Checkout does not submit payments. Support still opens email/phone links. Profile/verification customer pages, full settings, customer messaging UI, AI, referrals, coupons, cashback and delivery integrations remain incomplete or absent.
+Orders and Details use private real data. Checkout has configured server totals, atomic submission and Razorpay payment controls (E23); live provider acceptance remains pending. Support tickets and Profile/verification pages are implemented offline. E24 connects admin customer messaging with saved/accepted history; delivery acceptance remains pending. Full settings, AI, incentives, refunds and delivery remain incomplete.
 
 Editable business data should move into configuration/database management. Currently much branding/content remains in `src/config.ts`, the storefront adapter and components; full white-label deployment is a requirement, not a finished capability. Never commit secrets or put private values in browser environment variables. Legal policy pages currently request approved business content.
 
@@ -90,3 +90,12 @@ E17 fixes home newsletter feedback when a subscription is saved but confirmation
 
 
 E18 adds Account email and /verify-email with authenticated rate-limited resend, single-use links and verification status. Offline scope passes; owner delivery/mobile acceptance remains pending. See [EMAIL_VERIFICATION.md](EMAIL_VERIFICATION.md).
+
+
+E19 adds the common Profile page and owned saved addresses, with password-confirmed login-phone updates and protected order-address history. Admin Settings remains separate. See PROFILE_MANAGEMENT.md; offline evidence is in PROJECT_STATUS E19 and production/device acceptance remains pending.
+
+
+E20 connects Orders to private paginated history with stored totals/status. Order Details and Checkout remain pending. See PROJECT_STATUS E20 for evidence and owner acceptance gaps.
+
+
+E21/E22 checkpoint adds real order details, cart/address checkout preview, rating/hex controls, routing/connectivity fixes and support requests. Support requires the unapplied migration and server-only SUPPORT_EMAIL; see SUPPORT_REQUESTS.md. E23 adds configured checkout/payment submission; see CHECKOUT_PAYMENTS.md for pending provider and release acceptance.

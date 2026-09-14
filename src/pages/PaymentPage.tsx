@@ -1,106 +1,115 @@
-import { useNotification } from '../components/NotificationProvider'
-import { useState, type FormEvent, type MouseEvent } from 'react'
+import { useState, type MouseEvent } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useCart } from '../api/cart'
+import { getProfile } from '../api/profile'
+import { privateKey } from '../api/sessionScope'
 import type { StorefrontApiResponse } from '../api/storefront'
+import { CheckoutSubmit } from '../components/CheckoutSubmit'
+
 type Props = {
   storefront: StorefrontApiResponse
   onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void
 }
 export function PaymentPage({ storefront, onNavigate }: Props) {
-  const notify = useNotification()
-  const items = storefront.products.slice(0, 2)
-  const currency = new Intl.NumberFormat(storefront.localization.locale, {
-    style: 'currency',
-    currency: storefront.localization.currency,
-    maximumFractionDigits: 0,
+  const cart = useCart()
+  const profile = useQuery({
+    queryKey: privateKey('profile'),
+    queryFn: ({ signal }) => getProfile(signal),
   })
-  const total = items.reduce((sum, item) => sum + item.price, 0)
-  const [submitted, setSubmitted] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (submitting || submitted) return
-    setSubmitting(true)
-    try {
-      notify('Online payment is not available yet. No order or payment has been submitted.', 'info')
-      setSubmitted(false)
-    } finally {
-      setSubmitting(false)
-    }
-  }
+  const [selected, setSelected] = useState('')
+  const addresses = profile.data?.addresses ?? []
+  const selectedId = selected || addresses.find((a) => a.isDefault)?.id || addresses[0]?.id || ''
+  const items = cart.data ?? []
+  const total = items.reduce((sum, item) => sum + item.quantity * item.product.priceMinor, 0)
+  const money = (minor: number) =>
+    new Intl.NumberFormat(storefront.localization.locale, {
+      style: 'currency',
+      currency: storefront.localization.currency,
+    }).format(minor / 100)
   return (
     <section className="page-section payment-page" aria-labelledby="payment-title">
-      <div className="payment-layout">
-        <div>
-          <p className="eyebrow">SECURE CHECKOUT</p>
-          <h1 id="payment-title">Complete your order</h1>
-          <p className="hero-text">Pay securely online with Razorpay.</p>
-          <form className="payment-form" onSubmit={submit}>
-            <fieldset>
-              <legend>Payment method</legend>
-              <div className="payment-option selected">
-                <span className="payment-option-name">
-                  <strong>Razorpay</strong>
-                  <small>Cards, UPI, net banking &amp; wallets</small>
-                </span>
-                <span className="razorpay-mark">R</span>
-              </div>
-            </fieldset>
-            <div className="payment-info">
-              <p>
-                Razorpay will collect your online payment. Name and email can be passed as Razorpay
-                prefill values; your delivery address is collected separately for fulfillment.
-              </p>
-              <p className="payment-note">
-                Online payment will open after the Razorpay server integration is configured.
-              </p>
-            </div>
-            <div className="payment-fields">
-              <label>
-                Full name
-                <input required placeholder="Your name" />
-              </label>
-              <label>
-                Email address
-                <input required type="email" placeholder="you@example.com" />
-              </label>
-              <label>
-                Delivery address
-                <textarea required rows={3} placeholder="Street, city, postal code" />
-              </label>
-            </div>
-            <button
-              className="primary-button payment-submit"
-              type="submit"
-              disabled={submitting || submitted}
-            >
-              {submitted ? 'Submitted' : submitting ? 'Please wait…' : 'Continue to Razorpay'}{' '}
-              <span aria-hidden="true">→</span>
-            </button>
-          </form>
+      <h1 id="payment-title">Checkout</h1>
+      {cart.isPending || profile.isPending ? (
+        <p role="status">Loading cart and delivery addresses?</p>
+      ) : cart.isError || profile.isError ? (
+        <div className="state-message" role="alert">
+          <p>Unable to load checkout. Please try again.</p>
+          <button
+            className="secondary-button"
+            disabled={cart.isFetching || profile.isFetching}
+            onClick={() => {
+              void cart.refetch({ cancelRefetch: false })
+              void profile.refetch({ cancelRefetch: false })
+            }}
+          >
+            Retry
+          </button>
         </div>
-        <aside className="order-summary">
-          <p className="eyebrow">YOUR ORDER</p>
-          <h2>Order summary</h2>
-          {items.map((item) => (
-            <div className="summary-line" key={item.id}>
-              <span>{item.name}</span>
-              <strong>{currency.format(item.price)}</strong>
-            </div>
-          ))}
-          <div className="summary-total">
-            <span>Total</span>
-            <strong>{currency.format(total)}</strong>
-          </div>
-          <div className="summary-protection">
-            Secure checkout
-            <br />
-            Free returns · Support included
-          </div>
-          <a href="/cart" onClick={onNavigate('/cart')}>
-            ← Return to cart
+      ) : !items.length ? (
+        <p>
+          Your cart is empty.{' '}
+          <a href="/products" onClick={onNavigate('/products')}>
+            Browse products
           </a>
-        </aside>
-      </div>
+        </p>
+      ) : (
+        <div className="payment-layout">
+          <div>
+            <h2>Delivery address</h2>
+            {!addresses.length ? (
+              <p>Add a delivery address in your profile.</p>
+            ) : (
+              <fieldset className="payment-form">
+                <legend>Choose a saved address</legend>
+                {addresses.map((address) => (
+                  <label key={address.id} className="payment-option">
+                    <input
+                      type="radio"
+                      name="delivery-address"
+                      checked={selectedId === address.id}
+                      onChange={() => setSelected(address.id)}
+                    />
+                    <span>
+                      {address.name}: {address.line1}, {address.city}, {address.state}{' '}
+                      {address.postalCode}, {address.country}
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+            )}
+            <a href="/profile" onClick={onNavigate('/profile')}>
+              Manage delivery addresses
+            </a>
+            <CheckoutSubmit
+              addressId={selectedId}
+              cartRevision={JSON.stringify(
+                items.map((item) => [item.id, item.quantity, item.product.priceMinor]),
+              )}
+              disabled={cart.isUpdating}
+            />
+            {cart.isUpdating && <p role="status">Updating your cart?</p>}
+          </div>
+          <aside className="order-summary">
+            <h2>Cart summary</h2>
+            {items.map((item) => (
+              <div className="summary-line" key={item.product.id}>
+                <span>
+                  {item.product.name} ? {item.quantity}
+                </span>
+                <strong>{money(item.product.priceMinor * item.quantity)}</strong>
+              </div>
+            ))}
+            <div className="summary-total">
+              <span>Items subtotal</span>
+              <strong>{money(total)}</strong>
+            </div>
+            <p>Delivery charges and taxes must be confirmed before payment.</p>
+            <a href="/cart" onClick={onNavigate('/cart')}>
+              Return to cart
+            </a>
+          </aside>
+        </div>
+      )}
     </section>
   )
 }

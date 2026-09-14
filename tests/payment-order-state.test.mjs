@@ -3,16 +3,30 @@ import assert from 'node:assert/strict'
 import { createHmac } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import ts from 'typescript'
+globalThis.fetch = async () => {
+  throw new Error('Network is forbidden in offline payment tests')
+}
 
 // Exercise real handlers with synthetic signed messages and an injected store. No .env/providers.
 let revision = 0
 async function invoke(kind, status, invalidSignature = false) {
   const fixture = { status, writes: 0 }
+  globalThis.captureFixture = {
+    fetchPayment: async () => ({
+      id: 'provider-payment',
+      order_id: 'provider-order',
+      amount: 100,
+      currency: 'INR',
+      status: 'captured',
+    }),
+  }
   globalThis.paymentStateFixture = {
     order: {
       findFirst: async () => ({
         id: 'order',
         status: fixture.status,
+        totalMinor: 100,
+        currency: 'INR',
         payment: { providerOrderId: 'provider-order' },
       }),
       updateMany: async ({ where, data }) => {
@@ -33,6 +47,8 @@ async function invoke(kind, status, invalidSignature = false) {
       },
     },
   }
+  globalThis.paymentStateFixture.$transaction = async (action) =>
+    action(globalThis.paymentStateFixture)
   const file = kind === 'verify' ? 'payments/razorpay-verify.ts' : 'webhooks/razorpay.ts'
   let source = readFileSync(new URL(`../server/api/${file}`, import.meta.url), 'utf8')
     .replace("import { db } from '../_lib/db.js'", 'const db = globalThis.paymentStateFixture')
@@ -40,11 +56,26 @@ async function invoke(kind, status, invalidSignature = false) {
       "import { requireUser } from '../_lib/auth.js'",
       "const requireUser = async () => ({ id: 'synthetic-customer' })",
     )
+    .replace(
+      /import\s*\{\s*fetchPayment,\s*matchesCapturedPayment,\s*recordCapturedPayment,?\s*\}\s*from ['"]\.\.\/_lib\/payment-confirmation\.js['"]/,
+      'import { matchesCapturedPayment, recordCapturedPayment } from ' +
+        JSON.stringify(
+          new URL('../server/api/_lib/payment-confirmation.ts', import.meta.url).href,
+        ) +
+        '; const {fetchPayment}=globalThis.captureFixture',
+    )
+    .replaceAll(
+      "'../_lib/payment-confirmation.js'",
+      JSON.stringify(new URL('../server/api/_lib/payment-confirmation.ts', import.meta.url).href),
+    )
     .replaceAll(
       "'../_lib/http.js'",
       JSON.stringify(new URL('../server/api/_lib/http.ts', import.meta.url).href),
     )
-    .replace(/process\.env\.RAZORPAY_(KEY_SECRET|WEBHOOK_SECRET)/g, "'synthetic-signing-key'")
+    .replace(
+      /process\.env\.RAZORPAY_(KEY_SECRET|KEY_ID|WEBHOOK_SECRET)/g,
+      "'synthetic-signing-key'",
+    )
   source = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.ESNext },
   }).outputText
@@ -57,7 +88,17 @@ async function invoke(kind, status, invalidSignature = false) {
     createHmac('sha256', 'synthetic-signing-key').update(text).digest('hex')
   const payload = JSON.stringify({
     event: 'payment.captured',
-    payload: { payment: { entity: { order_id: 'provider-order', id: 'provider-payment' } } },
+    payload: {
+      payment: {
+        entity: {
+          order_id: 'provider-order',
+          id: 'provider-payment',
+          amount: 100,
+          currency: 'INR',
+          status: 'captured',
+        },
+      },
+    },
   })
   const request =
     kind === 'verify'

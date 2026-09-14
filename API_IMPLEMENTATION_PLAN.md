@@ -127,3 +127,21 @@ E17 newsletter clarification: the existing 502 CONFIRMATION_EMAIL_FAILED contrac
 
 
 E18: POST /api/auth/email-verification-request requires session + CSRF, ignores recipient/body IDs and sends only to the stored account email; returns 202 accepted:true, 200 verified:true for already-verified accounts, 400 EMAIL_REQUIRED or safe 503 VERIFICATION_UNAVAILABLE. Existing POST /api/auth/verify-email consumes a one-time token. GET /api/auth/me adds emailVerified:boolean. Signup shares configured-origin fragment link issuance; mail failure does not undo account creation. No login restriction or additional serverless function. See EMAIL_VERIFICATION.md and PROJECT_STATUS E18.
+
+
+E19: GET /api/profile returns selected profile and owned addresses; PATCH accepts name, phone and currentPassword (required on login-phone change). Email/role/customer-ID changes are ignored. POST /api/addresses creates; PATCH accepts id with full address fields or makeDefault:true; DELETE accepts id. All require session ownership, CSRF on writes and private/no-store responses. Addresses used by orders return 409 for edits/deletion. Defaults and phone/token changes use Serializable transactions; conflicts are not replayed. Profile/address queries are private and session-aborted. See PROFILE_MANAGEMENT.md and PROJECT_STATUS E19.
+
+
+E20 GET /api/orders returns a minimal list: orders[{id,orderNumber,status,totalMinor,currency,createdAt,items[{id,productName,quantity}],payment:{status}|null}], nextPage:number|null and requestId. page defaults to 0; 20 rows/page, sorted createdAt/id descending. Only the session owner is queried. No provider IDs/payloads or shipping address are returned. POST is unchanged. Customer detail-page integration remains pending.
+
+
+E21 detail DTO now selects customer-facing order/items/payment status/shipment/address fields only and strips address owner ID. E22 adds GET/POST/PATCH /api/support and GET/PATCH /api/admin/support through the sole dispatcher. GET pages return 20 tickets plus nextPage. POST accepts UUID id, subject <=120 and body <=4000; recipient and owner are server-derived. PATCH requires expectedStatus and reason for terminal states; customers may only cancel their own OPEN tickets. Parameterized SupportTicket SQL requires the prepared migration. Email acceptance is separate from saved-ticket success. See SUPPORT_REQUESTS.md.
+
+
+E23: GET/POST /api/checkout adds private configured quotes and UUID-idempotent atomic order creation; POST accepts addressId, expectedTotalMinor and requestId. Admin settings validates the checkout JSON contract. Razorpay initiation returns its canonical stored provider ID; verification fetches captured payment and matches amount/currency/IDs. Dispatcher preserves bounded raw webhook bodies. See CHECKOUT_PAYMENTS.md for contracts and pending provider acceptance.
+
+
+E24 /api/admin/messages: POST now requires UUID id, registered verified recipientEmail, subject (1-120) and body (1-4000). Saves before sending, binds ID to sender/draft and returns only message id/status. ACCEPTED means provider accepted; UNCONFIRMED remains saved without automatic resend. GET selects latest 100 operational history records. Existing admin/CSRF/rate gates remain.
+
+
+E25 PATCH /api/admin/payments only accepts action reconcile-refund; legacy refund is rejected. Provider full-refund identity/amount/currency/status proof is required before conditional atomic payment/order changes. No refund request is sent. Shared order updates and return PATCH reject manual REFUNDED values. See CHECKOUT_PAYMENTS.md.

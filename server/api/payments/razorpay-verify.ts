@@ -1,8 +1,14 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { db } from '../_lib/db.js'
+import {
+  fetchPayment,
+  matchesCapturedPayment,
+  recordCapturedPayment,
+} from '../_lib/payment-confirmation.js'
 import { requireUser } from '../_lib/auth.js'
 import {
   bodyRecord,
+  fetchWithTimeout,
   requestId,
   sendError,
   type VercelRequest,
@@ -21,6 +27,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const providerPaymentId = typeof body.razorpayPaymentId === 'string' ? body.razorpayPaymentId : ''
   const signature = typeof body.signature === 'string' ? body.signature : ''
   const secret = process.env.RAZORPAY_KEY_SECRET
+  const key = process.env.RAZORPAY_KEY_ID
   if (!orderId || !providerOrderId || !providerPaymentId || !signature || !secret)
     return sendError(
       response,
@@ -43,16 +50,42 @@ export default async function handler(request: VercelRequest, response: VercelRe
     })
     if (!order?.payment || order.payment.providerOrderId !== providerOrderId)
       return sendError(response, 404, 'NOT_FOUND', 'Payment order not found.', id)
-    const payment = await db.payment.update({
-      where: { orderId },
-      data: { providerPaymentId, status: 'CAPTURED' },
-    })
-    // A late capture must not reopen a cancelled order whose stock was returned.
-    await db.order.updateMany({
-      where: { id: orderId, status: 'PENDING' },
-      data: { status: 'CONFIRMED' },
-    })
-    return response.status(200).json({ verified: true, payment, requestId: id })
+    if (!key)
+      return sendError(
+        response,
+        503,
+        'PAYMENT_UNAVAILABLE',
+        'Payment verification is temporarily unavailable.',
+        id,
+      )
+    const providerPayment = await fetchPayment(providerPaymentId, key, secret, fetchWithTimeout)
+    if (
+      !matchesCapturedPayment(providerPayment, {
+        id: providerPaymentId,
+        orderId: providerOrderId,
+        amount: order.totalMinor,
+        currency: order.currency,
+      })
+    )
+      return sendError(
+        response,
+        409,
+        'PAYMENT_UNCONFIRMED',
+        'Payment capture is not confirmed. Check your order status before attempting another payment.',
+        id,
+      )
+    const recorded = await recordCapturedPayment(db, orderId, providerOrderId, providerPaymentId)
+    if (!recorded)
+      return sendError(
+        response,
+        409,
+        'PAYMENT_CONFLICT',
+        'Payment state changed. Check your order before trying again.',
+        id,
+      )
+    return response
+      .status(200)
+      .json({ verified: true, payment: { status: 'CAPTURED' }, requestId: id })
   } catch {
     return sendError(
       response,

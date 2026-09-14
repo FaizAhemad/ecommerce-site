@@ -338,7 +338,11 @@ test('dispatcher blocks before rate-limit/handler work and retains reads and exa
   const source = readFileSync(new URL('../api/[...route].ts', import.meta.url), 'utf8').replace(
     /^import (.+) from '([^']+)'/gm,
     (_line, binding, path) => {
-      if (path.endsWith('/csrf.js') || path.endsWith('/http.js'))
+      if (
+        path.endsWith('/csrf.js') ||
+        path.endsWith('/http.js') ||
+        path.endsWith('/webhook-body.js')
+      )
         return `import ${binding} from ${JSON.stringify(new URL(path.replace('.js', '.ts'), new URL('../api/', import.meta.url)).href)}`
       if (binding === '{ db }') return 'const db = {}'
       if (binding === '{ currentUser }') return 'const currentUser = async () => null'
@@ -365,7 +369,7 @@ test('dispatcher blocks before rate-limit/handler work and retains reads and exa
     ['GET', 'auth/me'],
     ['POST', 'webhooks/razorpay'],
   ])
-    await dispatch({ method, query: { route } }, response())
+    await dispatch({ method, body: '{}', query: { route } }, response())
   assert.deepEqual(globalThis.csrfFixture, { limits: 2, calls: 2 })
   const paths = [
     'auth/login',

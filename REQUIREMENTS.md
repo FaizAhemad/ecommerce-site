@@ -235,3 +235,21 @@ E16 implements email-based Forgot password and Reset password customer pages wit
 
 
 E18 implements email verification and authenticated resend within the shared account form layout, preserving existing login eligibility. Full profile/address/email-change/mobile verification and production/provider/device acceptance remain in APPLICATION_BACKLOG. See EMAIL_VERIFICATION.md and PROJECT_STATUS E18.
+
+
+E19 implements the common Profile page for customers/admins with name/login-phone and saved delivery-address management. Email remains read-only pending verified replacement; mobile verification/full localization and production/device acceptance remain in APPLICATION_BACKLOG. Existing admin store Settings is separate. See PROFILE_MANAGEMENT.md.
+
+
+E20 implements customer Orders history only, with session-owned pagination and minimal stored order/item/payment status fields. Order Details, Checkout and production/provider acceptance remain pending in APPLICATION_BACKLOG.
+
+
+Owner scope (2026-09-14): Gadgify sells household gadgets in India, primarily Maharashtra, using INR; other Indian states can be served. Reuse for separate family/friend stores is future configurability, not approved marketplace scope. Legal policies/reward rates/AI provider and regulated products are undecided. Complete functionality continuously, updating tests/docs; visual polish follows. E21/E22 implement detail/checkout preview/support core; full payments, attachments and release acceptance remain pending.
+
+
+E23 implements a narrow configurable India/INR checkout with a uniform per-order delivery charge and item-subtotal tax. Rates are explicitly owner-configured, never inferred. Product/regional GST, inclusive taxes, incentive stacking and shipping rules remain requirements when applicable. See CHECKOUT_PAYMENTS.md; provider success and legal approval remain acceptance gates.
+
+
+E24 admin messaging implements transactional composition/history with existing verified recipients and saved-before-send duplicate protection. Provider acceptance does not complete delivery, notification retries/events or full localization requirements.
+
+
+E25 refund verification does not complete refund processing requirements. Full/partial refund initiation, remaining-amount checks, approved eligibility, durable audit/replay protection and settlement acceptance remain required.

@@ -56,3 +56,15 @@ E16 uses existing auth-send and auth-verify quotas for forgot/reset and verifica
 
 
 E18 adds auth/email-verification-request POST: 5 per IP and 3 per authenticated account per 600 seconds under email-verification-send. Existing verification submission quota is unchanged. Central CSRF, private 429/Retry-After and fail-closed 503 behavior remain. No migration is added; owner validates existing counter storage and new quota on production.
+
+
+E19 adds profile-write for profile/addresses mutations: 60/IP and 20/authenticated account per 60 seconds. GET reads remain outside this mutation quota. Existing CSRF, fail-closed counter handling and Retry-After behavior apply. No migration is added; owner production quota acceptance remains pending.
+
+
+E22 /support writes use existing contact-coupon quotas (10/IP, 5/account per 600 seconds); /admin/support uses existing admin-write limits. CSRF applies. Support reads are session-owned/admin-guarded. New support table migration is separate from existing counter migration.
+
+
+E23: checkout POST uses the existing commerce-write IP/account policy; admin checkout configuration uses admin-write. Read-only quotes are private but follow existing GET exclusions. No new limiter migration is introduced.
+
+
+E24/E25 message submission and refund verification retain the admin-write IP/account policy and CSRF gate. Provider calls occur only after admin authorization; offline tests do not establish deployed rate-limit behavior.

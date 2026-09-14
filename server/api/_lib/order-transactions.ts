@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { PrismaClient, OrderStatus } from '@prisma/client'
+import type { checkoutRules, checkoutTotal } from './checkout.js'
 
 type Store = Pick<PrismaClient, '$transaction'>
 const transactionOptions = {
@@ -21,15 +22,49 @@ export function isTransactionConflict(error: unknown) {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2034'
 }
 
-export async function createCartOrder(store: Store, userId: string, addressId: string) {
+export async function createCartOrder(
+  store: Store,
+  userId: string,
+  addressId: string,
+  checkout?: {
+    requestId: string
+    expectedTotalMinor: number
+    rules: typeof checkoutRules
+    calculate: typeof checkoutTotal
+  },
+) {
   return store.$transaction(async (tx) => {
+    if (checkout) {
+      const existing = await tx.order.findUnique({
+        where: { orderNumber: `GAD-${checkout.requestId}` },
+        include: { payment: true },
+      })
+      if (existing) {
+        if (existing.userId !== userId || existing.shippingAddressId !== addressId)
+          throw new OrderActionError(
+            409,
+            'CONFLICT',
+            'Check your previous order before starting another checkout.',
+          )
+        return existing
+      }
+    }
     // All eligibility, price and cart reads participate in the same serializable snapshot.
     const address = await tx.address.findFirst({
       where: { id: addressId, userId },
-      select: { id: true },
+      select: { id: true, country: true },
     })
     if (!address)
       throw new OrderActionError(400, 'INVALID_ADDRESS', 'Select a valid shipping address.')
+    const rules = checkout
+      ? checkout.rules((await tx.storeSetting.findUnique({ where: { key: 'checkout' } }))?.value)
+      : null
+    if (checkout && (!rules?.enabled || address.country !== 'IN'))
+      throw new OrderActionError(
+        409,
+        'CHECKOUT_UNAVAILABLE',
+        'Online ordering is unavailable for this address.',
+      )
     const cart = await tx.cart.findUnique({
       where: { userId },
       include: { items: { include: { product: true }, orderBy: { productId: 'asc' } } },
@@ -54,13 +89,22 @@ export async function createCartOrder(store: Store, userId: string, addressId: s
     }
     if (!Number.isSafeInteger(subtotalMinor) || subtotalMinor < 0 || subtotalMinor > 2_147_483_647)
       throw new OrderActionError(409, 'INVALID_CART', 'Update your cart before placing an order.')
+    const totals =
+      rules && checkout
+        ? checkout.calculate(subtotalMinor, rules)
+        : { subtotalMinor, totalMinor: subtotalMinor }
+    if (checkout && totals.totalMinor !== checkout.expectedTotalMinor)
+      throw new OrderActionError(
+        409,
+        'PRICE_CHANGED',
+        'Your cart or charges changed. Review the latest total before placing the order.',
+      )
     const order = await tx.order.create({
       data: {
-        orderNumber: `GAD-${randomUUID().toUpperCase()}`,
+        orderNumber: checkout ? `GAD-${checkout.requestId}` : `GAD-${randomUUID().toUpperCase()}`,
         userId,
         shippingAddressId: address.id,
-        subtotalMinor,
-        totalMinor: subtotalMinor,
+        ...totals,
         items: {
           create: cart.items.map((item) => ({
             productId: item.productId,
@@ -69,7 +113,9 @@ export async function createCartOrder(store: Store, userId: string, addressId: s
             quantity: item.quantity,
           })),
         },
-        payment: { create: { provider: 'COD', amountMinor: subtotalMinor } },
+        payment: {
+          create: { provider: checkout ? 'RAZORPAY' : 'COD', amountMinor: totals.totalMinor },
+        },
       },
       include: { items: true, payment: true },
     })
@@ -107,6 +153,12 @@ export async function cancelOrder(store: Store, orderId: string, userId?: string
 }
 
 export async function updateOrderStatus(store: Store, orderId: string, status: OrderStatus) {
+  if (status === 'REFUNDED')
+    throw new OrderActionError(
+      409,
+      'REFUND_UNCONFIRMED',
+      'Verify the provider refund through Payments before recording a refunded order.',
+    )
   if (status === 'CANCELLED') return cancelOrder(store, orderId)
   return store.$transaction(async (tx) => {
     const order = await tx.order.findUnique({ where: { id: orderId } })

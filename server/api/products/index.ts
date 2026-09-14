@@ -1,3 +1,4 @@
+import { ratingBands } from '../_lib/rating-filter.js'
 import type { Prisma } from '@prisma/client'
 import { db } from '../_lib/db.js'
 import {
@@ -59,6 +60,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
     .map((color) => color.trim())
     .filter(Boolean)
   const minRating = Number(queryValue(request.query?.minRating))
+  const ratings = ratingBands(queryValue(request.query?.ratings))
+  if (ratings === null)
+    return sendError(response, 400, 'VALIDATION_ERROR', 'Select valid rating bands.', id)
 
   const where: Prisma.ProductWhereInput = {
     isActive: true,
@@ -72,9 +76,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
       : {}),
     ...(category ? { category } : {}),
     ...(colors?.length ? { colors: { some: { name: { in: colors } } } } : {}),
-    ...(Number.isFinite(minRating) && minRating > 0
-      ? { rating: { gte: minRating, lt: minRating + 1 } }
-      : {}),
+    ...(ratings.length
+      ? { AND: [{ OR: ratings.map((rating) => ({ rating: { gte: rating, lt: rating + 1 } })) }] }
+      : Number.isFinite(minRating) && minRating > 0
+        ? { rating: { gte: minRating, lt: minRating + 1 } }
+        : {}),
   }
 
   try {

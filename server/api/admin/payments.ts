@@ -1,7 +1,9 @@
 import { db } from '../_lib/db.js'
 import { requireAdmin } from '../_lib/auth.js'
+import { fetchPayment, matchesFullRefund, recordFullRefund } from '../_lib/payment-confirmation.js'
 import {
   bodyRecord,
+  fetchWithTimeout,
   requestId,
   sendError,
   type VercelRequest,
@@ -25,17 +27,63 @@ export default async function handler(request: VercelRequest, response: VercelRe
       return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET or PATCH.', id)
     const body = bodyRecord(request)
     const orderId = typeof body.orderId === 'string' ? body.orderId : ''
-    if (!orderId || body.action !== 'refund')
+    if (!orderId || body.action !== 'reconcile-refund')
       return sendError(
         response,
         400,
         'VALIDATION_ERROR',
-        'A payment order and refund action are required.',
+        'Use refund verification after an approved refund is processed through the payment provider.',
         id,
       )
-    const payment = await db.payment.update({ where: { orderId }, data: { status: 'REFUNDED' } })
-    await db.order.update({ where: { id: orderId }, data: { status: 'REFUNDED' } })
-    return response.status(200).json({ payment, requestId: id })
+    const payment = await db.payment.findUnique({ where: { orderId }, include: { order: true } })
+    if (
+      !payment ||
+      payment.provider !== 'RAZORPAY' ||
+      !payment.providerPaymentId ||
+      !payment.providerOrderId
+    )
+      return sendError(
+        response,
+        409,
+        'REFUND_UNCONFIRMED',
+        'A recorded Razorpay payment is required for verification.',
+        id,
+      )
+    const key = process.env.RAZORPAY_KEY_ID,
+      secret = process.env.RAZORPAY_KEY_SECRET
+    if (!key || !secret)
+      return sendError(
+        response,
+        503,
+        'PAYMENT_UNAVAILABLE',
+        'Payment verification is unavailable.',
+        id,
+      )
+    const proof = await fetchPayment(payment.providerPaymentId, key, secret, fetchWithTimeout)
+    if (
+      payment.amountMinor !== payment.order.totalMinor ||
+      !matchesFullRefund(proof, {
+        id: payment.providerPaymentId,
+        orderId: payment.providerOrderId,
+        amount: payment.order.totalMinor,
+        currency: payment.order.currency,
+      })
+    )
+      return sendError(
+        response,
+        409,
+        'REFUND_UNCONFIRMED',
+        'The provider has not confirmed a matching full refund. No refund status was changed.',
+        id,
+      )
+    await recordFullRefund(
+      db,
+      orderId,
+      payment.providerOrderId,
+      payment.providerPaymentId,
+      payment.amountMinor,
+    )
+    return response.status(200).json({ payment: { status: 'REFUNDED' }, requestId: id })
   } catch {
     return sendError(
       response,

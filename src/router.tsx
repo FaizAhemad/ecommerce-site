@@ -12,6 +12,8 @@ import { TrackOrderPage } from './pages/TrackOrderPage'
 import { AuthPage } from './pages/AuthPage'
 import { PasswordRecoveryPage } from './pages/PasswordRecoveryPage'
 import { EmailVerificationPage } from './pages/EmailVerificationPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { safeRouteId } from './routePaths'
 import { OrdersPage } from './pages/OrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
 import { AdminPage } from './pages/AdminPage'
@@ -44,6 +46,24 @@ function WishlistRedirect() {
   }, [])
   return null
 }
+function AdminRedirect() {
+  useEffect(() => {
+    window.history.replaceState({}, '', '/admin')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }, [])
+  return <p role="status">Opening dashboard…</p>
+}
+function NotFoundPage() {
+  return (
+    <section className="page-section">
+      <h1>Page not found</h1>
+      <p>This link is unavailable.</p>
+      <a href="/" onClick={navigate('/')}>
+        Back to home
+      </a>
+    </section>
+  )
+}
 
 function DebugErrorPage() {
   if (import.meta.env.DEV) throw new Error('Intentional error-boundary preview')
@@ -60,6 +80,12 @@ export function StorefrontRoute({
 }: RouteProps) {
   const normalizedPath = path.length > 1 ? path.replace(/\/+$/, '') : path
   switch (normalizedPath) {
+    case '/profile':
+      return isAuthenticated ? (
+        <ProfilePage onNavigate={navigate} />
+      ) : (
+        <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+      )
     case '/verify-email':
       return <EmailVerificationPage isAuthenticated={isAuthenticated} onNavigate={navigate} />
     case '/forgot-password':
@@ -139,13 +165,42 @@ export function StorefrontRoute({
         />
       )
     case '/support':
-      return <SupportPage storefront={storefront} />
+      return (
+        <SupportPage
+          key="create-support"
+          storefront={storefront}
+          isAuthenticated={isAuthenticated}
+        />
+      )
+    case '/support-requests':
+      return (
+        <SupportPage
+          key="list-support"
+          storefront={storefront}
+          isAuthenticated={isAuthenticated}
+          mode="list"
+        />
+      )
+    case '/admin/support':
+      return isAuthenticated && isAdmin ? (
+        <SupportPage key="admin-support" storefront={storefront} isAuthenticated mode="admin" />
+      ) : (
+        <p className="state-message">Administrator access is required.</p>
+      )
     default:
+      if (normalizedPath.startsWith('/admin/')) return <AdminRedirect />
+      if (
+        (normalizedPath.startsWith('/orders/') &&
+          !safeRouteId(normalizedPath.slice('/orders/'.length))) ||
+        (normalizedPath.startsWith('/product/') &&
+          !safeRouteId(normalizedPath.slice('/product/'.length)))
+      )
+        return <NotFoundPage />
       if (normalizedPath.startsWith('/orders/'))
         return isAuthenticated ? (
           <OrderDetailPage
             storefront={storefront}
-            orderId={decodeURIComponent(normalizedPath.slice('/orders/'.length))}
+            orderId={safeRouteId(normalizedPath.slice('/orders/'.length))!}
             onNavigate={navigate}
           />
         ) : (
@@ -156,11 +211,12 @@ export function StorefrontRoute({
           <ProductDetailPage
             key={normalizedPath}
             storefront={storefront}
-            productId={decodeURIComponent(normalizedPath.slice('/product/'.length))}
+            productId={safeRouteId(normalizedPath.slice('/product/'.length))!}
             onAdd={onAdd}
             onNavigate={navigate}
           />
         )
+      if (normalizedPath !== '/') return <NotFoundPage />
       return (
         <HomePage
           storefront={storefront}

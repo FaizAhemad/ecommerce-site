@@ -13,6 +13,7 @@ export type ProductQuery = {
   sort?: ProductSort
   colors?: readonly string[]
   minRating?: number
+  ratings?: readonly number[]
 }
 export type ProductPage = { products: readonly StorefrontProduct[]; nextCursor: string | null }
 
@@ -357,6 +358,7 @@ export async function getProducts(
   if (query.sort) params.set('sort', query.sort)
   if (query.colors?.length) params.set('colors', query.colors.join(','))
   if (query.minRating) params.set('minRating', String(query.minRating))
+  if (query.ratings?.length) params.set('ratings', query.ratings.join(','))
   const response = await fetch(`/api/products?${params.toString()}`, { signal })
   if (!response.ok) throw new Error('Unable to load products. Please try again.')
   return (await response.json()) as ProductPage

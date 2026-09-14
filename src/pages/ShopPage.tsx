@@ -23,7 +23,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
   const [category, setCategory] = useState('')
   const [sort, setSort] = useState<ProductSort>('newest')
   const [selectedColors, setSelectedColors] = useState<readonly string[]>([])
-  const [minRating, setMinRating] = useState(0)
+  const [selectedRatings, setSelectedRatings] = useState<readonly number[]>([])
   const sentinel = useRef<HTMLDivElement>(null)
   const currency = new Intl.NumberFormat(storefront.localization.locale, {
     style: 'currency',
@@ -33,7 +33,13 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
   const productQuery = useInfiniteQuery({
     queryKey: [
       'catalog',
-      { search: debouncedSearch, category, sort, colors: [...selectedColors].sort(), minRating },
+      {
+        search: debouncedSearch,
+        category,
+        sort,
+        colors: [...selectedColors].sort(),
+        ratings: [...selectedRatings].sort(),
+      },
     ],
     initialPageParam: undefined as string | undefined,
     queryFn: ({ signal, pageParam }) =>
@@ -43,7 +49,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
           category,
           sort,
           colors: selectedColors,
-          minRating,
+          ratings: selectedRatings,
           cursor: pageParam,
         },
         signal,
@@ -64,7 +70,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
     setCategory('')
     setSort('newest')
     setSelectedColors([])
-    setMinRating(0)
+    setSelectedRatings([])
   }
   const initialLoading = loading && catalog.length === 0
   const skeletons = Array.from({ length: 8 }, (_, index) => index)
@@ -102,15 +108,26 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
           collapseLabel={collection.collapseFiltersLabel}
           expandLabel={collection.expandFiltersLabel}
           selectedColors={selectedColors}
-          minRating={minRating}
+          selectedRatings={selectedRatings}
           colorOptions={storefront.facets.colors}
+          colorValues={Object.assign(
+            {},
+            ...storefront.products.map((product) => product.colorValues ?? {}),
+            ...catalog.map((product) => product.colorValues ?? {}),
+          )}
           ratingLabel={collection.ratingLabel}
           colorsLabel={collection.colorsFilterLabel}
           benefits={storefront.content.filterBenefits}
           onSearch={updateSearch}
           onCategory={updateCategory}
           onSort={setSort}
-          onRating={(value) => setMinRating((current) => (current === value ? 0 : value))}
+          onRating={(value) =>
+            setSelectedRatings((current) =>
+              current.includes(value)
+                ? current.filter((rating) => rating !== value)
+                : [...current, value],
+            )
+          }
           onColorToggle={toggleColor}
           onClear={clear}
         />

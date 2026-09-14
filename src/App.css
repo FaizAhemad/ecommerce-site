@@ -2601,6 +2601,24 @@ body {
   display: grid;
   gap: 16px;
 }
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-block: 16px;
+}
+.auth-form .profile-default {
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  min-height: 44px;
+}
+.auth-form .profile-default input {
+  width: 20px;
+  min-height: 20px;
+  margin: 0;
+  padding: 0;
+}
 .auth-form label {
   display: grid;
   gap: 7px;

@@ -7,7 +7,7 @@ import {
   type VercelRequest,
   type VercelResponse,
 } from '../_lib/http.js'
-const statuses = ['REQUESTED', 'APPROVED', 'REJECTED', 'REFUNDED'] as const
+const statuses = ['REQUESTED', 'APPROVED', 'REJECTED'] as const
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   const id = requestId(request)
   if (!(await requireAdmin(request, response))) return

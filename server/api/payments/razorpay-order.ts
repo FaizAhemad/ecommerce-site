@@ -32,6 +32,20 @@ export default async function handler(request: VercelRequest, response: VercelRe
     })
     if (!order || !order.payment)
       return sendError(response, 404, 'NOT_FOUND', 'Order not found.', id)
+    if (
+      !['PENDING', 'CONFIRMED'].includes(order.status) ||
+      !['PENDING', 'FAILED'].includes(order.payment.status)
+    )
+      return sendError(response, 409, 'PAYMENT_CONFLICT', 'This order is not awaiting payment.', id)
+    const ready = (paymentOrderId: string) => ({
+      paymentOrderId,
+      amount: order.totalMinor,
+      currency: order.currency,
+      keyId: publicKeyId,
+      requestId: id,
+    })
+    if (order.payment.providerOrderId)
+      return response.status(200).json(ready(order.payment.providerOrderId))
     const auth = Buffer.from(`${keyId}:${secret}`).toString('base64')
     const result = await fetchWithTimeout('https://api.razorpay.com/v1/orders', {
       timeoutMs: LONG_RUNNING_API_TIMEOUT_MS,
@@ -41,7 +55,6 @@ export default async function handler(request: VercelRequest, response: VercelRe
         amount: order.totalMinor,
         currency: order.currency,
         receipt: order.orderNumber,
-        notes: { userId: user.id },
       }),
     })
     if (!result.ok)
@@ -56,10 +69,34 @@ export default async function handler(request: VercelRequest, response: VercelRe
         'Payment provider returned an invalid order.',
         id,
       )
-    await db.payment.update({
-      where: { orderId },
+    const saved = await db.payment.updateMany({
+      where: {
+        orderId,
+        providerOrderId: null,
+        status: { in: ['PENDING', 'FAILED'] },
+        order: { status: 'PENDING' },
+      },
       data: { provider: 'RAZORPAY', providerOrderId, status: 'PENDING' },
     })
+    if (saved.count !== 1) {
+      const current = await db.payment.findUnique({
+        where: { orderId },
+        include: { order: { select: { status: true } } },
+      })
+      if (
+        current?.providerOrderId &&
+        current.order.status === 'PENDING' &&
+        ['PENDING', 'FAILED'].includes(current.status)
+      )
+        return response.status(200).json(ready(current.providerOrderId))
+      return sendError(
+        response,
+        409,
+        'PAYMENT_CONFLICT',
+        'Order changed. Check its status before trying again.',
+        id,
+      )
+    }
     return response.status(201).json({
       paymentOrderId: String(providerOrderId),
       amount: Number(order.totalMinor),
