@@ -17,6 +17,7 @@ import { safeRouteId } from './routePaths'
 import { OrdersPage } from './pages/OrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
 import { AdminPage } from './pages/AdminPage'
+import { HelpPage } from './pages/HelpPage'
 
 type RouteProps = {
   path: string
@@ -80,6 +81,8 @@ export function StorefrontRoute({
 }: RouteProps) {
   const normalizedPath = path.length > 1 ? path.replace(/\/+$/, '') : path
   switch (normalizedPath) {
+    case '/help':
+      return <HelpPage onNavigate={navigate} />
     case '/profile':
       return isAuthenticated ? (
         <ProfilePage onNavigate={navigate} />
@@ -148,6 +151,12 @@ export function StorefrontRoute({
       )
     case '/privacy':
       return <PolicyPage storefront={storefront} policy="privacy" onNavigate={navigate} />
+    case '/shipping':
+      return <PolicyPage storefront={storefront} policy="shipping" onNavigate={navigate} />
+    case '/cancellation':
+      return <PolicyPage storefront={storefront} policy="cancellation" onNavigate={navigate} />
+    case '/cookies':
+      return <PolicyPage storefront={storefront} policy="cookies" onNavigate={navigate} />
     case '/returns':
       return <PolicyPage storefront={storefront} policy="returns" onNavigate={navigate} />
     case '/refund-policy':

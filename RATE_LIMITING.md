@@ -68,3 +68,6 @@ E23: checkout POST uses the existing commerce-write IP/account policy; admin che
 
 
 E24/E25 message submission and refund verification retain the admin-write IP/account policy and CSRF gate. Provider calls occur only after admin authorization; offline tests do not establish deployed rate-limit behavior.
+
+
+E28 feedback POST uses 20 requests per IP and 5 per verified account per 600 seconds. Reads retain the existing GET policy; CSRF and session guards apply.

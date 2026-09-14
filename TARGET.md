@@ -77,3 +77,12 @@ E24 connects admin transactional messaging and private latest-100 history for ve
 
 
 E25 replaces manual refund status changes with provider full-refund verification only. Initiation, partial refunds, approved eligibility, legacy data audit and live acceptance remain open.
+
+
+E26 adds real admin return review; customer return creation, approved eligibility, audit/fulfillment and live acceptance remain open. Formatting is owner-managed from 2026-09-14; functional/security work and tests continue.
+
+
+E27 Help and the explicit website tour are implemented offline; AI, localized help, device acceptance and remaining roadmap work continue.
+
+
+E28 implements private first-purchase feedback with an unapplied migration. Public reviews, incentives and broader privacy/retention/device acceptance remain separate.

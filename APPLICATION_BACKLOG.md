@@ -20,6 +20,12 @@ Owner requests continuous implementation without per-item permission pauses; vis
 - [ ] E24 owner acceptance: admin authorization, provider delivery/rejection, interrupted sends, account switching and phone form/history behavior. Durable retries, delivery events and history beyond the latest 100 remain incomplete.
 - [x] ✅ E25 bounded offline refund integrity: replace manual refund status mutation with provider-backed full-refund reconciliation and reject manual REFUNDED edits through order/return controls. 164 synthetic tests pass; see PROJECT_STATUS E25.
 - [ ] E25 owner acceptance and remaining refunds: verify provider full/partial/failed outcomes, audit legacy manually-refunded records, implement approved refund initiation/eligibility, partial refunds and durable audit/reconciliation. Verification does not issue refunds or establish bank settlement.
+- [x] ✅ E26 bounded offline implementation: admin return history and guarded explicit review decisions, with owner/order consistency checks and no financial/stock effects. Fixed independent admin panel visibility; 169 tests pass (PROJECT_STATUS E26).
+- [ ] E26 customer return creation, approved eligibility/policy, full history/audit, fulfillment linkage and owner browser/device acceptance remain pending.
+- [x] ✅ E27 bounded offline implementation: public Help page/navigation and explicit five-step route tour with previous/next/exit controls, without storage or API writes. 171 tests pass (PROJECT_STATUS E27).
+- [ ] E27 owner keyboard/focus/phone acceptance and full English/Hindi/Marathi help/tour localization remain pending.
+- [x] ✅ E28 bounded offline implementation: private first-purchase feedback in Orders/paid Details and admin Feedback, with owner-derived order, one-response constraint, retry reconciliation and quotas. 176 tests pass (PROJECT_STATUS E28).
+- [ ] Owner applies purchase-feedback migration and validates eligibility, isolation, real concurrency and phone/provider-history behavior. Retention policy, editing, deeper history and localization remain pending.
 
 ## Previous task: customer order history (E20)
 

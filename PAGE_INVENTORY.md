@@ -26,6 +26,7 @@ The app waits for storefront/session checks before rendering navigation and rout
 | /reset-password | PasswordRecoveryPage (reset) | Public; one-time token authorizes reset | New/confirmed password, missing-link recovery, fragment/legacy query support, session revocation and normal login after success; owner acceptance pending (E16). |
 | /verify-email | EmailVerificationPage | Public token confirmation; session required for status/resend | Explicit confirmation, safe token URL cleanup, verified status, owned resend, pending/errors; owner mobile/provider acceptance pending (E18). |
 | /profile | ProfilePage / ProfileForms | Signed-in customers and admins; guests see login | Personal details, password-confirmed phone change, read-only email/status/recovery links, owned address CRUD/default and order-use protection. Offline scope E19; owner device/production acceptance pending. |
+| /help | HelpPage / SiteTour | Public; tour destinations retain normal auth gates | Help disclosures and five-step explicit route tour with back/next/exit, memory-only state and no writes (E27). Device/focus/localization acceptance pending. |
 | /cart | CartPage | Authenticated | Shared header/page query with optimistic quantity/removal, per-product locks, affected-row rollback and checkout guard while saving. |
 | /wishlist | WishlistRedirect | Public redirect | Temporarily hidden by request; replaces the URL with /products. Header link removed. WishlistPage is retained but inactive; product hearts and saved-item APIs remain available. |
 | /checkout | PaymentPage | Authenticated | Real cart/address selection, private server quote and idempotent order submission when explicitly configured; navigates to order payment (E23). |
@@ -35,7 +36,7 @@ The app waits for storefront/session checks before rendering navigation and rout
 | /debug-error | DebugErrorPage | Intentional throw only in development | In production renders a development-only notice. |
 | Any unmatched path | NotFoundPage / AdminRedirect | Public fallback | Unknown /admin/* redirects to /admin; other unknown routes show not-found. Invalid encoded IDs are rejected. |
 
-Missing pages include AI/tour/help flows, and shipping/cancellation/cookie policy pages. Reset emails now resolve to /reset-password (E16); /verify-email is registered in E18.
+Missing pages include AI flows and shipping/cancellation/cookie policy pages. Reset emails now resolve to /reset-password (E16); /verify-email is registered in E18.
 
 The navbar includes Orders and Profile for authenticated users. Admin visibility now requires verified ADMIN role; the page/API still apply authorization. Final responsive/role-visibility verification is pending.
 
@@ -49,9 +50,10 @@ All tabs are component state under /admin, not separate URL routes.
 | Products | Reads products; create/edit, strict category select/add, image/video upload, primary image, colors, stock, archive and immediate list updates. |
 | Orders | Reads orders; status selector keeps confirmed values on failure and reconciles on success. E13 guards cancellation/restock and closed states; full fulfillment/production verification pending. |
 | Payments | Reads payments and verifies a provider-reported full Razorpay refund (E25); never issues refunds. Legacy manual status action rejected; initiation/partial refunds and live acceptance pending. |
-| Returns | Reads returns; complete workflow remains pending. |
+| Returns | Private latest-100 real history and guarded requested-to-approved/rejected review with mandatory reason (E26). No refund/stock effects; customer submission, logistics and live acceptance pending. |
 | Customers | Reads customer data/order counts; no full account-management UI. |
 | Messages | Private latest-100 history and transactional email form for verified customers; UUID duplicate protection and accepted/unconfirmed feedback (E24). Provider/device acceptance and durable delivery tracking remain pending. |
+| Feedback | Private latest-100 first-purchase ratings/comments/order numbers (E28); unapplied migration and owner/device acceptance pending. |
 | Settings | Private settings query and validated checkout fee/tax/availability editor (E23); broader store configuration remains incomplete. |
 
 ## Server-state coverage
@@ -106,3 +108,6 @@ E18 adds the Account email header link for signed-in customers/admins. Verify /v
 
 
 E19: Profile replaces the Account email header link; email verification remains reachable from Profile and email links. Admin Settings continues to configure the store. Profile uses the existing form-width PageContainer. Owner matrix includes customer/admin/guest, no email/phone/address, default switching, addresses referenced by orders, wrong password, conflicts, pending/duplicate actions, account switch and phone keyboard/focus/reflow. Source and synthetic fixtures do not certify rendered responsiveness.
+
+
+E28 Orders and captured/refunded Order Details include an independent first-purchase feedback form/status. Feedback failures do not block the order page. Admin Feedback is a separate read-only tab; see PURCHASE_FEEDBACK.md for migration and acceptance.

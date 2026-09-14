@@ -85,3 +85,9 @@ E24 admin transactional messages distinguish saved UNCONFIRMED from provider ACC
 
 
 E25 refund reconciliation success says Provider full refund verified. It must never say a refund was issued by this action or settled in a bank. Partial/unconfirmed proof is an error without status mutation; legacy manual-refund records need owner audit.
+
+
+E26 return review feedback confirms only the recorded decision and explicitly excludes refund/stock changes. Decision notifications to customers remain pending.
+
+
+E28 feedback success means the private response was recorded. It does not publish a review or send an email. Failed feedback reads remain independent of order/payment state.

@@ -43,7 +43,7 @@ export async function apiFetch(
   const callerSignal = init.signal ?? request?.signal
   const privateRequest =
     url === '/api/auth/email-verification-request' ||
-    /^\/api\/(cart|wishlist|orders|admin|payments|profile|addresses|support|checkout)(\/|\?|$)/.test(
+    /^\/api\/(cart|wishlist|orders|admin|payments|profile|addresses|support|checkout|feedback)(\/|\?|$)/.test(
       url,
     ) ||
     (url.startsWith('/api/products/') &&

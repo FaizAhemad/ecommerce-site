@@ -8,18 +8,21 @@ import {
   type VercelRequest,
   type VercelResponse,
 } from '../_lib/http.js'
+const ordinarySettings = { NOT: ['policy.', 'policy-history.', 'audit.'].map(prefix => ({ key: { startsWith: prefix } })) }
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   const id = requestId(request)
   if (!(await requireAdmin(request, response))) return
   try {
     if (request.method === 'GET')
       return response.status(200).json({
-        settings: await db.storeSetting.findMany({ orderBy: { key: 'asc' } }),
+        settings: await db.storeSetting.findMany({ where: ordinarySettings, orderBy: { key: 'asc' } }),
         requestId: id,
       })
     if (request.method !== 'PUT')
       return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET or PUT.', id)
     const values = bodyRecord(request)
+    if (Object.keys(values).some(key => /^(policy\.|policy-history\.|audit\.)/.test(key)))
+      return sendError(response, 400, 'VALIDATION_ERROR', 'Use the policy publication workflow for reserved records.', id)
     if (
       'checkout' in values &&
       (typeof values.checkout !== 'string' || !checkoutRules(values.checkout))
@@ -42,7 +45,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       ),
     )
     return response.status(200).json({
-      settings: await db.storeSetting.findMany({ orderBy: { key: 'asc' } }),
+      settings: await db.storeSetting.findMany({ where: ordinarySettings, orderBy: { key: 'asc' } }),
       requestId: id,
     })
   } catch {

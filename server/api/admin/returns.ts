@@ -1,5 +1,6 @@
 import { db } from '../_lib/db.js'
 import { requireAdmin } from '../_lib/auth.js'
+import { reviewReturn, ReturnActionError } from '../_lib/returns.js'
 import {
   bodyRecord,
   requestId,
@@ -7,7 +8,6 @@ import {
   type VercelRequest,
   type VercelResponse,
 } from '../_lib/http.js'
-const statuses = ['REQUESTED', 'APPROVED', 'REJECTED'] as const
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   const id = requestId(request)
   if (!(await requireAdmin(request, response))) return
@@ -15,42 +15,32 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (request.method === 'GET')
       return response.status(200).json({
         returns: await db.returnRequest.findMany({
-          include: { order: true, user: { select: { id: true, email: true, name: true } } },
-          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            reason: true,
+            status: true,
+            resolution: true,
+            createdAt: true,
+            order: { select: { orderNumber: true } },
+            user: { select: { email: true, name: true } },
+          },
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          take: 100,
         }),
         requestId: id,
       })
     if (request.method !== 'PATCH')
       return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET or PATCH.', id)
-    const body = bodyRecord(request)
-    const returnId = typeof body.returnId === 'string' ? body.returnId : ''
-    const status = body.status
-    if (
-      !returnId ||
-      typeof status !== 'string' ||
-      !statuses.includes(status as (typeof statuses)[number])
-    )
-      return sendError(
-        response,
-        400,
-        'VALIDATION_ERROR',
-        'A valid return and status are required.',
-        id,
-      )
-    const item = await db.returnRequest.update({
-      where: { id: returnId },
-      data: {
-        status: status as (typeof statuses)[number],
-        resolution: typeof body.resolution === 'string' ? body.resolution : undefined,
-      },
-    })
+    const item = await reviewReturn(db, bodyRecord(request))
     return response.status(200).json({ return: item, requestId: id })
-  } catch {
+  } catch (error) {
+    if (error instanceof ReturnActionError)
+      return sendError(response, error.status, 'RETURN_REJECTED', error.message, id)
     return sendError(
       response,
       503,
-      'DATABASE_UNAVAILABLE',
-      'Return management is temporarily unavailable.',
+      'RETURN_UNAVAILABLE',
+      'Unable to confirm the return decision. Refresh before trying again.',
       id,
     )
   }

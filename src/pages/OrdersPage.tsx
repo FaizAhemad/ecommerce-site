@@ -3,6 +3,7 @@ import type { StorefrontApiResponse } from '../api/storefront'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { getOrders, orderStatusLabel } from '../api/orders'
 import { privateKey } from '../api/sessionScope'
+import { PurchaseFeedback } from '../components/PurchaseFeedback'
 
 type Props = {
   storefront: StorefrontApiResponse
@@ -37,6 +38,7 @@ export function OrdersPage({ storefront, onNavigate }: Props) {
           </span>
         )}
       </div>
+      <PurchaseFeedback />
       {history.isPending && (
         <p className="state-message" role="status">
           Loading your orders…

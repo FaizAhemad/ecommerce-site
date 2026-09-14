@@ -48,6 +48,70 @@ function findButton(node) {
 }
 const flush = () => new Promise((resolve) => setImmediate(resolve))
 
+test('help routes point to real account, order, policy and support flows without promising outcomes',async()=>{
+  const {HelpPage}=await load('../src/pages/HelpPage.tsx',rewrite)
+  const node=HelpPage({onNavigate:()=>()=>{}}),text=rendered(node),paths=[]
+  function visit(node){if(!node||typeof node!=='object')return;if(Array.isArray(node)){node.forEach(visit);return}if(node.type==='a')paths.push(node.props.href);visit(node.props?.children)}
+  visit(node)
+  for(const path of ['/support','/support-requests','/orders','/profile','/forgot-password','/returns','/refund-policy'])assert.ok(paths.includes(path))
+  assert.match(text,/Payment is confirmed separately/)
+  assert.doesNotMatch(text,/guaranteed refund|instant refund|free delivery/i)
+})
+test('website tour changes only routes, supports back/finish and retains no customer storage',async()=>{
+  let step=null
+  const paths=[]
+  globalThis.window={history:{pushState:(_state,_title,path)=>paths.push(path)},dispatchEvent:()=>{},scrollTo:()=>{},fetch:()=>{throw new Error('Tour must not make API calls')}}
+  globalThis.PopStateEvent=class{constructor(type){this.type=type}}
+  globalThis.batchFixture={useState:()=>[step,value=>{step=value}],useRef:()=>({current:null}),useEffect:()=>{}}
+  const {SiteTour}=await load('../src/components/SiteTour.tsx',rewrite)
+  const tourSteps=['/products','/cart','/profile','/orders','/support'].map(path=>({path}))
+  assert.equal(SiteTour({path:'/products'}),null)
+  findButton(SiteTour({path:'/help'})).props.onClick()
+  assert.equal(step,0);assert.equal(paths[0],'/products')
+  function buttons(node){if(!node||typeof node!=='object')return [];if(Array.isArray(node))return node.flatMap(buttons);return [...(node.type==='button'?[node]:[]),...buttons(node.props?.children)]}
+  for(let index=0;index<tourSteps.length-1;index++)buttons(SiteTour({path:tourSteps[index].path})).find(button=>rendered(button)==='Next').props.onClick()
+  assert.equal(step,tourSteps.length-1)
+  buttons(SiteTour({path:'/support'})).find(button=>rendered(button)==='Previous').props.onClick()
+  assert.equal(step,tourSteps.length-2)
+  buttons(SiteTour({path:'/orders'})).find(button=>rendered(button)==='Exit tour').props.onClick()
+  assert.equal(step,null);assert.equal(paths.at(-1),'/help')
+})
+
+test('independent admin settings, messages and returns panels remain visible without legacy load state', async () => {
+  for (const section of ['settings', 'messages', 'returns', 'feedback', 'policies']) {
+    globalThis.batchFixture = {
+      sessionGeneration: () => 1,
+      useNotification: () => () => {},
+      useRef: (value) => ({ current: value }),
+      useState: (value) => [value === 'overview' ? section : value, () => {}],
+      useCallback: (fn) => fn,
+      useEffect: () => {},
+      privateKey: () => [],
+      assertCurrentSession: () => {},
+    }
+    const { AdminPage } = await load('../src/pages/AdminPage.tsx', (binding, path) =>
+      rewrite(path === 'react/jsx-runtime' ? binding : binding.replace(/\bas\b/g, ':'), path),
+    )
+    const tree = AdminPage({ storefront: { categories: [] }, onNavigate: () => () => {} })
+    const hidden = []
+    function walk(node) {
+      if (!node || typeof node !== 'object') return
+      if (Array.isArray(node)) {
+        node.forEach(walk)
+        return
+      }
+      if (node.props && 'hidden' in node.props) hidden.push(node.props.hidden)
+      walk(node.props?.children)
+    }
+    walk(tree)
+    assert.ok(hidden.length)
+    assert.ok(
+      hidden.every((value) => value === false),
+      section + ' must be visible',
+    )
+  }
+})
+
 test('checkout guards duplicate clicks and reuses original identity/address/total after an uncertain response', async () => {
   const calls = [],
     notices = []

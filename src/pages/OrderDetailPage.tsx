@@ -4,6 +4,7 @@ import type { StorefrontApiResponse } from '../api/storefront'
 import { getOrder, orderStatusLabel } from '../api/orders'
 import { privateKey } from '../api/sessionScope'
 import { OrderPayment } from '../components/OrderPayment'
+import { PurchaseFeedback } from '../components/PurchaseFeedback'
 
 type Props = {
   storefront: StorefrontApiResponse
@@ -123,6 +124,7 @@ export function OrderDetailPage({ storefront, orderId, onNavigate }: Props) {
               </p>
             </aside>
           </div>
+          {order.payment && ['CAPTURED','REFUNDED'].includes(order.payment.status) && <PurchaseFeedback />}
         </>
       )}
     </section>

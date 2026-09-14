@@ -6,7 +6,31 @@ Reviewed: 2026-09-13. This describes the current workspace, including staged imp
 
 ## Verification evidence
 
-Latest checkpoint: E25 (2026-09-14), described below, replaces the manual refund shortcut. E24 supersedes disconnected-message claims; E23 supersedes placeholder/payment claims. Historical evidence counts describe their own revisions.
+Latest checkpoint: E28 (2026-09-14) adds first-purchase feedback. E27 adds Help/tour, E26 connects return review, E25 replaces the manual refund shortcut, E24 supersedes disconnected-message claims, and E23 supersedes placeholder/payment claims. Historical evidence counts describe their own revisions.
+
+## First-purchase feedback - E28 - 2026-09-14
+
+Added GET/POST /api/feedback and GET /api/admin/feedback through the sole dispatcher. Eligibility uses the owner's earliest recorded CAPTURED/REFUNDED payment order, with private selected responses. POST accepts rating/comment only; user/order IDs are ignored in favor of server identity. Unique per-user storage and transactional insertion reconcile identical retries and reject changed duplicates. Inputs are bounded, queries parameterized, reads private, and writes have CSRF plus 20/IP and 5/account per ten-minute quotas.
+
+Orders and paid/refunded Order Details include independent feedback state; admin has a private latest-100 Feedback tab. No modal blocks orders, no customer payload is stored in the browser, and form failures preserve inputs. Feedback is distinct from reviews. Migration 20260914010000_purchase_feedback is prepared but NOT applied; missing table causes a safe independent 503. The earlier support migration is also still pending owner rollout. See PURCHASE_FEEDBACK.md.
+
+Evidence: 176 tests pass, including five new eligibility/ownership, retry/draft, unpaid-account, validation and quota cases; admin visibility regression includes Feedback. Offline client/API build passes, lint has three previous warnings, formatting remains owner-deferred. Existing generated Prisma types are used; new table access is parameterized SQL. Schema/migration execution, real database contention, provider history accuracy, rendered mobile/keyboard and retention/legal/localization acceptance are not established. No .env inspection or live service action.
+
+## Help and website tour - E27 - 2026-09-14
+
+Added public /help in the shared reading-width layout and primary Help navigation. Accessible disclosure sections link to actual product, account/recovery, order, policy and support routes. Help avoids invented delivery/refund promises and explains separately confirmed payments and missing-policy escalation.
+
+The explicit tour starts on Help and visits Products, Cart, Profile, Orders and Support. SiteLayout retains the in-memory step across route changes; existing login/role boundaries still govern destination pages. Previous/next/finish/exit and Escape controls are supplied, with focused step heading. It is an inline panel, not an overlay or focus trap; there is no automatic start, customer storage, analytics or API write. Page reads happen normally on visited routes.
+
+Evidence: 171 tests pass, including help-link/truthful-content checks and synthetic tour navigation/exit without writes. Offline frontend/API build passes. A new export-related lint warning was removed by keeping tour configuration internal; three prior warnings remain. Browser focus, device layout and full localization still need owner acceptance. Formatting was not run after the owner's deferral instruction. No .env, database/provider/live checks or deployment.
+
+## Return review and admin visibility - E26 - 2026-09-14
+
+Admin Returns now reads the latest 100 real requests through a private query instead of always showing empty. Selected DTOs contain the request, order number and customer name/email needed for review, not complete order/customer/provider objects. The review form requires an explicit approval/rejection and bounded reason; failed drafts survive, clicks share a lock, unmount aborts requests and saved feedback does not promise money or stock changes.
+
+PATCH requires expectedStatus REQUESTED. A Serializable transaction verifies request/order customer consistency and conditionally records only APPROVED or REJECTED. Stale/concurrent decisions and manual REFUNDED/reopening edits fail safely. Approval is a human policy decision, not automated eligibility or a refund. Customer-facing return creation, full history/audit and logistics remain pending.
+
+Fixed a parent visibility gate that could hide independently loaded Settings: Messages, Settings and Returns now use their own loading/error states rather than requiring the legacy parent load flag. Regression invokes AdminPage for all three tabs and verifies visible content containers. Total 169 tests pass, offline frontend/API build passes, lint retains three prior warnings. Formatting checks completed before the owner requested formatting be deferred; future formatting is owner-managed. Browser/device/provider checks remain unperformed under the production-only workflow.
 
 ## Refund status integrity - E25 - 2026-09-14
 

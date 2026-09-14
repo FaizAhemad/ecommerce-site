@@ -1,0 +1,7 @@
+CREATE TABLE "PurchaseFeedback" (
+  "userId" TEXT PRIMARY KEY REFERENCES "User"("id") ON DELETE CASCADE,
+  "orderId" TEXT NOT NULL UNIQUE REFERENCES "Order"("id") ON DELETE CASCADE,
+  "rating" INTEGER NOT NULL CHECK ("rating" BETWEEN 1 AND 5),
+  "comment" TEXT NOT NULL CHECK (length("comment") <= 2000),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

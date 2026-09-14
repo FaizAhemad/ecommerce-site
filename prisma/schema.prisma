@@ -30,6 +30,17 @@ model User {
   messagesReceived  CustomerMessage[] @relation("ReceivedMessages")
   returnRequests    ReturnRequest[]
   supportTickets    SupportTicket[]
+  purchaseFeedback  PurchaseFeedback?
+}
+
+model PurchaseFeedback {
+  userId    String   @id
+  orderId   String   @unique
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model SupportTicket {
@@ -263,6 +274,7 @@ model Order {
   payment         Payment?
   shipment        Shipment?
   returns         ReturnRequest[]
+  purchaseFeedback PurchaseFeedback?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   @@index([userId, createdAt])

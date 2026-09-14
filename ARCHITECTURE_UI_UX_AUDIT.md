@@ -260,3 +260,12 @@ E24 replaces the disconnected admin Messages form with a focused component/priva
 
 
 E25 removes the database-only refund shortcut from SEC-03. Admin verification now checks provider full-refund proof before atomic financial status changes; manual order/return refund edits are blocked. This does not complete actual refund initiation, eligibility, audit or live reconciliation acceptance.
+
+
+E26 connects admin return history/review and repairs independent admin panel visibility. Automated AdminPage regression covers Settings/Messages/Returns containers; rendered/device acceptance remains pending. Owner now defers format/format:check to their own workflow; continue functional/security verification.
+
+
+E27 adds Help and an inline explicit route tour in SiteLayout/PageContainer, with memory-only state and normal destination authorization. Synthetic navigation tests pass; rendered focus/mobile and localization acceptance are pending.
+
+
+E28 adds independent private first-purchase feedback state and admin visibility. Synthetic owner/retry/quota checks pass; database migration/device/retention acceptance remains open. No formatting commands were run.

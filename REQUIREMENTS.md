@@ -253,3 +253,12 @@ E24 admin messaging implements transactional composition/history with existing v
 
 
 E25 refund verification does not complete refund processing requirements. Full/partial refund initiation, remaining-amount checks, approved eligibility, durable audit/replay protection and settlement acceptance remain required.
+
+
+E26 return approval records a manual decision only. It does not establish policy eligibility, stock receipt or a provider refund; customer creation and complete returns logistics remain required.
+
+
+E27 implements public Help entry points and an explicit five-step route tour. No automated transactions, customer tracking or browser persistence are introduced. Full localization and phone/keyboard acceptance remain required.
+
+
+E28 feedback collects one private experience response against the first recorded paid order. Recorded financial-history integrity, migration, retention policy, editing/localization and owner/device acceptance remain required; see PURCHASE_FEEDBACK.md.

@@ -1,5 +1,9 @@
 import categories from '../server/api/categories.js'
 import checkout from '../server/api/checkout.js'
+import policies from '../server/api/policies.js'
+import adminPolicies from '../server/api/admin/policies.js'
+import feedback from '../server/api/feedback.js'
+import adminFeedback from '../server/api/admin/feedback.js'
 import { webhookBody } from '../server/api/_lib/webhook-body.js'
 import support from '../server/api/support.js'
 import adminSupport from '../server/api/admin/support.js'
@@ -73,6 +77,10 @@ const routes: Record<string, Handler> = {
   'admin/support': adminSupport,
   categories,
   checkout,
+  policies,
+  'admin/policies': adminPolicies,
+  feedback,
+  'admin/feedback': adminFeedback,
   health,
   'admin/analytics': adminAnalytics,
   'admin/audit': adminAudit,

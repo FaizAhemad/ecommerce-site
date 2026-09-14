@@ -2,6 +2,9 @@ import { privateKey, sessionGeneration, assertCurrentSession } from '../api/sess
 import { useNotification } from '../components/NotificationProvider'
 import { CheckoutSettings } from '../components/CheckoutSettings'
 import { CustomerMessages } from '../components/CustomerMessages'
+import { ReturnRequests } from '../components/ReturnRequests'
+import { AdminFeedback } from '../components/PurchaseFeedback'
+import { PolicyEditor } from '../components/PolicyEditor'
 import { apiFetch as fetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
 import { queryClient } from '../api/queryClient'
 import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
@@ -33,6 +36,8 @@ type Section =
   | 'messages'
   | 'analytics'
   | 'settings'
+  | 'feedback'
+  | 'policies'
 const tabs: { id: Section; label: string }[] = [
   'overview',
   'products',
@@ -43,6 +48,8 @@ const tabs: { id: Section; label: string }[] = [
   'messages',
   'analytics',
   'settings',
+  'feedback',
+  'policies',
 ].map((id) => ({ id: id as Section, label: id[0].toUpperCase() + id.slice(1) }))
 export function AdminPage({ storefront, onNavigate }: Props) {
   const notify = useNotification()
@@ -123,7 +130,6 @@ export function AdminPage({ storefront, onNavigate }: Props) {
       products: ['/api/admin/products', 'products'],
       orders: ['/api/admin/orders', 'orders'],
       payments: ['/api/admin/payments', 'payments'],
-      returns: ['/api/admin/returns', 'returns'],
       customers: ['/api/admin/customers', 'customers'],
     }
     const item = map[section]
@@ -429,7 +435,12 @@ export function AdminPage({ storefront, onNavigate }: Props) {
               </button>
             </div>
           )}
-          <div hidden={activeKey !== 'messages' && loadStates[activeKey] !== 'ready'}>
+          <div
+            hidden={
+              !['messages', 'settings', 'returns', 'feedback', 'policies'].includes(activeKey) &&
+              loadStates[activeKey] !== 'ready'
+            }
+          >
             {notice && (
               <p className="admin-feedback admin-feedback-top" role="status">
                 {notice}
@@ -795,7 +806,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
             {section === 'returns' && (
               <>
                 <Title title="Returns & refunds" text="Review customer return requests." />
-                <Empty text="No return requests yet." />
+                <ReturnRequests />
               </>
             )}
             {section === 'customers' && (
@@ -842,6 +853,8 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                 <CheckoutSettings />
               </>
             )}
+            {section === 'feedback' && <><Title title="Purchase feedback" text="Review private first-purchase experience feedback." /><AdminFeedback /></>}
+            {section === 'policies' && <><Title title="Policies" text="Save drafts and explicitly publish approved business policies." /><PolicyEditor /></>}
           </div>
         </div>
       </div>

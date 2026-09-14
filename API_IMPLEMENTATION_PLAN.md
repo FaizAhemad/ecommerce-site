@@ -145,3 +145,12 @@ E24 /api/admin/messages: POST now requires UUID id, registered verified recipien
 
 
 E25 PATCH /api/admin/payments only accepts action reconcile-refund; legacy refund is rejected. Provider full-refund identity/amount/currency/status proof is required before conditional atomic payment/order changes. No refund request is sent. Shared order updates and return PATCH reject manual REFUNDED values. See CHECKOUT_PAYMENTS.md.
+
+
+E26 admin returns GET selects latest 100 request summaries. PATCH requires returnId, expectedStatus REQUESTED, status APPROVED/REJECTED and resolution (1-2000). Serializable owner/order consistency and conditional updates reject stale decisions; no money/stock effects.
+
+
+E27 Help/tour adds no API routes or writes. Navigated pages use their existing authenticated/private query boundaries.
+
+
+E28 GET/POST /api/feedback and GET /api/admin/feedback use the sole dispatcher. POST accepts rating/comment; owner and first paid order are server-derived. One response per customer, identical retry reconciliation, private selected DTOs and prepared PurchaseFeedback migration. See PURCHASE_FEEDBACK.md.

@@ -4,6 +4,7 @@ import type { MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 import { SocialLinks } from './SocialLinks'
 import { PageContainer } from './PageContainer'
+import { SiteTour } from './SiteTour'
 import { useTranslation } from 'react-i18next'
 
 type SiteLayoutProps = {
@@ -115,6 +116,7 @@ export function SiteLayout({
           >
             {content.navigation.support}
           </a>
+          <a className={currentPath === '/help' ? 'is-active' : ''} href="/help" onClick={navigate('/help')}>Help</a>
           {isAuthenticated && (
             <a
               className={
@@ -217,7 +219,7 @@ export function SiteLayout({
           )}
         </div>
       </header>
-      <PageContainer path={currentPath}>{children}</PageContainer>
+      <PageContainer path={currentPath}><SiteTour path={currentPath} />{children}</PageContainer>
       <SocialLinks storefront={storefront} placement="rail" />
       <footer className="site-footer" id="footer">
         <div>
@@ -249,6 +251,9 @@ export function SiteLayout({
           <a href="/terms" onClick={navigate('/terms')}>
             Terms &amp; Conditions
           </a>
+          <a href="/shipping" onClick={navigate('/shipping')}>Shipping</a>
+          <a href="/cancellation" onClick={navigate('/cancellation')}>Cancellation</a>
+          <a href="/cookies" onClick={navigate('/cookies')}>Cookies</a>
         </div>
         <div>
           <p className="footer-label">Explore</p>

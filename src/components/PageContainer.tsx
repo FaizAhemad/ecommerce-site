@@ -5,7 +5,7 @@ export function PageContainer({ path, children }: { path: string; children: Reac
     path,
   )
     ? 'form'
-    : /^\/(support|support-requests|admin\/support|track-order|privacy|returns|refund-policy|terms|terms-and-conditions)\/?$/.test(
+    : /^\/(help|support|support-requests|admin\/support|track-order|privacy|returns|refund-policy|terms|terms-and-conditions|shipping|cancellation|cookies)\/?$/.test(
           path,
         )
       ? 'reading'

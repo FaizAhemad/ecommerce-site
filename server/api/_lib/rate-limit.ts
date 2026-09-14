@@ -25,6 +25,7 @@ export function rateLimitRule(path: string, method = 'GET'): Rule | null {
     return { scope: 'auth-verify', seconds: 600, ip: 20 }
   }
   if (method === 'GET') return null
+  if (path === 'feedback') return { scope: 'feedback', seconds: 600, ip: 20, user: 5 }
   if (path === 'profile' || path === 'addresses')
     return { scope: 'profile-write', seconds: 60, ip: 60, user: 20 }
   if (path === 'admin/upload' || /^products\/[^/]+\/review-upload$/.test(path))
