@@ -269,3 +269,6 @@ E27 adds Help and an inline explicit route tour in SiteLayout/PageContainer, wit
 
 
 E28 adds independent private first-purchase feedback state and admin visibility. Synthetic owner/retry/quota checks pass; database migration/device/retention acceptance remains open. No formatting commands were run.
+
+
+E29 replaces policy placeholders with published-only reads and versioned private draft/publication controls. Plain text remains React-escaped. Publication audit exists; general audit, legal approval and rendered/mobile acceptance remain pending. Owner now defers formatting, lint and tests to final verification.

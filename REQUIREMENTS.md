@@ -262,3 +262,6 @@ E27 implements public Help entry points and an explicit five-step route tour. No
 
 
 E28 feedback collects one private experience response against the first recorded paid order. Recorded financial-history integrity, migration, retention policy, editing/localization and owner/device acceptance remain required; see PURCHASE_FEEDBACK.md.
+
+
+E29 implements en/hi/mr policy draft/publication/version controls. Legally approved policy text, age/consent/cookie/retention obligations and live acceptance remain required; see POLICY_PUBLISHING.md.

@@ -154,3 +154,6 @@ E27 Help/tour adds no API routes or writes. Navigated pages use their existing a
 
 
 E28 GET/POST /api/feedback and GET /api/admin/feedback use the sole dispatcher. POST accepts rating/comment; owner and first paid order are server-derived. One response per customer, identical retry reconciliation, private selected DTOs and prepared PurchaseFeedback migration. See PURCHASE_FEEDBACK.md.
+
+
+E29 GET /api/policies exposes published title/text/version/date only. GET/PUT /api/admin/policies takes kind/locale and versioned draft/publish actions. Approved saved publication/history/audit is atomic. Generic settings rejects policy/history/audit prefixes. /api/admin/audit reads publication events; see POLICY_PUBLISHING.md.

@@ -91,3 +91,6 @@ E26 return review feedback confirms only the recorded decision and explicitly ex
 
 
 E28 feedback success means the private response was recorded. It does not publish a review or send an email. Failed feedback reads remain independent of order/payment state.
+
+
+E29 Save draft confirms private persistence; Publish confirms explicit publication only. No publication email, legal certification or checkout consent update is implied.

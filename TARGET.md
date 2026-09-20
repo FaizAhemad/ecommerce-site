@@ -86,3 +86,6 @@ E27 Help and the explicit website tour are implemented offline; AI, localized he
 
 
 E28 implements private first-purchase feedback with an unapplied migration. Public reviews, incentives and broader privacy/retention/device acceptance remain separate.
+
+
+E29 supplies policy publication infrastructure and missing policy routes. Owner legal wording, checkout consent and device acceptance remain pending. From 2026-09-15, defer format/lint/tests to final verification and continue implementation.

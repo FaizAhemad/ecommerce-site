@@ -15,10 +15,10 @@ The app waits for storefront/session checks before rendering navigation and rout
 | /support-requests | SupportPage list | Authenticated for API; guest login guidance | Owned paginated tickets, status/reason and open cancellation; migration/device acceptance pending. |
 | /admin/support | SupportPage admin | Administrator | Paginated tickets and guarded status/resolution updates; migration/device acceptance pending. |
 | /track-order | TrackOrderPage | Public page; API requires session | Guarded pending lookup accepts owned order number or internal ID; handles not-found and request errors. Provider integration remains incomplete. |
-| /privacy | PolicyPage (privacy) | Public | Placeholder asking for approved content. |
-| /returns | PolicyPage (returns) | Public | Placeholder asking for approved content. |
-| /refund-policy | PolicyPage (refund) | Public | Placeholder asking for approved content. |
-| /terms | PolicyPage (terms) | Public | Placeholder asking for approved content. |
+| /privacy | PolicyPage (privacy) | Public | Published-only localized query with loading/error/unpublished states; approved text remains owner-supplied (E29). |
+| /returns | PolicyPage (returns) | Public | Published-only localized query with loading/error/unpublished states; approved text remains owner-supplied (E29). |
+| /refund-policy | PolicyPage (refund) | Public | Published-only localized query with loading/error/unpublished states; approved text remains owner-supplied (E29). |
+| /terms | PolicyPage (terms) | Public | Published-only localized query with loading/error/unpublished states; approved text remains owner-supplied (E29). |
 | /terms-and-conditions | PolicyPage (terms) | Public | Terms alias. |
 | /login | AuthPage (login) | Public | Password login by email/mobile identifier. Authenticated visitors render HomePage at this path. |
 | /signup | AuthPage (signup) | Public | Registration with email/mobile selection. Email-verification and password-recovery pages exist; mobile OTP UI remains pending. |
@@ -36,7 +36,7 @@ The app waits for storefront/session checks before rendering navigation and rout
 | /debug-error | DebugErrorPage | Intentional throw only in development | In production renders a development-only notice. |
 | Any unmatched path | NotFoundPage / AdminRedirect | Public fallback | Unknown /admin/* redirects to /admin; other unknown routes show not-found. Invalid encoded IDs are rejected. |
 
-Missing pages include AI flows and shipping/cancellation/cookie policy pages. Reset emails now resolve to /reset-password (E16); /verify-email is registered in E18.
+AI flows remain missing; E29 adds shipping/cancellation/cookie policy routes. Reset emails now resolve to /reset-password (E16); /verify-email is registered in E18.
 
 The navbar includes Orders and Profile for authenticated users. Admin visibility now requires verified ADMIN role; the page/API still apply authorization. Final responsive/role-visibility verification is pending.
 
@@ -111,3 +111,6 @@ E19: Profile replaces the Account email header link; email verification remains 
 
 
 E28 Orders and captured/refunded Order Details include an independent first-purchase feedback form/status. Feedback failures do not block the order page. Admin Feedback is a separate read-only tab; see PURCHASE_FEEDBACK.md for migration and acceptance.
+
+
+E29: existing policy pages now query published-only text in the selected language, with loading/error/unpublished states. Added /shipping, /cancellation and /cookies under the reading layout, with footer links. Admin Policies saves drafts and explicitly publishes approved text with version/history/audit. No approved copy or consent completion is implied.

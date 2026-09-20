@@ -185,3 +185,11 @@ Each item needs an owner/priority, implementation notes, API/data changes, secur
 
 - [x] ✅ Saved-subscription confirmation failures reconcile to Subscribed with informational feedback and no replay; privacy-safe failure diagnostics and 111 offline tests verify the bounded behavior (PROJECT_STATUS E17).
 - [x] ✅ Owner reports newsletter working on 2026-09-14 (PROJECT_STATUS E17 owner report). Exact provider configuration fix and independent delivery/device evidence were not supplied; this does not verify every notification flow.
+
+
+## Policy publication - E29
+
+- [x] ✅ Bounded offline E29: policy drafts/publication, version conflicts, immutable publication history/audit, published-only DTOs and additional policy routes. Prior verification: full 181-test pass plus expanded seven-case policy suite; see PROJECT_STATUS.
+- [ ] Owner supplies approved policy/age text and validates publication/privacy/device behavior. Checkout consent, cookie consent, rollback/unpublish and legal/localization acceptance remain pending.
+
+Current owner workflow (2026-09-15): defer format, lint and test commands until remaining implementation is finished. Newly added work stays unverified until the final checks; do not mark it completed just because code exists.
