@@ -1,5 +1,19 @@
 # Request limits and deployment
 
+Seller media deletion: seller-media-delete permits 20/account and 100/IP per minute. Existing upload quota remains unchanged. Live quota/concurrency checks are deferred.
+
+
+MP-08: POST seller/fulfillment, orders/fulfillment and admin/fulfillment share shop-order-write quota: 20/account and 100/IP per minute. It covers fulfillment/returns/conversation writes, with no automatic replay. Source configuration only; live 429/concurrency acceptance is pending.
+
+
+Seller catalog POST: 100/IP and 30/account per minute. Seller media POST: 100/IP and 30/account per ten minutes, plus 1 MB/file and 100 stored attachments/shop. These bounds supplement membership/ownership checks; they do not authorize publication. See SELLER_WORKSPACE.md.
+
+MP-02 seller/application POST uses 20/IP and 5/account submissions per 10 minutes. Admin seller review uses the existing admin-write bucket. Authentication and CSRF remain mandatory; quotas never confer seller access.
+
+Session activity POST uses a dedicated 60-second bucket: 120 requests per IP and 30 per account. This avoids sharing login/verification quotas with normal foreground use. Browser renewal is throttled to once per minute except explicit continuation; existing safe limiter failure behavior is unchanged. See SESSION_SECURITY.md.
+
+E30 customer return writes use a dedicated ten-minute policy (30 requests per IP, 10 per authenticated user). Support attachment/reply writes continue through the existing support/contact policy. The RateLimitBucket migration and live 429/recovery validation remain required before production readiness.
+
 Reviewed against current implementation on 2026-09-12. [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) owns completion; [PROJECT_STATUS.md](PROJECT_STATUS.md) records evidence. All 38 default automated tests pass. E11 records passing live PostgreSQL temporary-table checks and migrate deploy with three migrations/no pending work: the database already had the counter migration. Production-host/browser acceptance remains pending and no cleanup schedule was installed. Do not treat this document as a deployment confirmation.
 
 The consolidated API dispatcher applies PostgreSQL-backed limits before write handlers run. Each scope has a fixed window starting with its first request. Attempts beyond the limit do not extend that window. Conflicting counter updates use an atomic PostgreSQL upsert and database time, so separate Vercel instances share the same limit.

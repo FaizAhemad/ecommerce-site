@@ -1,9 +1,14 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": { "api/[...route].ts": { "includeFiles": "{dist/index.html,index.html}" } },
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/[...route]?route=$1" },
     { "handle": "filesystem" },
+    { "src": "/robots\\.txt", "dest": "/api/[...route]?route=seo&kind=robots" },
+    { "src": "/sitemap\\.xml", "dest": "/api/[...route]?route=seo&kind=sitemap" },
+    { "src": "/product/([^/]+)/?", "dest": "/api/[...route]?route=seo&kind=product&id=$1" },
+    { "src": "/(seller|admin|profile|cart|checkout|orders|track-order|login|signup|forgot-password|reset-password|verify-email|support-requests|wishlist)(/.*)?", "headers": { "X-Robots-Tag": "noindex, nofollow" }, "continue": true },
     { "src": "/((?!api(?:/|$)|@|src/|node_modules/|assets/|.*\\.).*)", "dest": "/index.html" }
   ]
 }

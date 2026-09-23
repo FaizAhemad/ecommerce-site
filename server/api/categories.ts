@@ -1,6 +1,7 @@
 import { db } from './_lib/db.js'
 import {
   requestId,
+  logApiFailure,
   sendError,
   setCacheControl,
   type VercelRequest,
@@ -20,7 +21,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return response
       .status(200)
       .json({ categories: categories.map((category) => category.name), requestId: id })
-  } catch {
+  } catch (error) {
+    logApiFailure(error, id, 'categories')
     return sendError(
       response,
       503,

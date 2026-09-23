@@ -1,4 +1,5 @@
 import { db } from '../_lib/db.js'
+import { publishedProductWhere } from '../_lib/marketplace-purchases.js'
 import { requireUser } from '../_lib/auth.js'
 import {
   bodyRecord,
@@ -35,8 +36,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const productId = typeof body.productId === 'string' ? body.productId : ''
     if (!productId)
       return sendError(response, 400, 'VALIDATION_ERROR', 'A product id is required.', id)
-    const product = await db.product.findFirst({ where: { id: productId, isActive: true } })
-    if (!product) return sendError(response, 404, 'NOT_FOUND', 'Product not found.', id)
+    if (request.method !== 'DELETE' && !await db.product.findFirst({ where: { id: productId, ...publishedProductWhere } }))
+      return sendError(response, 404, 'NOT_FOUND', 'Product not found.', id)
     if (request.method === 'POST')
       await db.wishlistItem.upsert({
         where: { wishlistId_productId: { wishlistId: wishlist.id, productId } },

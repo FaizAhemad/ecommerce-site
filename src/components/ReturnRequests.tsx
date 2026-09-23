@@ -104,7 +104,7 @@ function ReturnReview({
     if (await review(item, event.currentTarget)) setSaved(true)
   }
   return (
-    <article className="state-message">
+    <article className="record-card">
       <h3>Order {item.order.orderNumber}</h3>
       <p>
         {item.user.name ?? 'Customer'} {item.user.email}

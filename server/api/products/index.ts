@@ -1,8 +1,10 @@
 import { ratingBands } from '../_lib/rating-filter.js'
+import { publishedProductWhere, purchaseEligibility, publicSeller } from '../_lib/marketplace-purchases.js'
 import type { Prisma } from '@prisma/client'
 import { db } from '../_lib/db.js'
 import {
   queryValue,
+  logApiFailure,
   requestId,
   sendError,
   setCacheControl,
@@ -13,10 +15,12 @@ import {
 const PAGE_SIZE = 24
 
 function toProduct(
-  product: Prisma.ProductGetPayload<{ include: { images: true; videos: true; colors: true } }>,
+  product: Prisma.ProductGetPayload<{ include: { images: true; videos: true; colors: true; shopOwnership: { include: { shop: true } } } }>,
 ) {
   return {
     id: product.id,
+    seller: publicSeller(product.shopOwnership),
+    purchase: purchaseEligibility(product.shopOwnership),
     name: product.name,
     category: product.category,
     price: product.priceMinor / 100,
@@ -49,7 +53,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const id = requestId(request)
   if (request.method !== 'GET')
     return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Only GET is supported.', id)
-  setCacheControl(response, 'public')
+  setCacheControl(response, 'private')
 
   const search = queryValue(request.query?.search)?.trim()
   const category = queryValue(request.query?.category)?.trim()
@@ -65,7 +69,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return sendError(response, 400, 'VALIDATION_ERROR', 'Select valid rating bands.', id)
 
   const where: Prisma.ProductWhereInput = {
-    isActive: true,
+    ...publishedProductWhere,
     ...(search
       ? {
           OR: [
@@ -87,6 +91,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const products = await db.product.findMany({
       where,
       include: {
+        shopOwnership: { include: { shop: true } },
         images: { orderBy: { sortOrder: 'asc' } },
         videos: { orderBy: { sortOrder: 'asc' } },
         colors: true,
@@ -107,7 +112,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
       nextCursor: hasMore ? (page[page.length - 1]?.id ?? null) : null,
       requestId: id,
     })
-  } catch {
+  } catch (error) {
+    logApiFailure(error, id, 'products')
     return sendError(
       response,
       503,

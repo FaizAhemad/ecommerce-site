@@ -1,4 +1,5 @@
 import { db } from '../_lib/db.js'
+import { activateNewsletter } from '../_lib/newsletter-subscription.js'
 import {
   bodyRecord,
   fetchWithTimeout,
@@ -16,7 +17,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Only POST is supported.', id)
   const body = bodyRecord(request)
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return sendError(response, 400, 'VALIDATION_ERROR', 'Enter a valid email address.', id)
   const apiKey = process.env.RESEND_API_KEY
   const audienceId = process.env.RESEND_AUDIENCE_ID
@@ -32,6 +33,15 @@ export default async function handler(request: VercelRequest, response: VercelRe
   let saved = false
   let phase = 'audience'
   try {
+    phase = 'subscription'
+    const activated = await activateNewsletter(db, email)
+    if (!activated) {
+      const existing = await db.newsletterSubscription.findUnique({ where: { email }, select: { status: true } })
+      if (existing?.status !== 'ACTIVE') return sendError(response, 409, 'NEWSLETTER_UNAVAILABLE', 'This subscription cannot be changed here. Please contact support.', id)
+      return sendError(response, 409, 'ALREADY_SUBSCRIBED', 'This email is already subscribed.', id)
+    }
+    saved = true
+    phase = 'audience'
     if (audienceId) {
       const result = await fetchWithTimeout(
         `https://api.resend.com/audiences/${audienceId}/contacts`,
@@ -53,19 +63,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
         return sendError(
           response,
           502,
-          'NEWSLETTER_UNAVAILABLE',
-          'Newsletter service unavailable.',
+          'CONFIRMATION_EMAIL_FAILED',
+          'Subscription saved, but provider synchronization and confirmation could not be completed.',
           id,
         )
       }
     }
-    phase = 'subscription'
-    await db.newsletterSubscription.upsert({
-      where: { email },
-      create: { email },
-      update: { status: 'ACTIVE', unsubscribedAt: null },
-    })
-    saved = true
     phase = 'confirmation'
     let emailSent = false
     if (fromEmail) {
@@ -75,8 +78,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
         body: JSON.stringify({
           from: fromEmail,
           to: [email],
-          subject: 'Welcome to Field & Form',
-          html: '<p>Thanks for subscribing to Field &amp; Form.</p><p><a href="/">Return to the home page</a> for considered goods and useful ideas.</p>',
+          subject: 'Welcome to Gadgify',
+          html: '<p>Thanks for subscribing to Gadgify.</p><p>Look out for new arrivals and updates from our store.</p>',
         }),
       })
       if (!emailResponse.ok) {

@@ -1,6 +1,11 @@
 import { db } from './_lib/db.js'
+import { purchaseEligibility } from './_lib/marketplace-purchases.js'
+import { notifyOrder } from './_lib/order-notifications.js'
+import { enqueueOrderNotification } from './_lib/notification-queue.js'
+import { sendTransactionalEmail } from './_lib/email.js'
 import { requireUser } from './_lib/auth.js'
-import { checkoutRules, checkoutTotal } from './_lib/checkout.js'
+import { checkoutRules, checkoutTotal, CheckoutDiscountError } from './_lib/checkout.js'
+import { couponCode, quoteCoupon, couponUsagePrefix, CouponError } from './_lib/coupons.js'
 import {
   createCartOrder,
   OrderActionError,
@@ -36,14 +41,23 @@ export default async function handler(request: VercelRequest, response: VercelRe
       if (!rules?.enabled) return response.status(200).json({ enabled: false })
       const cart = await db.cart.findUnique({
         where: { userId: user.id },
-        include: { items: { include: { product: true } } },
+        include: { items: { include: { product: { include: { shopOwnership: { include: { shop: true } } } } } } },
       })
       if (!cart?.items.length) return response.status(200).json({ enabled: false })
+      for (const item of cart.items) {
+        const eligibility = purchaseEligibility(item.product.shopOwnership)
+        if (!eligibility.available || !item.product.isActive || item.product.stock < item.quantity)
+          return sendError(response, 409, 'SHOP_UNAVAILABLE', eligibility.reason ?? 'A cart item is unavailable or out of stock.', id)
+      }
       const subtotal = cart.items.reduce(
         (sum, item) => sum + item.quantity * item.product.priceMinor,
         0,
       )
-      return response.status(200).json({ enabled: true, ...checkoutTotal(subtotal, rules) })
+      const coupon = request.query?.coupon
+        ? await quoteCoupon(db, user.id, request.query.coupon, subtotal) : null
+      return response.status(200).json({ enabled: true,
+        ...checkoutTotal(subtotal, rules, coupon?.discountMinor, coupon?.taxTreatment),
+        discountMinor: coupon?.discountMinor ?? 0, couponCode: coupon?.code ?? null })
     }
     if (request.method !== 'POST')
       return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET or POST.', id)
@@ -67,9 +81,17 @@ export default async function handler(request: VercelRequest, response: VercelRe
       expectedTotalMinor: Number(body.expectedTotalMinor),
       rules: checkoutRules,
       calculate: checkoutTotal,
-    })
-    return response.status(201).json({ orderId: order.id })
+      couponCode: body.couponCode === undefined || body.couponCode === '' ? undefined : couponCode(body.couponCode),
+      quoteCoupon,
+      couponUsagePrefix,
+    }, enqueueOrderNotification)
+    const emailStatus = await notifyOrder(db, order.id, 'ORDER_RECORDED', sendTransactionalEmail)
+    return response.status(201).json({ orderId: order.id, emailStatus })
   } catch (error) {
+    if (error instanceof CheckoutDiscountError)
+      return sendError(response, 409, 'COUPON_REJECTED', error.message, id)
+    if (error instanceof CouponError)
+      return sendError(response, error.status, 'COUPON_REJECTED', error.message, id)
     if (error instanceof OrderActionError)
       return sendError(response, error.status, error.code, error.message, id)
     if (

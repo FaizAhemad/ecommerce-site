@@ -30,7 +30,9 @@ model User {
   messagesReceived  CustomerMessage[] @relation("ReceivedMessages")
   returnRequests    ReturnRequest[]
   supportTickets    SupportTicket[]
+  supportReplies SupportReply[]
   purchaseFeedback  PurchaseFeedback?
+  shopMemberships ShopMembership[]
 }
 
 model PurchaseFeedback {
@@ -44,6 +46,8 @@ model PurchaseFeedback {
 }
 
 model SupportTicket {
+  replies SupportReply[]
+  attachments SupportAttachment[]
   id          String   @id
   userId      String
   subject     String
@@ -55,6 +59,28 @@ model SupportTicket {
   updatedAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, createdAt])
+}
+
+model SupportAttachment {
+  id String @id
+  ticketId String
+  contentType String
+  data String
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@index([ticketId])
+}
+
+model SupportReply {
+  id String @id
+  ticketId String
+  authorId String
+  fromAdmin Boolean
+  body String
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@index([ticketId, createdAt])
 }
 
 enum UserRole {
@@ -135,6 +161,7 @@ model Category {
 }
 
 model Product {
+  shopOwnership ShopProduct?
   id          String         @id
   name        String
   slug        String         @unique
@@ -258,6 +285,7 @@ model WishlistItem {
 }
 
 model Order {
+  sellerOrders SellerOrder[]
   id              String        @id @default(cuid())
   orderNumber     String        @unique
   userId          String
@@ -335,6 +363,7 @@ enum OrderStatus {
 }
 
 model OrderItem {
+  sellerSnapshot ShopOrderItem?
   id             String  @id @default(cuid())
   orderId        String
   productId      String
@@ -412,4 +441,95 @@ model NewsletterSubscription {
   subscribedAt DateTime  @default(now())
   unsubscribedAt DateTime?
   updatedAt    DateTime  @updatedAt
+}
+
+model Shop {
+  sellerOrders SellerOrder[]
+  id String @id
+  slug String @unique
+  name String
+  status String @default("PENDING")
+  isPlatform Boolean @default(false)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  updatedAt DateTime @default(now()) @db.Timestamp(3)
+  memberships ShopMembership[]
+  products ShopProduct[]
+  orderItems ShopOrderItem[]
+}
+
+model ShopMembership {
+  shopId String
+  userId String
+  status String @default("PENDING")
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@id([shopId, userId])
+  @@index([userId, status])
+}
+
+model ShopProduct {
+  productId String @id
+  shopId String
+  moderationStatus String @default("DRAFT")
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  @@index([shopId, moderationStatus])
+}
+
+model ShopOrderItem {
+  sellerOrderId String
+  sellerOrder SellerOrder @relation(fields: [sellerOrderId, shopId], references: [id, shopId], onDelete: Cascade)
+  orderItemId String @id
+  shopId String
+  shopName String
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  @@index([shopId])
+}
+
+model SellerOrder {
+  id String @id
+  orderId String
+  shopId String
+  shopName String
+  status String @default("PENDING")
+  carrier String?
+  trackingCode String?
+  version Int @default(1)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  updatedAt DateTime @default(now()) @db.Timestamp(3)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  items ShopOrderItem[]
+  events SellerOrderEvent[]
+  returns SellerReturn[]
+  @@unique([orderId, shopId])
+  @@unique([id, shopId])
+  @@index([shopId, createdAt])
+}
+
+model SellerOrderEvent {
+  id String @id
+  sellerOrderId String
+  status String
+  reason String
+  actorId String
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  sellerOrder SellerOrder @relation(fields: [sellerOrderId], references: [id], onDelete: Cascade)
+  @@index([sellerOrderId, createdAt])
+}
+
+model SellerReturn {
+  id String @id
+  sellerOrderId String @unique
+  reason String
+  status String @default("REQUESTED")
+  resolution String @default("")
+  version Int @default(1)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  updatedAt DateTime @default(now()) @db.Timestamp(3)
+  sellerOrder SellerOrder @relation(fields: [sellerOrderId], references: [id], onDelete: Cascade)
 }

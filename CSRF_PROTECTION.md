@@ -1,5 +1,13 @@
 # CSRF protection
 
+Seller catalog/media and administrator product moderation writes use apiFetch and central CSRF/source validation. Shop browsing, media reads and seller order reads do not mutate state. No provider or seller exception is added.
+
+MP-02 seller application submission and administrator review use apiFetch and the existing central CSRF/source validation. No new exception or mutation through GET is introduced.
+
+POST auth/session-activity uses the same token/source validation as other browser writes. GET auth/me reports deadlines but never renews a session. No new CSRF exemption or state-changing GET is introduced; see SESSION_SECURITY.md.
+
+E30 browser writes for coupons, returns, shipments, support attachments and support replies use shared `apiFetch` and the central CSRF token flow. No E30 write is exempted; only the existing exact Razorpay webhook bypass remains. Browser and production verification is pending.
+
 E14, implemented 2026-09-13. Completion is tracked only in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md), with evidence in [PROJECT_STATUS.md](PROJECT_STATUS.md). Production acceptance belongs to the owner.
 
 ## Shared contract

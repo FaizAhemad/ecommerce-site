@@ -50,5 +50,5 @@ export function AdminFeedback() {
   if (query.isPending) return <p role="status">Loading purchase feedback…</p>
   if (query.isError) return <div role="alert"><p>Unable to load feedback.</p><button className="secondary-button" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry</button></div>
   if (!query.data?.feedback.length) return <p>No purchase feedback recorded.</p>
-  return <><p>Latest 100 first-purchase responses. This customer feedback is private.</p>{query.data.feedback.map(item => <article className="state-message" key={item.orderNumber}><h3>Order {item.orderNumber}</h3><p>Experience: {item.rating} / 5</p><p>{item.comment || 'No written comment.'}</p><p>{new Date(item.createdAt).toLocaleString()}</p></article>)}</>
+  return <><p>Latest 100 first-purchase responses. This customer feedback is private.</p>{query.data.feedback.map(item => <article className="record-card" key={item.orderNumber}><h3>Order {item.orderNumber}</h3><p>Experience: {item.rating} / 5</p><p>{item.comment || 'No written comment.'}</p><p>{new Date(item.createdAt).toLocaleString()}</p></article>)}</>
 }

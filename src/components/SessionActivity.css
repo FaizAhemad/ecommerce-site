@@ -1,0 +1,16 @@
+.session-warning {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1050;
+  width: min(560px, calc(100% - 32px));
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font: 15px/1.5 Arial, sans-serif;
+}
+.session-warning p { margin: 0 0 12px; }

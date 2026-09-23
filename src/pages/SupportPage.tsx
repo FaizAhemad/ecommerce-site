@@ -3,6 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { privateKey } from '../api/sessionScope'
 import { supportRequest, type SupportTicket } from '../api/support'
 import { SupportTicketCard } from '../components/SupportTicketCard'
+import { SupportAttachments } from '../components/SupportAttachments'
 import { useNotification } from '../components/NotificationProvider'
 import type { StorefrontApiResponse } from '../api/storefront'
 export function SupportPage({
@@ -81,10 +82,12 @@ export function SupportPage({
         {admin ? 'Manage support requests' : list ? 'Your support requests' : 'How can we help?'}
       </h1>
       <div className="profile-actions">
+        <span>Gadgify support: {storefront.contact.supportEmail}</span>
         <a href="/support">Contact support</a>
         {isAuthenticated && <a href="/support-requests">Your requests</a>}
         {admin && <a href="/admin">Back to dashboard</a>}
       </div>
+      {!list && <p>Use the form below to contact our support team and keep a record of your request.</p>}
       {error && (
         <p className="state-message" role="alert">
           {error}
@@ -140,6 +143,7 @@ export function SupportPage({
       ) : saved ? (
         <div className="state-message" role="status">
           <p>Your request is recorded. Reference: {saved.id}</p>
+          <SupportAttachments ticketId={saved.id} canUpload />
           <p>
             {saved.emailStatus === 'ACCEPTED'
               ? 'Confirmation email requested.'

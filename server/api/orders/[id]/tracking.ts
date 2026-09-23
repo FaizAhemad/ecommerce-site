@@ -23,7 +23,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
       select: {
         id: true,
         status: true,
-        shipment: { include: { events: { orderBy: { occurredAt: 'desc' } } } },
+        shipment: { select: {
+          carrier: true, trackingCode: true, status: true,
+          events: { select: { id: true, status: true, description: true, location: true, occurredAt: true },
+            orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }], take: 100 },
+        } },
       },
     })
     if (!order) return sendError(response, 404, 'NOT_FOUND', 'Order not found.', id)

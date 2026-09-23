@@ -4,24 +4,39 @@ import { checkoutRequest } from '../api/checkout'
 import { privateKey } from '../api/sessionScope'
 import { queryClient } from '../api/queryClient'
 import { useNotification } from './NotificationProvider'
-export function CheckoutSubmit({
+type CheckoutProps = { addressId: string; cartRevision: string; disabled: boolean }
+export function CheckoutSubmit(props: CheckoutProps) {
+  const [draft, setDraft] = useState('')
+  const [coupon, setCoupon] = useState('')
+  const [locked, setLocked] = useState(false)
+  return <div>
+    <label>Coupon code
+      <input value={draft} maxLength={32} autoCapitalize="characters" autoComplete="off"
+        disabled={locked || props.disabled} onChange={(event) => setDraft(event.target.value)} />
+    </label>
+    <button type="button" className="secondary-button" disabled={locked || props.disabled || !draft.trim()}
+      onClick={() => setCoupon(draft.trim().toUpperCase())}>Apply coupon</button>
+    {coupon && <button type="button" className="secondary-button" disabled={locked}
+      onClick={() => { setCoupon(''); setDraft('') }}>Remove coupon</button>}
+    <CheckoutOrder {...props} couponCode={coupon} onAttempt={() => setLocked(true)} />
+  </div>
+}
+function CheckoutOrder({
   addressId,
   cartRevision,
   disabled,
-}: {
-  addressId: string
-  cartRevision: string
-  disabled: boolean
-}) {
+  couponCode,
+  onAttempt,
+}: CheckoutProps & { couponCode: string; onAttempt: () => void }) {
   const notify = useNotification()
   const quote = useQuery({
-    queryKey: privateKey('checkout', cartRevision),
-    queryFn: ({ signal }) => checkoutRequest('GET', signal),
+    queryKey: privateKey('checkout', cartRevision, couponCode),
+    queryFn: ({ signal }) => checkoutRequest('GET', signal, undefined, couponCode),
     retry: false,
   })
   const lock = useRef(false),
     controller = useRef<AbortController | null>(null),
-    request = useRef<{ requestId: string; addressId: string; expectedTotalMinor: number } | null>(
+    request = useRef<{ requestId: string; addressId: string; expectedTotalMinor: number; couponCode?: string } | null>(
       null,
     )
   const [attempted, setAttempted] = useState(false)
@@ -29,9 +44,10 @@ export function CheckoutSubmit({
     [orderId, setOrderId] = useState('')
   useEffect(() => () => controller.current?.abort(), [])
   async function submit() {
-    if (lock.current || disabled || !addressId || !Number.isSafeInteger(quote.data?.totalMinor))
+    if (lock.current || disabled || quote.isFetching || !addressId || !Number.isSafeInteger(quote.data?.totalMinor))
       return
     lock.current = true
+    onAttempt()
     setAttempted(true)
     setPending(true)
     const abort = new AbortController()
@@ -40,6 +56,7 @@ export function CheckoutSubmit({
       requestId: crypto.randomUUID(),
       addressId,
       expectedTotalMinor: quote.data!.totalMinor!,
+      ...(couponCode ? { couponCode } : {}),
     }
     try {
       const result = await checkoutRequest('POST', abort.signal, request.current)
@@ -47,7 +64,9 @@ export function CheckoutSubmit({
         throw new Error('Unable to confirm the order. Check your orders before trying again.')
       if (abort.signal.aborted) return
       setOrderId(result.orderId)
-      notify('Order recorded. Payment is still pending.', 'info')
+      notify(result.emailStatus === 'UNCONFIRMED'
+        ? 'Order recorded; payment is pending. The confirmation email could not be confirmed. Check Orders for details.'
+        : 'Order recorded. Payment is still pending.', 'info')
       void queryClient.invalidateQueries({ queryKey: privateKey('cart') })
       void queryClient.invalidateQueries({ queryKey: privateKey('orders') })
       window.history.pushState({}, '', '/orders/' + encodeURIComponent(result.orderId))
@@ -71,7 +90,7 @@ export function CheckoutSubmit({
   if (quote.isError)
     return (
       <div role="alert">
-        <p>Unable to load charges.</p>
+        <p>{quote.error instanceof Error ? quote.error.message : 'Unable to load charges.'}</p>
         <button
           className="secondary-button"
           disabled={quote.isFetching}
@@ -94,6 +113,7 @@ export function CheckoutSubmit({
     )
   return (
     <div>
+      {!!quote.data.discountMinor && <p role="status">Coupon {quote.data.couponCode}: −{money(quote.data.discountMinor)}. Usage is confirmed when the order is recorded.</p>}
       <p>
         Delivery: {money(quote.data.shippingMinor)} · Tax: {money(quote.data.taxMinor)} · Total:{' '}
         {money(quote.data.totalMinor)}

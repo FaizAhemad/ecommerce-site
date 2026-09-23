@@ -6,6 +6,7 @@ export function SubscribeSection() {
   const submitting = useRef(false)
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [alreadySubscribed, setAlreadySubscribed] = useState(false)
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (submitting.current || status === 'success') return
@@ -14,14 +15,17 @@ export function SubscribeSection() {
     try {
       const result = await subscribeToNewsletter(email)
       setStatus('success')
-      setEmail('')
+      setAlreadySubscribed(result.alreadySubscribed === true)
+      if (!result.alreadySubscribed) setEmail('')
       notify(
-        result.confirmationFailed
+        result.alreadySubscribed
+          ? 'This email is already subscribed.'
+          : result.confirmationFailed
           ? 'You are subscribed, but we could not confirm the email was sent. No need to subscribe again.'
           : result.emailSent
             ? 'You are subscribed. A confirmation email is on its way.'
             : 'You are subscribed.',
-        result.confirmationFailed ? 'info' : 'success',
+        result.alreadySubscribed ? 'error' : result.confirmationFailed ? 'info' : 'success',
       )
     } catch (error) {
       setStatus('error')
@@ -40,6 +44,7 @@ export function SubscribeSection() {
         <p>New arrivals, thoughtful edits, and useful ideas delivered to your inbox.</p>
       </div>
       <form className="subscribe-form" onSubmit={submit}>
+        {alreadySubscribed && <p role="alert">This email is already subscribed.</p>}
         <label htmlFor="subscribe-email">Email address</label>
         <div>
           <input
@@ -59,7 +64,7 @@ export function SubscribeSection() {
             type="submit"
             disabled={status === 'loading' || status === 'success'}
           >
-            {status === 'loading' ? 'Joining…' : status === 'success' ? 'Subscribed' : 'Subscribe'}{' '}
+            {status === 'loading' ? 'Joining…' : alreadySubscribed ? 'Already subscribed' : status === 'success' ? 'Subscribed' : 'Subscribe'}{' '}
             <span aria-hidden="true">→</span>
           </button>
         </div>

@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto'
+import { purchaseEligibility } from './marketplace-purchases.ts'
 import type { PrismaClient, OrderStatus } from '@prisma/client'
 import type { checkoutRules, checkoutTotal } from './checkout.js'
+import type { quoteCoupon, couponUsagePrefix } from './coupons.js'
+import type { enqueueOrderNotification } from './notification-queue.js'
 
 type Store = Pick<PrismaClient, '$transaction'>
 const transactionOptions = {
@@ -31,7 +34,11 @@ export async function createCartOrder(
     expectedTotalMinor: number
     rules: typeof checkoutRules
     calculate: typeof checkoutTotal
+    couponCode?: string
+    quoteCoupon?: typeof quoteCoupon
+    couponUsagePrefix?: typeof couponUsagePrefix
   },
+  enqueue?: typeof enqueueOrderNotification,
 ) {
   return store.$transaction(async (tx) => {
     if (checkout) {
@@ -67,12 +74,14 @@ export async function createCartOrder(
       )
     const cart = await tx.cart.findUnique({
       where: { userId },
-      include: { items: { include: { product: true }, orderBy: { productId: 'asc' } } },
+      include: { items: { include: { product: { include: { shopOwnership: { include: { shop: true } } } } }, orderBy: { productId: 'asc' } } },
     })
     if (!cart?.items.length)
       throw new OrderActionError(400, 'EMPTY_CART', 'Add items before placing an order.')
     let subtotalMinor = 0
     for (const item of cart.items) {
+      const eligibility = purchaseEligibility(item.product.shopOwnership)
+      if (!eligibility.available) throw new OrderActionError(409, 'SHOP_UNAVAILABLE', eligibility.reason!)
       if (!Number.isSafeInteger(item.quantity) || item.quantity < 1)
         throw new OrderActionError(409, 'INVALID_CART', 'Update your cart before placing an order.')
       const reserved = await tx.product.updateMany({
@@ -89,9 +98,13 @@ export async function createCartOrder(
     }
     if (!Number.isSafeInteger(subtotalMinor) || subtotalMinor < 0 || subtotalMinor > 2_147_483_647)
       throw new OrderActionError(409, 'INVALID_CART', 'Update your cart before placing an order.')
+    const coupon = checkout?.couponCode && checkout.quoteCoupon
+      ? await checkout.quoteCoupon(tx, userId, checkout.couponCode, subtotalMinor) : null
+    if (checkout?.couponCode && (!coupon || !checkout.couponUsagePrefix))
+      throw new OrderActionError(503, 'COUPON_UNAVAILABLE', 'Coupon checkout is unavailable.')
     const totals =
       rules && checkout
-        ? checkout.calculate(subtotalMinor, rules)
+        ? checkout.calculate(subtotalMinor, rules, coupon?.discountMinor, coupon?.taxTreatment)
         : { subtotalMinor, totalMinor: subtotalMinor }
     if (checkout && totals.totalMinor !== checkout.expectedTotalMinor)
       throw new OrderActionError(
@@ -119,6 +132,13 @@ export async function createCartOrder(
       },
       include: { items: true, payment: true },
     })
+    if (coupon && checkout?.couponUsagePrefix) {
+      await tx.storeSetting.create({ data: {
+        key: checkout.couponUsagePrefix(coupon.code, userId) + order.id,
+        value: JSON.stringify({ ...coupon, orderId: order.id, createdAt: new Date().toISOString() }),
+      } })
+    }
+    if (enqueue) await enqueue(tx, order.id, 'ORDER_RECORDED')
     await tx.cartItem.deleteMany({ where: { cartId: cart.id } })
     return order
   }, transactionOptions)
@@ -153,6 +173,8 @@ export async function cancelOrder(store: Store, orderId: string, userId?: string
 }
 
 export async function updateOrderStatus(store: Store, orderId: string, status: OrderStatus) {
+  if (status === 'SHIPPED' || status === 'DELIVERED')
+    throw new OrderActionError(409, 'SHIPMENT_REQUIRED', 'Use Shipments to record dispatch and delivery with tracking history.')
   if (status === 'REFUNDED')
     throw new OrderActionError(
       409,
@@ -164,6 +186,8 @@ export async function updateOrderStatus(store: Store, orderId: string, status: O
     const order = await tx.order.findUnique({ where: { id: orderId } })
     if (!order) throw new OrderActionError(404, 'NOT_FOUND', 'Order not found.')
     if (order.status === status) return order
+    if (order.status === 'SHIPPED' || order.status === 'DELIVERED')
+      throw new OrderActionError(409, 'CONFLICT', 'Fulfilled orders cannot move backward through order status editing.')
     if (order.status === 'CANCELLED' || order.status === 'REFUNDED')
       throw new OrderActionError(
         409,

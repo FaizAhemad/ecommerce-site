@@ -16,6 +16,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (request.method === 'GET')
       return response.status(200).json({
         products: await db.product.findMany({
+          where: { shopOwnership: { is: { shop: { isPlatform: true } } } },
           include: { images: true, colors: true, videos: true },
           orderBy: { createdAt: 'desc' },
         }),

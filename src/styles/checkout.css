@@ -1,0 +1,491 @@
+.payment-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 120px 32px;
+}
+.payment-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 72px;
+}
+.payment-form {
+  margin-top: 36px;
+  display: grid;
+  gap: 28px;
+}
+.payment-form fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.payment-form legend {
+  margin-bottom: 8px;
+  font:
+    11px Arial,
+    sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  padding: 14px;
+  font:
+    13px Arial,
+    sans-serif;
+}
+.payment-option span {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+.payment-fields {
+  display: grid;
+  gap: 16px;
+}
+.payment-fields > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.payment-fields label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font:
+    11px Arial,
+    sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.payment-fields input {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 0 11px;
+  color: var(--ink);
+  font:
+    13px Arial,
+    sans-serif;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.payment-note {
+  color: var(--muted);
+  font:
+    11px Arial,
+    sans-serif;
+  margin: 0;
+}
+.order-summary {
+  align-self: start;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 24px;
+}
+.order-summary h2 {
+  margin: 8px 0 24px;
+  font-size: 24px;
+}
+.summary-line,
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  font:
+    12px Arial,
+    sans-serif;
+}
+.summary-line span {
+  max-width: 170px;
+}
+.summary-total {
+  border-bottom: 0;
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+  font-size: 14px;
+}
+.order-summary > a {
+  color: var(--green);
+  font:
+    11px Arial,
+    sans-serif;
+  text-transform: uppercase;
+}
+@media (max-width: 760px) {
+  .cart-page,
+  .payment-page {
+    padding: 90px 20px 60px;
+  }
+  .cart-item {
+    grid-template-columns: 80px 1fr auto;
+    gap: 12px;
+  }
+  .cart-actions {
+    flex-direction: column;
+  }
+  .cart-actions a {
+    width: 100%;
+  }
+  .payment-layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .payment-option span {
+    display: none;
+  }
+}
+.payment-option {
+  position: relative;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.payment-option.selected {
+  border-color: var(--green);
+  background: rgba(93, 126, 90, 0.06);
+}
+.payment-option input {
+  accent-color: var(--green);
+}
+.payment-option-name {
+  display: grid;
+  gap: 4px;
+  margin-left: 2px;
+}
+.payment-option-name strong {
+  font:
+    13px Arial,
+    sans-serif;
+  color: var(--ink);
+}
+.payment-option-name small {
+  color: var(--muted);
+  font:
+    11px Arial,
+    sans-serif;
+}
+.razorpay-mark,
+.cod-mark {
+  margin-left: auto !important;
+  color: var(--green) !important;
+  font:
+    bold 12px Arial,
+    sans-serif !important;
+}
+.cod-mark {
+  color: var(--muted) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.05em;
+}
+.payment-info {
+  border-left: 2px solid var(--green);
+  padding: 4px 0 4px 14px;
+  color: var(--muted);
+  font:
+    12px Arial,
+    sans-serif;
+}
+.payment-info p {
+  margin: 0 0 8px;
+}
+.payment-info p:last-child {
+  margin-bottom: 0;
+}
+.payment-fields textarea {
+  resize: vertical;
+  padding: 11px;
+  min-height: 80px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font:
+    13px Arial,
+    sans-serif;
+}
+.payment-submit {
+  width: 100%;
+  justify-content: center;
+}
+.payment-success {
+  padding: 12px 14px;
+  background: rgba(93, 126, 90, 0.1);
+  color: var(--green);
+  font:
+    12px Arial,
+    sans-serif;
+}
+.summary-protection {
+  margin: 16px 0 20px;
+  color: var(--muted);
+  font:
+    11px/1.7 Arial,
+    sans-serif;
+}
+/* Cart rows use a deliberate three-column layout; quantity controls replace native selects. */
+.cart-list {
+  border-top: 1px solid var(--line);
+}
+.cart-item {
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  min-height: 148px;
+  padding: 20px 0;
+  align-items: center;
+}
+.cart-item-art {
+  width: 112px;
+  height: 112px;
+}
+.cart-item-detail {
+  margin: 10px 0 0 !important;
+  color: var(--muted);
+  font:
+    11px Arial,
+    sans-serif !important;
+}
+.cart-item-controls {
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: 24px;
+  min-width: 108px;
+}
+.cart-item-controls strong {
+  font:
+    13px Arial,
+    sans-serif;
+}
+.quantity-control {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.quantity-control button,
+.quantity-control span {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font:
+    16px Arial,
+    sans-serif;
+}
+.quantity-control button {
+  cursor: pointer;
+}
+.quantity-control button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+.quantity-control span {
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .cart-item {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 14px;
+  }
+  .cart-item-art {
+    width: 76px;
+    height: 76px;
+  }
+  .cart-item-controls {
+    grid-column: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    min-width: 0;
+  }
+  .cart-count {
+    padding-top: 8px;
+  }
+}
+.delivery-payment-options {
+  display: flex;
+  gap: 18px;
+  margin: 14px 0;
+  color: var(--ink);
+  font:
+    12px Arial,
+    sans-serif;
+}
+.delivery-payment-options label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.delivery-payment-options input {
+  accent-color: var(--green);
+}
+.track-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 130px 32px 100px;
+}
+.track-hero {
+  max-width: 640px;
+}
+.track-form {
+  display: grid;
+  gap: 9px;
+  margin-top: 38px;
+}
+.track-form label {
+  color: var(--muted);
+  font:
+    11px Arial,
+    sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.track-form > div {
+  display: flex;
+  gap: 10px;
+}
+.track-form input {
+  flex: 1;
+  min-height: 46px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0 13px;
+  font:
+    14px Arial,
+    sans-serif;
+}
+.track-form .primary-button {
+  border: 0;
+  cursor: pointer;
+}
+.track-form small {
+  color: var(--muted);
+  font:
+    11px Arial,
+    sans-serif;
+}
+.tracking-card {
+  margin-top: 72px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 30px;
+}
+.tracking-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 22px;
+}
+.tracking-card-header h2 {
+  margin: 8px 0 0;
+  font-size: 28px;
+}
+.tracking-badge {
+  padding: 7px 10px;
+  background: rgba(93, 126, 90, 0.12);
+  color: var(--green);
+  font:
+    11px Arial,
+    sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tracking-progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 30px 0 20px;
+}
+.tracking-progress span {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font:
+    11px Arial,
+    sans-serif;
+  position: relative;
+}
+.tracking-progress i {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-style: normal;
+}
+.tracking-progress strong {
+  color: var(--ink);
+  font:
+    12px Arial,
+    sans-serif;
+}
+.tracking-progress small {
+  font:
+    11px Arial,
+    sans-serif;
+}
+.tracking-progress .complete i,
+.tracking-progress .active i {
+  border-color: var(--green);
+  background: var(--green);
+  color: var(--paper);
+}
+.tracking-progress .active strong {
+  color: var(--green);
+}
+.tracking-note,
+.track-help {
+  color: var(--muted);
+  font:
+    12px/1.6 Arial,
+    sans-serif;
+}
+.tracking-note {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  margin: 0;
+}
+.track-help {
+  margin-top: 45px;
+}
+.track-help a {
+  color: var(--green);
+}
+.track-page h1 {
+  max-width: 620px;
+}
+@media (max-width: 600px) {
+  .track-page {
+    padding: 95px 20px 70px;
+  }
+  .track-form > div {
+    display: grid;
+  }
+  .track-form .primary-button {
+    width: 100%;
+  }
+  .tracking-card {
+    margin-top: 48px;
+    padding: 20px;
+  }
+  .tracking-progress {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 12px;
+  }
+}

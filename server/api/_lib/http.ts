@@ -74,6 +74,24 @@ export function requestId(request: VercelRequest): string {
 }
 
 /** Runtime failures only: module initialization/platform failures remain outside this boundary. */
+export function logApiFailure(error: unknown, id: string, operation?: 'products' | 'categories') {
+  // Allowlisted classifications only. Never serialize message, stack, meta or connection data.
+  const value = error && typeof error === 'object' ? error as { code?: unknown; errorCode?: unknown; name?: unknown } : {}
+  const candidate = value.code ?? value.errorCode
+  const codes: Record<string, string> = {
+    P1000: 'DATABASE_AUTHENTICATION', P1001: 'DATABASE_UNREACHABLE', P1002: 'DATABASE_CONNECT_TIMEOUT',
+    P1003: 'DATABASE_MISSING', P1010: 'DATABASE_ACCESS_DENIED', P1011: 'DATABASE_TLS',
+    P1017: 'DATABASE_CONNECTION_CLOSED', P2021: 'DATABASE_TABLE_MISSING', P2022: 'DATABASE_COLUMN_MISSING',
+    P2024: 'DATABASE_POOL_TIMEOUT', P2034: 'DATABASE_TRANSACTION_CONFLICT',
+  }
+  const code = typeof candidate === 'string' && Object.hasOwn(codes, candidate) ? candidate : undefined
+  const category = code ? codes[code] : value.name === 'PrismaClientInitializationError' ? 'DATABASE_INITIALIZATION' :
+    value.name === 'PrismaClientValidationError' ? 'DATABASE_QUERY_VALIDATION' : undefined
+  console.error(JSON.stringify({ event: 'api_unhandled_error', requestId: id,
+    ...(operation ? { operation } : {}), ...(category ? { category } : {}), ...(code ? { code } : {}),
+  }))
+}
+
 export async function withApiErrorBoundary(
   request: VercelRequest,
   response: VercelResponse,
@@ -84,9 +102,9 @@ export async function withApiErrorBoundary(
   try {
     response.setHeader?.('X-Request-Id', id)
     return await action()
-  } catch {
+  } catch (error) {
     // Do not log raw errors, URLs, bodies, headers or customer/provider details.
-    console.error(JSON.stringify({ event: 'api_unhandled_error', requestId: id }))
+    logApiFailure(error, id)
     if (response.headersSent || response.writableEnded) return
     return sendError(
       response,

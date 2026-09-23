@@ -13,11 +13,16 @@ import { AuthPage } from './pages/AuthPage'
 import { PasswordRecoveryPage } from './pages/PasswordRecoveryPage'
 import { EmailVerificationPage } from './pages/EmailVerificationPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { SellerPage } from './pages/SellerPage'
+import { SellerCatalogPage } from './pages/SellerCatalogPage'
+import { FulfillmentPage } from './pages/FulfillmentPage'
+import { ShopsPage } from './pages/ShopsPage'
 import { safeRouteId } from './routePaths'
 import { OrdersPage } from './pages/OrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
 import { AdminPage } from './pages/AdminPage'
 import { HelpPage } from './pages/HelpPage'
+import { usePageMetadata } from './api/pageMetadata'
 
 type RouteProps = {
   path: string
@@ -79,8 +84,28 @@ export function StorefrontRoute({
   isAdmin,
   onLogin,
 }: RouteProps) {
+  usePageMetadata(path, storefront.identity.businessName)
   const normalizedPath = path.length > 1 ? path.replace(/\/+$/, '') : path
+  if (normalizedPath.startsWith('/shops/')) {
+    const slug = safeRouteId(normalizedPath.slice('/shops/'.length))
+    return slug && /^[a-z0-9-]{1,100}$/.test(slug) ? <ShopsPage key={slug} slug={slug} /> : <NotFoundPage />
+  }
   switch (normalizedPath) {
+    case '/shops': return <ShopsPage key="directory" />
+    case '/seller/products':
+      return isAuthenticated ? <SellerCatalogPage key="seller-catalog" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+    case '/seller/orders':
+      return isAuthenticated ? <FulfillmentPage key="seller-fulfillment" audience="seller" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+    case '/orders/shipments':
+      return isAuthenticated ? <FulfillmentPage key="customer-fulfillment" audience="customer" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+    case '/admin/fulfillment':
+      return isAdmin ? <FulfillmentPage key="admin-fulfillment" audience="admin" /> : <section className="page-section"><h1>Administrator access required</h1></section>
+    case '/admin/seller-products':
+      return isAdmin ? <SellerCatalogPage key="admin-catalog" admin /> : <section className="page-section"><h1>Administrator access required</h1><a href="/login" onClick={navigate('/login')}>Sign in</a></section>
+    case '/seller':
+      return isAuthenticated ? <SellerPage key="seller" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+    case '/admin/sellers':
+      return isAdmin ? <SellerPage key="seller-review" admin /> : <section className="page-section"><h1>Administrator access required</h1><a href="/login" onClick={navigate('/login')}>Sign in</a></section>
     case '/help':
       return <HelpPage onNavigate={navigate} />
     case '/profile':

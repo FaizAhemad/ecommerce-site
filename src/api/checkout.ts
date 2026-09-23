@@ -6,13 +6,16 @@ export type Quote = {
   taxMinor?: number
   totalMinor?: number
   currency?: string
+  discountMinor?: number
+  couponCode?: string | null
 }
 export async function checkoutRequest(
   method: 'GET' | 'POST',
   signal: AbortSignal,
-  body?: { requestId: string; addressId: string; expectedTotalMinor: number },
+  body?: { requestId: string; addressId: string; expectedTotalMinor: number; couponCode?: string },
+  couponCode?: string,
 ) {
-  const response = await apiFetch('/api/checkout', {
+  const response = await apiFetch('/api/checkout' + (method === 'GET' && couponCode ? '?coupon=' + encodeURIComponent(couponCode) : ''), {
     method,
     signal,
     ...(body
@@ -21,6 +24,7 @@ export async function checkoutRequest(
   })
   const result = (await response.json()) as Quote & {
     orderId?: string
+    emailStatus?: 'ACCEPTED' | 'UNCONFIRMED' | 'SKIPPED' | 'QUEUED'
     error?: { message?: string }
   }
   if (!response.ok)

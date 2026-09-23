@@ -2,7 +2,7 @@ import { apiFetch } from './http.ts'
 
 export async function subscribeToNewsletter(
   email: string,
-): Promise<{ emailSent: boolean; confirmationFailed?: boolean }> {
+): Promise<{ emailSent: boolean; confirmationFailed?: boolean; alreadySubscribed?: boolean }> {
   const response = await apiFetch('/api/newsletter/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -12,6 +12,8 @@ export async function subscribeToNewsletter(
   const record = result && typeof result === 'object' ? result : undefined
   if (!response.ok) {
     const error = record && 'error' in record ? record.error : undefined
+    if (response.status === 409 && error && typeof error === 'object' && 'code' in error && error.code === 'ALREADY_SUBSCRIBED')
+      return { emailSent: false, alreadySubscribed: true }
     // This specific server code is emitted only after the subscription was saved.
     // Reconcile that outcome without replaying the write or claiming email delivery.
     if (
@@ -38,5 +40,5 @@ export async function subscribeToNewsletter(
   if (!record || !('subscribed' in record) || record.subscribed !== true) {
     throw new Error('We could not confirm your subscription. Please check before trying again.')
   }
-  return { emailSent: 'emailSent' in record && record.emailSent === true }
+  return { emailSent: 'emailSent' in record && record.emailSent === true, ...('alreadySubscribed' in record && record.alreadySubscribed === true ? { alreadySubscribed: true } : {}) }
 }

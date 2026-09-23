@@ -1,5 +1,23 @@
 # Agent instructions
 
+Marketplace workspace batch (2026-09-23): follow SELLER_WORKSPACE.md. Seller drafts/media use reserved seller-product/seller-media keys, never live Product writes. Moderation approval exposes a public showcase only; mutations reset approval and remain shop/version scoped. Preserve selected snapshot-only seller order reads. Financial/fulfillment activation remains incomplete; no migration/verification has run.
+
+MP-02: preserve SELLER_ONBOARDING.md account-owned applications, verified-email submission, expected-version decisions, serializable shop/membership/audit changes and reserved seller-application keys. Seller onboarding never grants platform ADMIN or enables catalog/payouts. Ownership migration and verification remain pending.
+
+MP-01: MARKETPLACE_MIGRATION.md governs the prepared ownership migration. Preserve platform product mapping and order-item snapshots. ShopMembership does not grant platform ADMIN privileges. Seller reads require current approved membership and scoped product predicates; writes must recheck within their transaction. Seller creation must stay disabled until moderation/publication/checkout gates exist. No migration or verification has run.
+
+Latest priority override (2026-09-22): marketplace MP-01–MP-09 precedes UI and other new features. Read MARKETPLACE_REQUIREMENTS.md; multi-vendor scope now supersedes historical separate-store-only scope. Begin ownership/isolation and safe migration design; do not invent fee, payout, provider or legal decisions. No marketplace capability is implemented by the documentation update. Existing environment/live-operation and verification deferrals remain unchanged.
+
+Session policy: preserve customer 30-minute idle/24-hour absolute and admin 15-minute idle/8-hour absolute caps. Only CSRF-protected session-activity POST renews expiry; background reads do not. Reject legacy overlong sessions; see SESSION_SECURITY.md. Verification remains deferred.
+
+Current UI priority (2026-09-22): work through UI-01–UI-09 in APPLICATION_BACKLOG.md before new features. App.css is an ordered import entry; edit owning feature styles, preserve cascade order and reuse FormDialog for contextual editors. Keep primary auth/checkout flows as pages. Preserve modal notification portals, focus restoration and pending guards; device acceptance remains pending.
+
+E33 refunds: preserve reserved refund-attempt claims before provider writes, explicit full-amount approval, capture/identity checks and no financial replay. Only provider-fetched full-refund proof changes financial status. See REFUND_OPERATIONS.md; verification remains deferred.
+
+E32: preserve versioned private order-notification jobs, transactional enqueue, compare-and-set leases, frozen provider payload/key, verified recipient checks and the five-attempt/23-hour retry boundary. Never replay legacy or UNCONFIRMED sends. See NOTIFICATION_QUEUE.md; worker deployment and verification remain pending.
+
+E31 SEO: preserve the sole dispatcher, filesystem/Vite precedence, bundled HTML template, escaped product text/JSON-LD, selected active-product data, real 404/503 responses and configured production origin. Do not emit customer data or fabricated ratings/policies into metadata. Follow SEO_OPERATIONS.md; tests and deployed crawler/HMR acceptance remain pending.
+
 Use [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) as the single completion checklist and [PROJECT_STATUS.md](PROJECT_STATUS.md) for current implementation/evidence. Read both before product changes. Requirements describe intended behavior; a handler or page existing does not establish completion.
 
 Read [PAGE_INVENTORY.md](PAGE_INVENTORY.md) before page/route work. Update it, status and affected API/notification/operational docs in the same change. Keep README, TARGET, REQUIREMENTS, Codex and Copilot instructions consistent when architecture or workflow changes.
@@ -74,3 +92,10 @@ E28 feedback: follow PURCHASE_FEEDBACK.md. Preserve owner-derived first paid ord
 
 Current owner override (2026-09-15): defer format, format:check, lint and test commands until remaining implementation is finished. Continue functional/security implementation and documentation; new unverified work must remain pending. This supersedes earlier per-change verification-command instructions.
 E29 policies: follow POLICY_PUBLISHING.md. Expose published text/version/date only, never drafts or actor history; preserve explicit approval, version checks and atomic publication/history/audit. Reserved settings prefixes cannot bypass this workflow.
+
+
+E30 current working scope is unverified. Preserve coupon activation approval, server totals, serializable usage recording and no reuse of archived codes. Return requests are owner-scoped and delivered-order only; approval does not issue refunds. Shipment changes must use the shipment transaction/history workflow and cannot bypass payment/terminal-state guards. Order notification ACCEPTED is provider acceptance only; UNCONFIRMED is never automatically replayed. Support attachments/replies require the prepared migrations, ticket-owner/admin authorization, bounded inputs and no public media URLs. Private/unknown routes remain noindex; canonical URLs require valid VITE_SITE_URL. Do not claim E30 complete until deferred tests/lint/build, migrations, browser/provider/production checks and relevant business approvals are recorded.
+
+MP-05 fulfillment: preserve shop-scoped SellerOrder/versioned actions and selected delivery data, existing Gadgify-only workflows, and financial separation. Prepared migration is unapplied. Mixed-shop checkout, allocation, refunds and payouts remain gated; follow SELLER_FULFILLMENT.md. Tests/lint/build/device acceptance remain deferred.
+
+Seller publication: use the transactional catalog projection and central marketplace purchase eligibility. External-shop purchasing stays disabled until approved commercial/provider rules; do not treat content approval as financial authorization. Both marketplace migrations and Prisma generation are rollout prerequisites. See MARKETPLACE_PURCHASING.md; all new work remains unverified under deferred checks.

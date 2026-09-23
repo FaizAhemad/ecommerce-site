@@ -1,0 +1,12 @@
+export class FulfillmentError extends Error {
+  readonly status: number
+  constructor(status: number, message: string) { super(message); this.status = status }
+}
+export function fulfillmentTransition(previous: string, next: unknown) {
+  const allowed: Record<string, string[]> = { PENDING: ['PACKING'], PACKING: ['SHIPPED'], SHIPPED: ['DELIVERED'], DELIVERED: [], CANCELLED: [] }
+  return typeof next === 'string' && !!allowed[previous]?.includes(next)
+}
+export function returnTransition(previous: string, next: unknown, customer: boolean) {
+  return customer ? previous === 'REQUESTED' && next === 'CANCELLED' :
+    (previous === 'REQUESTED' && (next === 'APPROVED' || next === 'REJECTED')) || (previous === 'APPROVED' && next === 'RECEIVED')
+}

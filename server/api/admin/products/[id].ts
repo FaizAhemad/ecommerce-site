@@ -15,6 +15,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const productId = Array.isArray(request.query?.id) ? request.query?.id[0] : request.query?.id
   if (!productId) return sendError(response, 400, 'VALIDATION_ERROR', 'Product id is required.', id)
   try {
+    const ownership = await db.shopProduct.findUnique({ where: { productId }, include: { shop: { select: { isPlatform: true } } } })
+    if (ownership && !ownership.shop.isPlatform) return sendError(response, 409, 'SELLER_REVIEW_REQUIRED', 'Manage this product through Seller products and moderation.', id)
     if (request.method === 'DELETE') {
       await db.product.update({ where: { id: productId }, data: { isActive: false } })
       return response.status(204).json(null)

@@ -1,5 +1,28 @@
 # Application message guidelines
 
+Newsletter duplicate handling: 409 ALREADY_SUBSCRIBED is a terminal already-active outcome, shown as an error without resending a welcome email. Unique/conditional activation occurs before provider operations. Saved subscription survives provider failures; repeated signup is not a synchronization-retry mechanism. Provider synchronization failures still need operational review using sanitized phase/requestId diagnostics.
+
+
+Dispute notices use generic fixed copy and direct users to the authenticated website conversation. Do not email message bodies, addresses or private support recipients to customers. Queue acceptance does not establish inbox delivery; conversation success does not claim email success. Verify recipient ownership again before customer sends.
+
+
+Shop fulfillment currently uses existing five-second snackbars and stored update history only. Shipment/return email delivery is not wired or claimed. Failed mutations preserve drafts; unknown outcomes require refresh. See SELLER_FULFILLMENT.md.
+
+
+Seller product save/submission/review feedback confirms only its stored draft/moderation status. Approval means public showcase visibility, not marketplace purchase or payout readiness. Keep failed inputs/media selections, display version conflicts and never automatically replay writes.
+
+MP-02 confirms only saved applications/admin decisions. It does not promise approval email delivery, seller product publication or payouts. Review reasons are visible to the applicant; failed drawer submissions retain inputs.
+
+Session expiry uses a persistent last-minute warning and explicit continuation, not a five-second snackbar. Render it inside an open dialog when applicable. Only server-confirmed renewal extends the displayed deadline; see SESSION_SECURITY.md.
+
+UI drawers: NotificationProvider renders the notification region inside an open FormDialog's top layer, otherwise document.body. Preserve five-second dismissal and announcements. Failed form submissions must remain visible without closing the drawer; verify modal focus and snackbar visibility on devices.
+
+E33 refund creation shows pending/uncertain/failed feedback. Only separate matching provider verification announces a full refund. Preserve failure drafts, never automatically replay financial writes and never equate provider confirmation with bank settlement.
+
+E32 supersedes the one-attempt rule below for new versioned order jobs only. Bounded idempotent retries and admin processing are implemented; see NOTIFICATION_QUEUE.md. Legacy and UNCONFIRMED sends remain excluded. Scheduling, delivery events and verification are pending.
+
+E30 adds order-recorded, dispatched and delivered email attempts to verified account addresses. Each order/milestone gets at most one automatic attempt. `ACCEPTED` means Resend accepted the request; `UNCONFIRMED` can include rejection, timeout or interrupted persistence and is not replayed automatically. Admin Notifications exposes these states without recipient addresses. Durable retries, delivery/bounce events, localization and production acceptance remain pending.
+
 Use `useNotification()` from `src/components/NotificationProvider.tsx` for action feedback. Call `notify(messageOrError)` for errors, or pass `success` or `info` as the second argument. Passing an `ApiRateLimitError` preserves translated retry guidance. Never notify during render.
 
 | Situation | Presentation | Examples |
@@ -75,7 +98,7 @@ E19 Profile: all writes share a synchronous lock and immediate pending feedback.
 E20 Orders reads use persistent loading/error/retry and load-more feedback; failed reads never become empty history or payment success. Existing rows remain on pagination failure. Retry/load-more use non-cancelling fetch options to join active requests. No financial mutation changed.
 
 
-E21 adds browser offline status and five-second online notice without queued writes. E22 ticket creation reports saved reference even when email is unconfirmed; only verified stored customer email receives a receipt. Failed drafts retain their UUID for explicit retry, preventing duplicate mail. Status errors remain inline; provider acceptance is not delivery. Status-change email/attachments/threading remain pending.
+E21 adds browser offline status and five-second online notice without queued writes. E22 ticket creation reports saved reference even when email is unconfirmed; only verified stored customer email receives a receipt. Failed drafts retain their UUID for explicit retry, preventing duplicate mail. Status errors remain inline; provider acceptance is not delivery. E30 adds in-app attachments and threading; reply/status-change emails remain pending.
 
 
 E23: order creation reports payment pending; only verified server capture reports payment confirmed. SDK failure/dismissal/uncertainty requests order refresh. No automatic payment replay. Support destination/verified-customer receipts run concurrently with settled results; saved ticket and email acceptance remain distinct.

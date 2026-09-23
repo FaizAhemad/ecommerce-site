@@ -6,6 +6,7 @@ import * as http from '../server/api/_lib/http.ts'
 import { subscribeToNewsletter } from '../src/api/newsletter.ts'
 import { clearCsrfToken } from '../src/api/csrf.ts'
 import { enforceRateLimit } from '../server/api/_lib/rate-limit.ts'
+import { activateNewsletter } from '../server/api/_lib/newsletter-subscription.ts'
 
 const uuid = /^[a-f0-9-]{36}$/i
 function response() {
@@ -239,6 +240,7 @@ test('existing quota error responses and Retry-After survive dispatcher unchange
 async function newsletter(options = {}) {
   const state = { writes: 0, providers: 0 }
   globalThis.newsletterFixture = {
+    activateNewsletter,
     env: {
       RESEND_API_KEY: options.configured === false ? '' : 'synthetic',
       RESEND_AUDIENCE_ID: options.audience ? 'synthetic' : '',
@@ -246,10 +248,14 @@ async function newsletter(options = {}) {
     },
     db: {
       newsletterSubscription: {
-        upsert: async () => {
+        createMany: async () => {
           if (options.databaseFails) throw new Error('private-secret')
+          if (options.alreadySubscribed) return { count: 0 }
           state.writes++
+          return { count: 1 }
         },
+        updateMany: async () => ({ count: 0 }),
+        findUnique: async () => ({ status: 'ACTIVE' }),
       },
     },
     http: {
@@ -266,6 +272,7 @@ async function newsletter(options = {}) {
       '../server/api/newsletter/subscribe.ts',
       (binding, path) => {
         if (path.endsWith('/db.js')) return 'const db = globalThis.newsletterFixture.db'
+        if (path.endsWith('/newsletter-subscription.js')) return 'const activateNewsletter = globalThis.newsletterFixture.activateNewsletter'
         if (path.endsWith('/http.js')) return `const ${binding} = globalThis.newsletterFixture.http`
       },
       (source) =>
@@ -296,12 +303,32 @@ test('newsletter validation/method/configuration errors are safe structured resp
   }
 })
 
-test('newsletter audience/database failure stays distinct from saved subscription', async () => {
-  for (const options of [{ audience: true, providerFails: true }, { databaseFails: true }]) {
-    const actual = await newsletter(options)
-    assertError(actual.result, 502, 'NEWSLETTER_UNAVAILABLE')
-    assert.equal(actual.writes, 0)
-  }
+test('newsletter audience failure preserves the subscription; database failure is unsaved', async () => {
+  const audience = await newsletter({ audience: true, providerFails: true })
+  assertError(audience.result, 502, 'CONFIRMATION_EMAIL_FAILED')
+  assert.equal(audience.writes, 1)
+  const database = await newsletter({ databaseFails: true })
+  assertError(database.result, 502, 'NEWSLETTER_UNAVAILABLE')
+  assert.equal(database.writes, 0)
+})
+
+test('already-subscribed response rejects duplicates without any provider call', async () => {
+  const actual = await newsletter({ alreadySubscribed: true, audience: true, sender: true, email: '  SYNTHETIC@example.test  ' })
+  assertError(actual.result, 409, 'ALREADY_SUBSCRIBED')
+  assert.equal(actual.result.body.error.message, 'This email is already subscribed.')
+  assert.equal(actual.writes, 0)
+  assert.equal(actual.providers, 0)
+})
+
+test('parallel subscription claims permit only one sender and one reactivation', async () => {
+  let status = null
+  const store = { newsletterSubscription: {
+    createMany: async ({ data }) => { assert.equal(data[0].email, 'person@example.test'); if (status) return { count: 0 }; status = 'ACTIVE'; return { count: 1 } },
+    updateMany: async ({ where }) => { assert.equal(where.status, 'UNSUBSCRIBED'); if (status !== 'UNSUBSCRIBED') return { count: 0 }; status = 'ACTIVE'; return { count: 1 } },
+  } }
+  assert.equal((await Promise.all(Array.from({ length: 4 }, () => activateNewsletter(store, 'person@example.test')))).filter(Boolean).length, 1)
+  status = 'UNSUBSCRIBED'
+  assert.equal((await Promise.all(Array.from({ length: 4 }, () => activateNewsletter(store, 'person@example.test')))).filter(Boolean).length, 1)
 })
 
 test('newsletter confirmation rejection or exception reports already-saved outcome without replay', async () => {
@@ -356,6 +383,12 @@ test('newsletter client supports structured/legacy errors and safe malformed-res
     await assert.rejects(subscribeToNewsletter('draft@example.test'), expected)
     assert.equal(calls(), 1)
   }
+})
+
+test('newsletter client identifies duplicate subscriptions without replaying the request', async () => {
+  const calls = browser({ error: { code: 'ALREADY_SUBSCRIBED', message: 'This email is already subscribed.' } }, 409)
+  assert.deepEqual(await subscribeToNewsletter('person@example.test'), { emailSent: false, alreadySubscribed: true })
+  assert.equal(calls(), 1)
 })
 
 test('newsletter client rejects unconfirmed success and accepts existing 202 contract', async () => {

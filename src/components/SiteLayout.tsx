@@ -30,7 +30,7 @@ export function SiteLayout({
   const [loggingOut, setLoggingOut] = useState(false)
   const { content, identity } = storefront
   const { t } = useTranslation()
-  const [showStickyHeader, setShowStickyHeader] = useState(false)
+  const [showHeaderShadow, setShowHeaderShadow] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -38,7 +38,7 @@ export function SiteLayout({
   const headerActionsRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const onScroll = () => {
-      setShowStickyHeader(window.scrollY > 180)
+      setShowHeaderShadow(window.scrollY > 8)
       setShowBackToTop(window.scrollY > 600)
     }
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -85,7 +85,7 @@ export function SiteLayout({
   return (
     <div className="site-shell">
       <header
-        className={`${showStickyHeader ? 'site-header is-sticky' : 'site-header'}${isAuthenticated ? '' : ' guest-header'}`}
+        className={`site-header${showHeaderShadow ? ' has-scroll-shadow' : ''}${isAuthenticated ? '' : ' guest-header'}`}
       >
         <a
           className="brand"
@@ -97,6 +97,9 @@ export function SiteLayout({
           <span>{identity.businessName}</span>
         </a>
         <nav aria-label="Primary navigation">
+          <a href="/shops" onClick={navigate('/shops')} className={currentPath.startsWith('/shops') ? 'is-active' : ''}>Shops</a>
+          <a href="/seller" onClick={navigate('/seller')} className={currentPath === '/seller' ? 'is-active' : ''}>Sell with us</a>
+          {isAdmin && <a href="/admin/sellers" onClick={navigate('/admin/sellers')} className={currentPath === '/admin/sellers' ? 'is-active' : ''}>Sellers</a>}
           <a className={currentPath === '/' ? 'is-active' : ''} href="/" onClick={navigate('/')}>
             {content.ui.homeLabel}
           </a>
@@ -236,6 +239,7 @@ export function SiteLayout({
           <a href="/support" onClick={navigate('/support')}>
             Contact support
           </a>
+          <p>{storefront.contact.supportEmail}</p>
         </div>
         <div>
           <p className="footer-label">{content.footer.policiesLabel}</p>

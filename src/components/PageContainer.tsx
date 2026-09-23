@@ -5,11 +5,11 @@ export function PageContainer({ path, children }: { path: string; children: Reac
     path,
   )
     ? 'form'
-    : /^\/(help|support|support-requests|admin\/support|track-order|privacy|returns|refund-policy|terms|terms-and-conditions|shipping|cancellation|cookies)\/?$/.test(
+    : /^\/(seller|admin\/sellers|help|support|support-requests|admin\/support|track-order|privacy|returns|refund-policy|terms|terms-and-conditions|shipping|cancellation|cookies)\/?$/.test(
           path,
         )
       ? 'reading'
-      : /^\/(cart|orders|checkout|product)(\/|$)/.test(path)
+      : /^\/(shops|seller|admin\/fulfillment|admin\/seller-products|cart|orders|checkout|product)(\/|$)/.test(path)
         ? 'content'
         : 'wide'
   return (

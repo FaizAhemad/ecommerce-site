@@ -25,6 +25,7 @@ import { ConnectionStatus } from './components/ConnectionStatus'
 import { SiteLayout } from './components/SiteLayout'
 import { StorefrontRoute } from './router'
 import './App.css'
+import { SessionActivity } from './components/SessionActivity'
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false }
   static getDerivedStateFromError() {
@@ -245,6 +246,7 @@ function App() {
     <AppErrorBoundary>
       <NotificationProvider key={sessionGeneration()}>
         <ConnectionStatus />
+        {user && <SessionActivity key={`${user.id}:${user.role}`} />}
         <SiteLayout
           storefront={storefront}
           cartCount={(cart.data ?? []).reduce((sum, item) => sum + item.quantity, 0)}

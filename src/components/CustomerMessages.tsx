@@ -128,7 +128,7 @@ export function CustomerMessages() {
         <p>No messages recorded.</p>
       ) : (
         query.data.messages.map((message) => (
-          <article className="state-message" key={message.id}>
+          <article className="record-card" key={message.id}>
             <strong>{message.subject}</strong>
             <p>{message.recipientEmail}</p>
             <p>{message.body}</p>

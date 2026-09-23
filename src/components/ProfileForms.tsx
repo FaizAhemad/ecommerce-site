@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { emptyAddress, type AddressDraft, type ProfileData } from '../api/profile'
+import { FormDialog } from './FormDialog'
 
 type Save = (path: 'profile' | 'addresses', method: string, body: unknown) => Promise<boolean>
 export function ProfileForms({
@@ -12,6 +13,7 @@ export function ProfileForms({
   save: Save
 }) {
   const [name, setName] = useState(data.profile.name ?? '')
+  const [profileOpen, setProfileOpen] = useState(false)
   const [phone, setPhone] = useState(data.profile.phone ?? '')
   const [password, setPassword] = useState('')
   const [draft, setDraft] = useState<AddressDraft | null>(null)
@@ -19,7 +21,7 @@ export function ProfileForms({
   const [deleting, setDeleting] = useState<string | null>(null)
   const submitProfile = async (event: FormEvent) => {
     event.preventDefault()
-    if (await save('profile', 'PATCH', { name, phone, currentPassword: password })) setPassword('')
+    if (await save('profile', 'PATCH', { name, phone, currentPassword: password })) { setPassword(''); setProfileOpen(false) }
   }
   const submitAddress = async (event: FormEvent) => {
     event.preventDefault()
@@ -35,8 +37,9 @@ export function ProfileForms({
   }
   return (
     <>
+      <article className="record-card"><h2>Personal details</h2><p>{data.profile.name || 'Add your name'}</p><p>{data.profile.phone || 'No phone number saved'}</p><button className="secondary-button" disabled={pending} onClick={() => setProfileOpen(true)}>Edit personal details</button></article>
+      <FormDialog open={profileOpen} title="Personal details" busy={pending} onClose={() => { setPassword(''); setProfileOpen(false) }}>
       <form className="auth-form" onSubmit={submitProfile} aria-busy={pending}>
-        <h2>Personal details</h2>
         <label>
           Name
           <input
@@ -82,11 +85,12 @@ export function ProfileForms({
           {pending ? 'Please wait…' : 'Save personal details'}
         </button>
       </form>
+      </FormDialog>
       <section className="page-section" aria-labelledby="address-title">
         <h2 id="address-title">Delivery addresses</h2>
         {!data.addresses.length && <p>No addresses saved yet.</p>}
         {data.addresses.map((address) => (
-          <article className="page-section" key={address.id}>
+          <article className="record-card" key={address.id}>
             <h3>
               {address.label || address.name}
               {address.isDefault ? ' — Default' : ''}
@@ -176,8 +180,8 @@ export function ProfileForms({
             Add address
           </button>
         ) : (
+          <FormDialog open title={editing ? 'Edit address' : 'New address'} busy={pending} onClose={() => { setDraft(null); setEditing(null) }}>
           <form className="auth-form" onSubmit={submitAddress} aria-busy={pending}>
-            <h3>{editing ? 'Edit address' : 'New address'}</h3>
             {(
               [
                 ['label', 'Label (optional)', 50, 'off'],
@@ -237,6 +241,7 @@ export function ProfileForms({
               </button>
             </div>
           </form>
+          </FormDialog>
         )}
       </section>
     </>

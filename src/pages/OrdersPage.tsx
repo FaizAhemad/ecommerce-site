@@ -39,6 +39,7 @@ export function OrdersPage({ storefront, onNavigate }: Props) {
         )}
       </div>
       <PurchaseFeedback />
+      <a className="secondary-button" href="/orders/shipments" onClick={onNavigate('/orders/shipments')}>Shop shipments and returns</a>
       {history.isPending && (
         <p className="state-message" role="status">
           Loading your orders…

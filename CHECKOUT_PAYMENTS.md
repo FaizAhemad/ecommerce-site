@@ -1,5 +1,14 @@
 # Checkout and payment operations
 
+Marketplace gate, 2026-09-23: quote and order creation recheck approved ownership; only Gadgify products are financially enabled. External-shop carts cannot bypass this via legacy COD. Seller charge/commission/provider/refund decisions remain pending; no mixed-shop charges introduced. See MARKETPLACE_PURCHASING.md.
+
+
+E33 supersedes older statements that refund initiation is unavailable: full-INR admin refunds and provider reconciliation are coded. See REFUND_OPERATIONS.md for duplicate protection and deferred verification. Partial refunds and scheduled reconciliation remain pending.
+
+## E30 coupon integration
+
+Checkout can accept one explicitly active coupon. The server revalidates dates, minimum subtotal, fixed/percentage amount, cap, global/customer usage limits and approved before/after-tax treatment inside order creation. The quoted total must match submission, and usage is recorded in the same serializable transaction as the order. A recorded order consumes a use even if payment remains unpaid, is cancelled or refunded; this rule and tax treatment require owner approval. Concurrency, payment-provider totals and production behavior are unverified.
+
 Current offline scope is E23 in [PROJECT_STATUS.md](PROJECT_STATUS.md). Completion stays in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md); this document is the contract and owner acceptance guide.
 
 ## Configuration and calculation

@@ -1,10 +1,28 @@
 # White-label Commerce Platform
 
+Seller catalog projections and checkout restrictions are described in MARKETPLACE_PURCHASING.md. Apply/rehearse both marketplace migrations and regenerate Prisma before owner deployment; external seller purchasing remains disabled pending business/provider approval.
+
+
+Marketplace fulfillment source update: seller/admin/customer shop-order pages and a prepared migration are described in SELLER_FULFILLMENT.md. Migration and acceptance remain pending; marketplace sales/payouts are not enabled.
+
+
+Connected marketplace preparation pages now include seller products/order records, admin moderation and public shop showcases. See SELLER_WORKSPACE.md for source scope and pending validation. Marketplace checkout, seller fulfillment and settlements are not enabled.
+
+Seller application/review source is available at /seller and /admin/sellers; see SELLER_ONBOARDING.md. It is unverified and approval requires the prepared ownership migration. Product selling and settlements are not enabled.
+
+Marketplace foundation source is now prepared, including an unapplied migration. See [MARKETPLACE_MIGRATION.md](MARKETPLACE_MIGRATION.md) before rollout; seller onboarding/catalog/checkout are not enabled.
+
+Current roadmap priority: [Gadgify multi-vendor marketplace](MARKETPLACE_REQUIREMENTS.md). This is planned work, not an available seller platform. Track MP-01–MP-09 in APPLICATION_BACKLOG.md and implementation evidence in PROJECT_STATUS.md. Commission/payout rules are undecided.
+
+Current unverified E30 work includes coupon redemption, customer return requests, manual shipment tracking, order email-attempt history, private support attachments/conversations and basic route metadata. See APPLICATION_BACKLOG and PROJECT_STATUS before deployment; two new support migrations are prepared but not applied.
+
 Vite, React and TypeScript storefront with Node.js API handlers, Prisma/PostgreSQL, Vercel Blob, Resend and Razorpay integration code. The UI uses the light-only Ink and Citron theme. This is an application in development; remaining security and commerce work gates production readiness.
 
 Reviewed against the current workspace on 2026-09-12, including staged changes. Workspace implementation does not imply deployment.
 
 ## Documentation map
+
+Product SEO configuration, initial HTML, sitemap/robots behavior and deferred verification are documented in [SEO_OPERATIONS.md](SEO_OPERATIONS.md). E31 source is present; deployed indexing is not yet verified.
 
 | File | Purpose |
 | --- | --- |

@@ -1,5 +1,21 @@
 # Architecture, security and UI/UX audit
 
+2026-09-23 publication: shared add-to-cart controls expose unavailable purchase reasons, while server eligibility remains authoritative. Shop ownership is required across catalog/checkout and server SEO. Media responses are bounded rather than embedding base64 in product DTOs. Verification deferred; see MARKETPLACE_PURCHASING.md.
+
+
+2026-09-23 shop fulfillment uses shared drawers, private queries, synchronous mutation locks and versioned server transitions. Role/customer isolation and limited seller delivery DTOs are implemented in source; browser/mobile/concurrency verification remains pending. See SELLER_FULFILLMENT.md.
+
+
+Session update 2026-09-22: role-specific server idle/absolute expiry and activity-only renewal replace 30-day persistence. A persistent warning offers continuation; expired identity clears private UI through existing generation guards. No browser/device or regression execution evidence yet; see SESSION_SECURITY.md.
+
+UI priority 2026-09-22 supersedes the earlier functionality-first sequence. App.css is an ordered CSS entry point; feature groups retain original cascade order pending further cleanup. New dialogs use dedicated FormDialog.css; record cards no longer reuse the uppercase centered state-message presentation. Product/coupon/profile/address/refund editors use native modal drawers. Phone navigation and control spacing changes need rendered acceptance; none is claimed. See the UI-01–UI-09 backlog entries.
+
+E33 adds independent Payments loading/error handling and explicit full-refund approval with durable duplicate protection. Financial status remains provider-verified. Source implementation has no new test/build or rendered/mobile evidence; see REFUND_OPERATIONS.md.
+
+E31 uses the existing dispatcher to supply initial product metadata and escaped structured data without a second function or build-time database query. No private customer data enters SEO DTOs; errors/noindex and unavailable-product 404s are explicit. Filesystem/Vite modules precede rewrites. Read SEO_OPERATIONS.md; bundling, HMR, browser and crawler acceptance remain pending.
+
+E30 source extends the private data model and UI with coupon redemption, return requests, shipment tracking, notification history and support attachments/replies. Preserve account-scoped React Query keys, server ownership checks, serializable commerce writes, no automatic write replay and safe failure messages during verification. The new support migrations are unapplied and the E30 UI/security/device matrix has not been run.
+
 Reviewed: 2026-09-12. This is the consolidated source audit and target design standard for the current application. Implementation status stays in [PROJECT_STATUS.md](PROJECT_STATUS.md); [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) remains the only completion checklist. The standards below are requirements for remediation, not claims that the application already follows them.
 
 ## Outcome and scope

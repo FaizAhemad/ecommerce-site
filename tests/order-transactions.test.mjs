@@ -17,13 +17,14 @@ function storeFixture({
   failCreate = false,
   checkout = { enabled: true, shippingMinor: 25, taxBps: 1000 },
   country = 'IN',
+  ownership = { moderationStatus: 'APPROVED', shop: { id: 'gadgify-platform', name: 'Gadgify', slug: 'gadgify', isPlatform: true, status: 'APPROVED' } },
 } = {}) {
   let state = {
     products: {
-      p: { id: 'p', name: 'Test', priceMinor: 100, stock, isActive: true },
+      p: { id: 'p', name: 'Test', priceMinor: 100, stock, isActive: true, shopOwnership: ownership },
       ...(secondStock === undefined
         ? {}
-        : { q: { id: 'q', name: 'Second', priceMinor: 200, stock: secondStock, isActive: true } }),
+        : { q: { id: 'q', name: 'Second', priceMinor: 200, stock: secondStock, isActive: true, shopOwnership: ownership } }),
     },
     carts: { a: [{ productId: 'p', quantity: 1 }], b: [{ productId: 'p', quantity: 1 }] },
     orders: orderStatus
@@ -128,6 +129,20 @@ test('two buyers competing for the last item produce one order and nonnegative s
   assert.equal(fixture.state().products.p.stock, 0)
   assert.equal(fixture.state().orders.length, 1)
   assert.equal(fixture.state().carts.b.length, 1)
+})
+
+test('unapproved and external-shop checkout rejects without stock/order/cart changes', async () => {
+  for (const ownership of [null,
+    { moderationStatus: 'PENDING', shop: { status: 'APPROVED', isPlatform: true } },
+    { moderationStatus: 'APPROVED', shop: { status: 'SUSPENDED', isPlatform: true } },
+    { moderationStatus: 'APPROVED', shop: { status: 'APPROVED', isPlatform: false } },
+  ]) {
+    const fixture = storeFixture({ ownership })
+    await assert.rejects(createCartOrder(fixture.store, 'a', 'address-a'), { code: 'SHOP_UNAVAILABLE' })
+    assert.equal(fixture.state().products.p.stock, 1)
+    assert.equal(fixture.state().orders.length, 0)
+    assert.equal(fixture.state().carts.a.length, 1)
+  }
 })
 test('concurrent submissions of one cart cannot create duplicate orders', async () => {
   const fixture = storeFixture({ stock: 10 })

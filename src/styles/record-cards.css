@@ -1,0 +1,18 @@
+.record-card {
+  display: grid;
+  gap: 12px;
+  margin-block: 20px;
+  padding: clamp(16px, 3vw, 24px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--ink);
+  font: 15px/1.6 Arial, sans-serif;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.record-card :is(h3, h4, p) { margin: 0; }
+.record-card :is(h3, h4) { font-size: 18px; line-height: 1.35; }
+.record-card small { color: var(--muted); }
+.record-card .profile-actions { margin: 4px 0 0; }
+.record-card .profile-actions > * { max-width: 100%; white-space: normal; }

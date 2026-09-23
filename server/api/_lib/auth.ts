@@ -1,6 +1,7 @@
 import { createHash, randomBytes, scrypt as nodeScrypt, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
 import { db } from './db.js'
+import { sessionLimits, sessionDeadline } from './session-policy.js'
 import {
   requestId,
   sendError,
@@ -11,7 +12,6 @@ import {
 
 const scrypt = promisify(nodeScrypt)
 const SESSION_COOKIE = 'gadgify_session'
-const SESSION_DAYS = 30
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString('hex')
@@ -33,12 +33,14 @@ function hashToken(token: string) {
 
 export async function createSession(userId: string, response: VercelResponse) {
   const token = randomBytes(32).toString('hex')
-  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000)
+  const user = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { role: true } })
+  const limits = sessionLimits(user.role)
+  const expiresAt = new Date(Date.now() + limits.idleMs)
   await db.session.create({ data: { userId, tokenHash: hashToken(token), expiresAt } })
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
   response.setHeader?.(
     'Set-Cookie',
-    `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`,
+    `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${limits.absoluteMs / 1000}`,
   )
 }
 
@@ -53,15 +55,19 @@ export function sessionToken(request: VercelRequest) {
     ?.slice(SESSION_COOKIE.length + 1)
 }
 
-export async function currentUser(request: VercelRequest) {
+export async function currentSession(request: VercelRequest) {
   const token = sessionToken(request)
   if (!token) return null
   const session = await db.session.findUnique({
     where: { tokenHash: hashToken(token) },
     include: { user: true },
   })
-  if (!session || session.expiresAt <= new Date()) return null
-  return session.user
+  if (!session || sessionDeadline(session) <= Date.now()) return null
+  return session
+}
+
+export async function currentUser(request: VercelRequest) {
+  return (await currentSession(request))?.user ?? null
 }
 
 export async function requireUser(request: VercelRequest, response: VercelResponse) {

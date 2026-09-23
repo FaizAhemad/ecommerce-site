@@ -2,18 +2,77 @@
 
 The current page and route inventory is maintained in [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md). Any page or route change must update that inventory and the relevant status documentation in the same change.
 
-Reviewed against the current workspace on 2026-09-13. This is the single completion checklist for product requirements, security gates and UI work. Other documents describe scope and evidence; they must not maintain competing completion lists.
+Completion status reviewed against current source and recorded evidence on 2026-09-21. This is the single completion checklist for product requirements, security gates and UI work. Other documents describe scope and evidence; they must not maintain competing completion lists.
 
 Completion convention: `- [ ]` means pending, partial, blocked or awaiting required verification; `- [x] ✅` means the stated scope is implemented and verified, with evidence in [PROJECT_STATUS.md](PROJECT_STATUS.md). A code implementation or build alone does not complete a live integration. Preserve unverified work and business dependencies. Evidence IDs below refer to that status document.
 
 ## Current work: continuous functional backlog (E21 onward)
 
+## First priority: multi-vendor marketplace (2026-09-22)
+
+Owner prioritizes multiple shops selling through Gadgify. Detailed scope and unresolved decisions: [MARKETPLACE_REQUIREMENTS.md](MARKETPLACE_REQUIREMENTS.md).
+
+Owner-requested tracking update (2026-09-23): checked entries explicitly labelled **Coding done** below acknowledge the implemented source scope only. This is an exception to the general verified-completion convention above, not a claim of passing tests, applied migrations, live email delivery or production readiness. Remaining functionality and acceptance are tracked separately. Evidence and limitations: PROJECT_STATUS.md.
+
+- [x] ✅ MP-01a **Coding done:** shop/membership/product ownership and order-item snapshot models, access helpers and prepared migration/backfill. See MARKETPLACE_MIGRATION.md.
+- [ ] MP-01b Apply/rehearse migrations, regenerate Prisma and verify historical data preservation and ownership isolation.
+- [x] ✅ MP-02a **Coding done:** seller application/revision, admin approval/rejection/suspension/restoration, version guards and audit. See SELLER_ONBOARDING.md.
+- [ ] MP-02b Verify onboarding, seller isolation and device/production behavior after migration.
+- [x] ✅ MP-03a **Coding done:** seller product workspace, private uploads, storage inventory/previews and confirmed deletion of unreferenced media; saved/archived draft and catalog references are protected. See SELLER_WORKSPACE.md.
+- [ ] MP-03b Larger media support and concurrency/security/device/production verification.
+- [x] ✅ MP-04a **Coding done:** moderation/publication/withdrawal, shop showcase, seller identity, media checks, suspension/SEO filtering and server purchase eligibility. See MARKETPLACE_PURCHASING.md.
+- [ ] MP-04b Enable external-shop purchasing only after approved commercial rules and migration/runtime acceptance; it remains disabled.
+- [x] ✅ MP-05a **Coding done:** shop order grouping, scoped shipment updates, customer returns and seller/admin review, with prepared fulfillment migration. See SELLER_FULFILLMENT.md.
+- [ ] MP-05b Mixed-shop checkout/allocation, platform mixed-order handling, cancellations/refunds, remaining fulfillment notifications and runtime/device acceptance.
+- [ ] MP-06 Approved configurable fee rules and immutable item-level commission ledger.
+- [ ] MP-07 Approved payment arrangement, earnings, payouts and settlement reconciliation.
+- [x] ✅ MP-08a **Coding done:** order support conversations, escalation, admin resolution/audit and dispute email outbox with private staff routing and verified-customer notices.
+- [ ] MP-08b Seller policies, worker operation, verified email delivery, direct inbound email forwarding setup and isolation/device/production acceptance.
+- [ ] MP-09 Isolation/regression/migration/provider/mobile acceptance and controlled rollout.
+
+- [ ] Session security: role-based idle/absolute expiry, legacy-session rejection, activity renewal and warning coded on 2026-09-22. No migration. Deferred checks and owner multi-tab/device/production acceptance remain pending; see SESSION_SECURITY.md.
+
+## UI priority - numbered work (2026-09-22)
+
+UI remains in scope but follows the newly prioritized marketplace work above. Preserve existing API/security behavior. All entries remain unchecked until their stated scope and deferred device/interaction checks are complete.
+
+- [ ] UI-01 CSS organization: extracted App.css into nine ordered feature groups plus dedicated record-card/dialog styles; extraction preserved existing rule order. Further subdivision and legacy override cleanup remain.
+- [ ] UI-02 Visual foundation: shared spacing/radius tokens, readable controls, checkbox fixes and record cards implemented; page-wide color/contrast/spacing review remains.
+- [ ] UI-03 Shared dialog/drawer: native modal, focus restoration, inert background, scroll locking, pending dismissal guard and top-layer snackbar placement implemented; keyboard/mobile checks remain.
+- [ ] UI-04 Admin: product/category and coupon editors plus refund approval moved into drawers; navigation is horizontally scrollable on small screens. Remaining admin forms/tables and all states need review.
+- [ ] UI-05 Profile: personal details and address forms moved into drawers with record-card summaries. Deletion, keyboard, failed drafts and device review remain.
+- [ ] UI-06 Catalog/product/reviews: complete spacing, filters, cards, media, review editor and mobile interactions.
+- [ ] UI-07 Cart/checkout/orders: complete responsive summaries, controls, financial feedback and loading states.
+- [ ] UI-08 Support/account/information pages: review forms, conversations, recovery, help and policy readability. Keep primary login/checkout flows as pages.
+- [ ] UI-09 Navigation/loading/overlays and acceptance: complete phone-first review across every route/admin panel, then tablet/desktop. Tests/lint/format and live checks remain deferred under owner instructions.
+
+UI-09 source update: removed header geometry changes at the scroll threshold to address reported Support-page flicker. Stable sticky positioning and shadow-only scroll styling are implemented; rendered acceptance remains pending.
+
 Owner requests continuous implementation without per-item permission pauses; visual polish review follows functionality. Confirmed business: Gadgify household products, India/INR, primarily Maharashtra. Rewards/policies/AI provider/medicines still need decisions.
+
+## Coded, awaiting verification - E30/E31/E32
+
+- [ ] E33 full-refund initiation/reconciliation: explicit admin approval, durable duplicate guard, provider checks and pending/failure UI are coded. See REFUND_OPERATIONS.md. Deferred checks and owner provider/mobile acceptance remain pending; partial refunds and scheduled reconciliation remain separate.
+
+- [ ] E32 order notification retries: transactional jobs, bounded idempotent retries, admin processing and owner-run worker are coded. See NOTIFICATION_QUEUE.md. Verification, worker operations, other email flows and delivery events remain pending.
+
+These entries are not untouched tasks: their stated implementation is present. The checkbox tracks verified completion, including the remaining scope written on each line. Earlier verified implementation scopes are ticked below; owner acceptance remains separate. This review did not rerun tests or establish production acceptance.
+
+- [ ] E31 product SEO implementation is present: server product HTML metadata/structured data, active-product sitemap index/pages, robots responses, private-route headers and client navigation cleanup. `SEO_OPERATIONS.md` records configuration and checks. Tests and deployed crawler/preview/HMR acceptance remain pending; do not mark complete from source alone.
+
+- [ ] Coupon management and checkout redemption are coded: admin draft/active/archive workflow, explicit tax treatment, server-calculated discounts, dates, minimums, caps, limits and transactional usage records. Checks, business approval, concurrency and production acceptance remain pending.
+- [ ] Delivered-order return submission/status, admin shipment updates, tracking history and guarded order/shipment transitions are coded. Eligibility windows, carrier integration, collection, refund linkage and production acceptance remain pending.
+- [ ] Recorded/dispatched/delivered email attempts use verified account email, milestone deduplication and admin accepted/unconfirmed history. Durable retry, delivery events, localization and provider acceptance remain pending.
+- [ ] Private JPEG/PNG support attachments and paginated customer/admin conversations are coded. Migrations `20260920000000_support_attachments` and `20260920010000_support_replies` are prepared, not applied; scanning, documents, retention, reply emails and production acceptance remain pending.
+- [ ] E30 route metadata foundation is coded and extended by E31 product metadata, structured data and sitemap/robots handlers above. Remaining work here is configured-origin, crawler/social-preview, navigation and deployment verification; do not reimplement those handlers as missing features.
+- [ ] E30 verification is deferred by owner: no new test, lint, format, build, migration, browser, provider or production evidence is recorded. Keep E30 unchecked until its stated checks pass.
+
+## Earlier verified implementation scopes - E21 to E28
 
 - [x] ✅ E21 offline implementation: owned real Order Details, cart/address checkout preview, multi-rating and hex filters, safe route fallback, connectivity notices and footer placeholder removal. Checkpoint: 145 tests/build/types/format pass (PROJECT_STATUS E21/E22).
 - [x] ✅ E22 offline implementation: support ticket creation/tracking/admin statuses, owned cancellation, idempotent request IDs and conditional Resend notifications, with prepared migration. See PROJECT_STATUS for bounded evidence.
-- [ ] Owner applies support migration/configures SUPPORT_EMAIL and validates support/customer receipt/privacy/device behavior. Attachments, durable retries, threaded replies/status notifications remain incomplete.
-- [ ] Finish payment initiation/reconciliation/checkout submission, charges, refunds, business rules and remaining roadmap; never mark provider acceptance complete from offline checks.
+- [ ] Owner applies support migrations/configures SUPPORT_EMAIL and validates support/customer receipt/privacy/device behavior. E30 image attachments and threaded replies are coded but unverified; durable retries and reply/status email notifications remain unimplemented.
+- [ ] Complete remaining payment/refund scope and owner acceptance. E23 checkout and E25 reconciliation have bounded evidence below; E33 full-refund initiation is coded but unverified. Partial refunds, scheduled reconciliation and approved business rules remain open.
 - [x] ✅ E23 bounded offline implementation: configured checkout quote/submission, atomic UUID retry protection, admin charge controls, customer Razorpay controls, strict capture matching and original-body webhook handling. 157 synthetic tests pass; see PROJECT_STATUS E23 and CHECKOUT_PAYMENTS.md.
 - [ ] E23 owner acceptance: approve charges/policies, validate provider capture and Vercel raw webhooks, stock/retry concurrency and mobile behavior. Refunds, reconciliation jobs and remaining commerce rules are still pending.
 - [x] ✅ E24 bounded offline implementation: connected admin message composition/history, verified-recipient validation, saved-before-send records and duplicate-ID protection. 161 synthetic tests pass; see PROJECT_STATUS E24.
@@ -21,7 +80,7 @@ Owner requests continuous implementation without per-item permission pauses; vis
 - [x] ✅ E25 bounded offline refund integrity: replace manual refund status mutation with provider-backed full-refund reconciliation and reject manual REFUNDED edits through order/return controls. 164 synthetic tests pass; see PROJECT_STATUS E25.
 - [ ] E25 owner acceptance and remaining refunds: verify provider full/partial/failed outcomes, audit legacy manually-refunded records, implement approved refund initiation/eligibility, partial refunds and durable audit/reconciliation. Verification does not issue refunds or establish bank settlement.
 - [x] ✅ E26 bounded offline implementation: admin return history and guarded explicit review decisions, with owner/order consistency checks and no financial/stock effects. Fixed independent admin panel visibility; 169 tests pass (PROJECT_STATUS E26).
-- [ ] E26 customer return creation, approved eligibility/policy, full history/audit, fulfillment linkage and owner browser/device acceptance remain pending.
+- [ ] E26 remaining return scope: E30 customer creation/status and manual shipment integration are coded but unverified. Approved eligibility/policy, full history/audit, collection/refund linkage and owner browser/device acceptance remain pending.
 - [x] ✅ E27 bounded offline implementation: public Help page/navigation and explicit five-step route tour with previous/next/exit controls, without storage or API writes. 171 tests pass (PROJECT_STATUS E27).
 - [ ] E27 owner keyboard/focus/phone acceptance and full English/Hindi/Marathi help/tour localization remain pending.
 - [x] ✅ E28 bounded offline implementation: private first-purchase feedback in Orders/paid Details and admin Feedback, with owner-derived order, one-response constraint, retry reconciliation and quotas. 176 tests pass (PROJECT_STATUS E28).
@@ -40,7 +99,7 @@ Owner requests continuous implementation without per-item permission pauses; vis
 ## Previous task: email verification (E18)
 
 - [x] ✅ Implement verification page, account-email status, session-owned resend with IP/account quotas, secure signup links and duplicate/pending/error handling. All 120 offline tests and offline build/types pass; see PROJECT_STATUS E18 for scope.
-- [ ] Owner production acceptance: signup and resend delivery, expired/used links, 429s, status refresh, existing login and Android/iOS interaction/accessibility. Full profile/email-change/mobile verification and durable notifications remain pending.
+- [ ] Owner production acceptance: signup and resend delivery, expired/used links, 429s, status refresh, existing login and Android/iOS interaction/accessibility. E19 common profile scope is verified separately; email changes, mobile verification and durable notifications remain pending.
 
 ## Previous task: password recovery and token claims (E16)
 
@@ -182,6 +241,8 @@ Each item needs an owner/priority, implementation notes, API/data changes, secur
 
 
 ## Newsletter partial-success repair - E17
+
+- [ ] Duplicate-subscription fix (2026-09-23): atomic creation/reactivation elects one provider sender; active subscribers receive 409 ALREADY_SUBSCRIBED with inline/snackbar error and disabled button. Regression cases updated; execution and owner production acceptance pending.
 
 - [x] ✅ Saved-subscription confirmation failures reconcile to Subscribed with informational feedback and no replay; privacy-safe failure diagnostics and 111 offline tests verify the bounded behavior (PROJECT_STATUS E17).
 - [x] ✅ Owner reports newsletter working on 2026-09-14 (PROJECT_STATUS E17 owner report). Exact provider configuration fix and independent delivery/device evidence were not supplied; this does not verify every notification flow.

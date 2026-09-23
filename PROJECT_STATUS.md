@@ -1,10 +1,102 @@
 # Project status
 
+## Owner-requested coding completion marks — 2026-09-23
+
+Split marketplace entries in APPLICATION_BACKLOG.md into checked coding scopes MP-01a/02a/03a/04a/05a/08a and separate unchecked remaining work/acceptance entries. The owner explicitly requested marking the implemented work done. These marks acknowledge source implementation described in the dated entries below; they do not establish verified feature completion. No additional code, tests, migration, provider call or deployment occurred in this tracking update. MP-06, MP-07, MP-09 and the remaining b-scopes stay pending.
+
+## Newsletter duplicate prevention — 2026-09-23
+
+Replaced unconditional upsert with unique create/conditional UNSUBSCRIBED reactivation before provider calls. Only the winning activation sends audience/welcome requests; active duplicates return 409 ALREADY_SUBSCRIBED. Home shows “This email is already subscribed.” inline and as an error snackbar, retains the entered address and disables submission. Email normalization and unique constraint cover case/whitespace and concurrent requests. Local subscription is authoritative: provider failures after activation retain the saved subscription and use existing partial-success reconciliation; repeat subscribe does not retry provider synchronization. Corrected welcome branding to Gadgify. Regression cases authored/updated, not executed; no env inspection, provider/database calls or deployment.
+
+
+## Seller media storage management — 2026-09-23
+
+Added metadata-only usage inventory and a seller workspace drawer with on-demand previews and confirmed deletion. Server rechecks approved shop membership and saved/archived draft plus catalog-image/video references in a serializable transaction; timestamp-conditional deletion protects stale records. Delete actions are rate-limited and session-scoped; successful removal clears preview/upload caches. Existing 100-file/1 MB limits remain. Regression cases authored, not executed. No env reads, migration, database/provider, browser/device, test/lint/build or deployment checks performed. No new migration; existing marketplace schema prerequisites remain. Full documentation deferred.
+
+
+## Dispute notification outbox — 2026-09-23
+
+Dispute writes now enqueue version-bound notification jobs in their transaction, then attempt sending after commit. Non-admin actions notify private SUPPORT_EMAIL; seller/admin actions notify the verified order customer. Customer ownership/email is rechecked on each attempt. Staff destination is frozen on first attempt and configuration changes block replay. Existing bounded queue/idempotency/lease behavior is reused; Admin Notifications and worker support the new kinds without exposing recipients or bodies. Generic emails omit conversation/customer address content. Tests authored but not executed; no env inspection, provider calls, migrations or deployment performed. Worker scheduling and delivery/device acceptance remain pending; full documentation remains deferred.
+
+
+## Shop support and private email routing — 2026-09-23
+
+Added order-scoped support conversations to existing fulfillment APIs/drawers: UUID author/content binding, version guards, bounded messages, escalation, admin-only resolution, selected public roles, list filtering and private/no-store responses. Reserved dispute records cannot be accessed through generic Settings; added sanitized audit events and normalization for older seller audit shapes. Public support address now appears on Support/footer; existing support form uses server-only SUPPORT_EMAIL. Direct incoming mail requires provider forwarding and is not intercepted by the website. Dispute conversations are in-app, not emailed automatically. Regression cases authored, not run; no env reads, migrations, live calls or deployment. Full documentation deferred by owner; all verification remains pending.
+
+
+## Seller product publication and purchase safeguards — 2026-09-23
+
+Added transactional publication/withdrawal, shop-namespaced Product ownership, reapproval stock deltas, public seller/availability DTOs, catalog links, approval-checked binary media, sitemap/SEO filtering and server cart/quote/order eligibility. Legacy admin editing cannot bypass moderation. External-shop purchasing remains disabled pending commercial decisions; this is not completed mixed-shop checkout. Requires both marketplace migrations and regenerated Prisma types before rollout. Authored policy/rollback regression cases and test:marketplace; no tests/lint/build/format, migrations, provider or browser checks run. See MARKETPLACE_PURCHASING.md.
+
+
+## Shop fulfillment implementation — 2026-09-23
+
+Added SellerOrder grouping/events/returns, prepared backfill and compatibility triggers, scoped seller/admin/customer APIs and shared shipment/return drawers. Gadgify-only legacy flows remain separate; financial writes and mixed-shop sales are not enabled. Transition tests authored, not run. No migration, Prisma generation, tests/lint/build, live or device checks executed. See SELLER_FULFILLMENT.md for rollout, gaps and owner acceptance; MP-05 remains pending.
+
+
 Reviewed: 2026-09-13. This describes the current workspace, including staged implementation. It does not certify the deployed revision or production readiness.
 
 [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) is the only completion checklist. A checked item needs implementation and relevant verification evidence. A build alone does not establish live behavior. Earlier snapshots are preserved in [historical status](docs/history/PROJECT_STATUS_BEFORE_SYNC.md); contradictions there are superseded by this document.
 
 ## Verification evidence
+
+## Connected marketplace pages - 2026-09-23
+
+Added seller product workspace, private media, admin product moderation, snapshot-scoped order reads and approved public shop directory/showcases, with shared navigation and drawer forms. Drafts are isolated reserved records and never enter Product/checkout. Public media checks approved shop/content/reference; edits reset moderation and remove showcase visibility. Added quota/storage bounds, audit and synthetic validation/invariant cases. No tests/lint/build, migration, browser/device, live provider/database or deployment checks were run. SELLER_WORKSPACE.md records remaining financial, fulfillment, media operations and rollout gates; marketplace is not complete.
+
+## MP-02 seller onboarding - 2026-09-22
+
+Added /seller and /admin/sellers, private application APIs in the sole dispatcher, verified-email submission, selected account-owned status and paginated admin review. Approval creates shop/membership transactionally, suspension revokes access, decisions require versions/reasons and write audit records. Reserved application storage is hidden from Settings; seller API requests use private session guards and submission quotas. Regression cases authored but not run. No migration, live check, provider call or deployment performed. Seller catalog/publication/payout capabilities remain disabled; SELLER_ONBOARDING.md records acceptance gaps.
+
+## MP-01 ownership foundation - 2026-09-22
+
+Prepared Shop, ShopMembership, ShopProduct and ShopOrderItem relations and transactional migration/backfill to Gadgify's platform shop. Compatibility triggers assign future platform product ownership and snapshot new order-item shops. Existing scalar commerce fields and User.role are unchanged. Added fail-closed parameterized approved-membership/product-scope helpers and synthetic access cases. No seller endpoint/UI is exposed; existing public/checkout queries are not marketplace-ready. No migration, Prisma generation, test/lint/build or live checks were executed. MARKETPLACE_MIGRATION.md records rollout, preservation and recovery requirements. MP-01 remains unverified, not completed.
+
+## Marketplace priority decision - 2026-09-22
+
+Owner approved multi-vendor marketplace requirements as first priority, superseding UI-first and separate-store-only planning. Added MARKETPLACE_REQUIREMENTS.md and MP-01–MP-09 to the sole backlog. Shop ownership/onboarding precedes financial features; fee rules, provider arrangements and seller responsibilities remain undecided. Documentation only: no marketplace routes, roles, schema, charges or payouts implemented and no checks/deployments executed.
+
+## Session expiry - 2026-09-22
+
+Replaced 30-day sessions with customer 30-minute idle/24-hour absolute and admin 15-minute idle/8-hour absolute budgets. Current-user validation rejects expired and legacy overlong sessions. Existing expiresAt supports idle expiry without migration. CSRF-protected rate-limited activity POST renews live sessions; trusted browser interaction drives renewal, not background reads. Added warning/continuation and private-UI clearing via existing expiry handling. Synthetic policy cases authored but not run. No environment inspection, migration, live call or deployment occurred; SESSION_SECURITY.md records acceptance gaps.
+
+## Header scroll stability - 2026-09-22
+
+Removed the scroll-triggered position/min-height/padding change from SiteLayout's header. The header stays sticky and retains its responsive dimensions; scrolling now changes only a shadow. This removes the geometry-changing 180px threshold that could cause scroll anchoring feedback/flicker. Source review only; owner Support-page/mobile scrolling acceptance and deferred checks remain pending.
+
+## Local API failure diagnosis - 2026-09-22
+
+Owner reports products/categories 503 and generic session boundary errors under vercel dev. Added allowlisted Prisma error code/category logging to the existing boundary and product/category catch blocks; raw messages, stacks, metadata and connection details remain excluded. These diagnostics do not fix or establish the underlying cause. No environment file, live database or server was accessed; waiting for classified owner logs. Verification commands remain deferred.
+
+## UI priority implementation - 2026-09-22
+
+UI-01 through UI-05 started. App.css now imports extracted CSS groups in original order; the extraction script compared concatenated output to the original before applying visual edits. Dedicated FormDialog and record-card styles accompany shared tokens and more readable form controls. Product/category, coupon, profile/address and refund forms now use native modal drawers, with scroll locking/focus restoration and pending guards. NotificationProvider portals feedback into the active dialog so errors remain above its backdrop. Admin small-screen navigation scrolls horizontally. No test/lint/format/build, browser/device or production check was run. Source changes are not verified UI completion; numbered remaining scope lives only in APPLICATION_BACKLOG.md.
+
+## Full-refund initiation - E33 - 2026-09-21
+
+Added full-INR refund initiation with provider-fetched capture/amount checks, reserved durable claims and no financial replay. Payments uses an independent private query and confirmation form with preserved failure drafts. Separate provider verification reconciles full refunds and known refund pending/failed states. Synthetic duplicate/timeout/mismatch cases were added but not run. No environment inspection, migration, real refund or deployment occurred. Tests/types/build and owner provider/mobile acceptance remain pending; see REFUND_OPERATIONS.md.
+
+## Order notification retries - E32 - 2026-09-21
+
+New order/shipment transactions persist versioned private jobs. Compare-and-set leases, stable provider keys/payloads, recipient checks, bounded retries and legacy exclusion are implemented. Admin Notifications shows selected queue status and guarded processing; an owner-run worker is provided. No migration, provider call, deployment or deferred test/lint/build command was run. See NOTIFICATION_QUEUE.md for remaining scope. This is not a verified completion checkpoint.
+
+## Backlog completion audit - 2026-09-21
+
+Reviewed the first backlog section through email verification against current source and the existing E18-E29 verification records. Previously verified implementation scopes were already checked. E30/E31 source entry points are present, but no newer test/build, applied-migration or production evidence was supplied; their completion boxes remain pending. Corrected stale claims about missing customer return creation, support attachments/conversations, payment initiation and product SEO. This was a source/documentation review, not execution of deferred checks. The latest historical offline checkpoint is E29; earlier counts do not validate the current working tree.
+
+## Product SEO implementation - E31 - 2026-09-21
+
+Added `server/api/seo.ts` and pure metadata helpers, single-dispatcher routes for product HTML/sitemap/robots, product description/stock/minor-price DTO fields, client metadata updates and SEO regression cases. Production HTML uses the bundled built shell; active product data is read at request time. Published English policies/public routes and active products populate paginated sitemaps. VITE_SITE_URL is required for production canonical/indexing configuration. No migration or additional function is added. See SEO_OPERATIONS.md for exact behavior and limitations.
+
+No E31 test, lint, formatting, build, local/live API, deployment or crawler validation has been run under the owner's deferral. Source is implemented, verification/production readiness is pending.
+
+## Continuous backlog implementation - E30 - 2026-09-21
+
+The current working tree adds coupon administration/redemption, customer return creation, shipment management/tracking, order milestone email attempts, private support attachments/conversations, admin notification history and basic client-managed SEO metadata. These are source changes without a new verification checkpoint.
+
+Coupon usage is recorded with order creation in the serializable checkout transaction. Shipment events and matching order status changes are transactional. Return submission is owner-scoped and limited to delivered orders. Notification attempts use verified account email and milestone keys; ACCEPTED means provider acceptance and UNCONFIRMED is not replayed automatically. Support attachments/replies use owner/admin authorization and prepared migrations. Client metadata marks unknown/account/admin routes noindex and emits canonical URLs only from a valid configured `VITE_SITE_URL`.
+
+No E30 tests, lint, formatting, offline build, migration execution, browser/device checks, provider calls or production checks have run under the owner's deferral. Support attachment/reply migrations are unapplied. Coupon rules, carrier integration, return eligibility, durable notification retries, malware scanning/retention and complete product SEO remain pending. E30 is not a completed backlog checkpoint.
 
 Latest checkpoint: E28 (2026-09-14) adds first-purchase feedback. E27 adds Help/tour, E26 connects return review, E25 replaces the manual refund shortcut, E24 supersedes disconnected-message claims, and E23 supersedes placeholder/payment claims. Historical evidence counts describe their own revisions.
 
@@ -174,7 +266,7 @@ Verification: npm run build passed (Prisma generation, frontend/API types and pr
 | Product admin | Create/edit, strict category select/add-category, price/stock/colors/media, archive, immediate local list update, reset after success | Authenticated save/edit/upload verification pending; category edits/deletion are not supplied. |
 | Other admin | Reads for analytics/products/orders/payments/returns/customers/settings; some update handlers | Messages UI has no submission handler; settings UI is informational; audit endpoint returns an empty list. Admin refund action changes database status without issuing a provider refund. |
 | Orders/checkout | Server order create/list/detail/cancel and Razorpay create/verify/webhook handlers exist | Customer Orders is an empty shell; Order Details uses catalog products and hardcoded delivered/paid information; Checkout uses placeholder totals and submits nothing. E11 validates address ownership; E13 adds stock/cancellation transaction guards; live concurrency acceptance, money/idempotency and raw-webhook handling remain. |
-| Tracking/support | Authenticated shipment lookup API and tracking query; Resend helper and admin messaging endpoint | Tracking accepts owned order number or internal ID and handles pending/errors. Support uses mailto/tel, with no ticket form/API/tracking. Customer receipt emails and attachments are pending. |
+| Tracking/support | Authenticated shipment lookup, support tickets, E30 manual tracking, private attachments and conversations | E30 source supersedes this older baseline; migrations, carrier/provider behavior, customer receipt and production acceptance remain pending. |
 | Newsletter/email | Newsletter persistence and optional Resend audience/contact/confirmation requests; auth email/SMS helpers | Provider delivery/retry verification missing. Newsletter still has Field & Form branding and a relative email link. Errors are structured; E17 reconciles saved subscriptions with failed confirmation. No durable notification worker. |
 | Policies/config/localization | Policy placeholder pages; local business config; English/Hindi/Marathi resources; rate-limit messages translated | Full CMS, versioned policy models/consent, business-approved copy and full UI/email localization pending. |
 | UX/navigation | Orders link for authenticated users; Admin link for admin state or current /admin route; light-only theme; five-second snackbars | Admin link now requires verified ADMIN role; responsive/browser verification pending. Rating radios, CSS-only filter swatches, placeholder phone, missing routes and other backlog UI work remain. |
@@ -257,7 +349,7 @@ E21: Order Details uses a private owned query and real item quantities/prices/to
 
 Rating filters now support multiple checkbox bands with server validation, retaining legacy minRating callers. Color checkboxes show database hex/swatches when available, never an invented hex; broader facet completeness remains pending. Unknown admin children resolve to /admin; other unknown routes get an explicit not-found page. Invalid encoded IDs no longer crash decoding. Global browser offline status and online notices cover ready/loading/error shells, with no automatic write replay; this is connectivity feedback, not a service-worker offline cache. Footer placeholder phone/mailto destination removed in favor of support navigation.
 
-E22: /support creates authenticated tickets, /support-requests lists the owner's tickets, /admin/support lets admins record in-progress/resolved/cancelled status and reasons. Customer cancellation is limited to open owned requests. Server role guards cannot be changed by query flags. Ticket creation uses a stable client UUID, parameterized SQL, unique insert and owner check to avoid duplicate records/emails on explicit retries; changed duplicate drafts are rejected. Saved tickets survive mail failure. SUPPORT_EMAIL is server-only; confirmation sends only to a verified stored account email. No provider/user payloads are logged. Ticket attachments, threaded replies, durable mail retries and automatic status-change emails are not implemented.
+E22: /support creates authenticated tickets, /support-requests lists the owner's tickets, /admin/support lets admins record in-progress/resolved/cancelled status and reasons. Customer cancellation is limited to open owned requests. Server role guards cannot be changed by query flags. Ticket creation uses a stable client UUID, parameterized SQL, unique insert and owner check to avoid duplicate records/emails on explicit retries; changed duplicate drafts are rejected. Saved tickets survive mail failure. SUPPORT_EMAIL is server-only; confirmation sends only to a verified stored account email. No provider/user payloads are logged. E30 later adds unverified attachment/thread source; durable mail retries and automatic reply/status-change emails remain unimplemented.
 
 Migration 20260914000000_support_tickets is prepared but NOT applied. Support uses parameterized SQL so offline builds do not need regenerated local Prisma types. Missing table returns safe 503. Owner must apply migration and set SUPPORT_EMAIL with existing Resend settings before production support acceptance. No .env inspection, provider call, live DB/API/browser test, migration application or deployment was performed.
 

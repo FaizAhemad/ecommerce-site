@@ -7,6 +7,15 @@ export type Counter = { count: number; retryAfter: number }
 export type Consume = (key: string, limit: number, seconds: number) => Promise<Counter>
 
 export function rateLimitRule(path: string, method = 'GET'): Rule | null {
+  if (path === 'seller/media' && method === 'DELETE') return { scope: 'seller-media-delete', seconds: 60, ip: 100, user: 20 }
+  if (['seller/fulfillment', 'orders/fulfillment', 'admin/fulfillment'].includes(path) && method === 'POST')
+    return { scope: 'shop-order-write', seconds: 60, ip: 100, user: 20 }
+  if (path === 'seller/media' && method === 'POST') return { scope: 'seller-media', seconds: 600, ip: 100, user: 30 }
+  if (path === 'seller/catalog' && method === 'POST') return { scope: 'seller-catalog', seconds: 60, ip: 100, user: 30 }
+  if (path === 'seller/application' && method === 'POST')
+    return { scope: 'seller-application', seconds: 600, ip: 20, user: 5 }
+  if (path === 'auth/session-activity' && method === 'POST')
+    return { scope: 'session-activity', seconds: 60, ip: 120, user: 30 }
   if (
     method === 'OPTIONS' ||
     method === 'HEAD' ||
@@ -26,6 +35,7 @@ export function rateLimitRule(path: string, method = 'GET'): Rule | null {
   }
   if (method === 'GET') return null
   if (path === 'feedback') return { scope: 'feedback', seconds: 600, ip: 20, user: 5 }
+  if (path === 'returns') return { scope: 'return-request', seconds: 600, ip: 30, user: 10 }
   if (path === 'profile' || path === 'addresses')
     return { scope: 'profile-write', seconds: 60, ip: 60, user: 20 }
   if (path === 'admin/upload' || /^products\/[^/]+\/review-upload$/.test(path))

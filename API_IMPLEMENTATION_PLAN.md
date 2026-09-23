@@ -1,5 +1,37 @@
 # API implementation and remaining plan
 
+POST newsletter/subscribe now returns 409 ALREADY_SUBSCRIBED for active duplicates. Unique creation/conditional reactivation elects a single provider sender. Provider failures after local activation use saved-subscription partial-success semantics; no automatic replay. No migration or environment change; deferred verification remains pending.
+
+
+Seller media now supports shop-scoped GET inventory and DELETE with id/expectedUpdatedAt. Metadata excludes base64; removal checks saved draft and published projection references and uses conditional deletion inside the existing serializable transaction. DELETE is CSRF-protected and separately rate-limited. No additional dispatcher/function or migration.
+
+
+Dispute POST writes atomically queue notification jobs; post-commit provider failures do not turn saved conversations into failed writes. Existing admin notification processing and worker handle dispute kinds using server-only SUPPORT_EMAIL plus existing Resend settings. No new endpoint/function/migration; scheduled processing and delivery acceptance remain pending.
+
+
+MP-08: existing fulfillment GET/POST supports support-open/reply/escalate/resolve under the same order authorization. supportOnly=1 filters orders with conversations. Reserved shop-dispute records use serializable conditional writes and UUID payload binding. Explicit per-account write quotas apply. No new serverless function or new migration for dispute storage; fulfillment schema prerequisites still apply.
+
+
+Catalog publication update: existing product APIs expose selected seller/purchase fields and enforce approved shop ownership. Cart/checkout/order APIs reject unavailable or financially disabled shops. shops?raw=1 returns signature-validated approved media bytes through the sole dispatcher. No new function/environment variable. See MARKETPLACE_PURCHASING.md.
+
+
+Shop fulfillment APIs (2026-09-23): GET/POST seller/fulfillment, admin/fulfillment and orders/fulfillment are registered in the single dispatcher. Membership/customer/admin scoping, selected DTOs and serializable version guards are implemented. New schema migration required; runtime acceptance pending. See SELLER_FULFILLMENT.md.
+
+
+Marketplace page batch adds seller/catalog GET/POST, seller/media GET/POST, seller/orders GET, admin/seller-products GET/POST and shops GET through the sole dispatcher. Membership/version/ownership guards apply to private operations; public showcase exposes only approved selected content. Drafts cannot become live Product records. SELLER_WORKSPACE.md records unverified behavior and remaining scope.
+
+MP-02: seller/application GET/POST and admin/sellers GET/PATCH use the sole dispatcher. Session-owned verified-email applications, versioned transactional decisions, membership changes and audit are implemented. No seller catalog or payout API is enabled. See SELLER_ONBOARDING.md.
+
+MP-01 adds internal approvedShop/ownedShopProduct helpers in server/api/_lib/shop-access.ts. Session-derived user identity, active membership, approved non-platform shop and product ownership are checked with parameterized queries. No seller route is registered yet. Future mutations must recheck scope transactionally; generic admin APIs are not seller APIs. See MARKETPLACE_MIGRATION.md.
+
+Session policy: GET auth/me adds expiry/server-time metadata; CSRF-protected POST auth/session-activity renews only live sessions with dedicated quotas. currentUser enforces idle and absolute expiry across APIs. No new function/table; see SESSION_SECURITY.md.
+
+E33 extends admin/payments PATCH with initiate-refund (confirmed amount/reason) alongside reconcile-refund. GET returns selected latest-100 payment/status fields. Reserved refund-attempt records prevent repeat financial writes; no new function/migration. See REFUND_OPERATIONS.md.
+
+E31 adds `seo` through the same dispatcher for product HTML and sitemap/robots responses. Vercel preserves filesystem/Vite assets before SEO routes and bundles the HTML template. `VITE_SITE_URL` must be an approved HTTPS production origin at build/runtime; public SEO uses selected active-product fields only. See SEO_OPERATIONS.md for pending validation.
+
+E30 adds owned return submission/status, private support attachments/replies, coupon lifecycle/redemption, manual shipment events and admin notification-attempt history through the existing single dispatcher. The support attachment/reply migrations are prepared and unapplied. All E30 source remains unverified.
+
 Reviewed: 2026-09-12. This describes current files and known gaps. [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) owns completion; [PROJECT_STATUS.md](PROJECT_STATUS.md) owns verification evidence.
 
 ## Current layout

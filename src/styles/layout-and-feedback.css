@@ -1,0 +1,234 @@
+.site-shell {
+  --page-gutter: 48px;
+  --section-space: 48px;
+}
+
+.site-shell .site-header,
+.site-shell .site-footer {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+.page-container {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  min-width: 0;
+}
+.page-container[data-width='content'] {
+  max-width: 1120px;
+}
+.page-container[data-width='reading'] {
+  max-width: 760px;
+}
+.page-container[data-width='form'] {
+  max-width: 560px;
+}
+.site-shell .page-container > :is(section, .page-section) {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+  padding-block: var(--section-space);
+}
+@media (min-width: 761px) and (max-width: 1199px) {
+  .site-shell {
+    --page-gutter: 32px;
+  }
+}
+.loading-spinner {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--line);
+  border-top-color: var(--ink);
+  border-radius: 50%;
+  animation: loading-spin 0.8s linear infinite;
+}
+@keyframes loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.detail-section {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@media (max-width: 760px) {
+  .detail-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+.auth-card {
+  max-width: 556px;
+  margin-inline: auto;
+}
+.notification-region {
+  position: fixed;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  width: min(520px, calc(100% - 40px));
+}
+.error-snackbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 20px;
+  border-radius: 6px;
+  background: #28313b;
+  color: #fffdf8;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  font:
+    14px/1.5 Arial,
+    sans-serif;
+}
+.error-snackbar p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.error-snackbar button {
+  flex-shrink: 0;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: #c7d866;
+  font: inherit;
+  cursor: pointer;
+}
+.error-snackbar button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+.notification-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.snackbar-error {
+  border-left: 4px solid #ef7582;
+}
+.snackbar-success {
+  border-left: 4px solid #c7d866;
+}
+.snackbar-info {
+  border-left: 4px solid #8bbde5;
+}
+.admin-existing-media > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.admin-existing-media img,
+.admin-existing-media video {
+  width: 120px;
+  height: 100px;
+  object-fit: contain;
+  background: var(--surface);
+}
+.admin-existing-media p {
+  font:
+    12px/1.5 Arial,
+    sans-serif;
+  color: var(--muted);
+}
+.category-manager {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.category-manager label {
+  color: var(--muted);
+  font:
+    11px Arial,
+    sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.category-manager > div {
+  display: flex;
+  gap: 10px;
+}
+.category-manager input {
+  flex: 1;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 0 11px;
+  font:
+    13px Arial,
+    sans-serif;
+}
+.category-manager button {
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .category-manager > div {
+    display: grid;
+  }
+  .category-manager button {
+    width: 100%;
+  }
+}
+.add-button:disabled,
+.primary-button:disabled,
+.wishlist-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.wishlist-button[aria-busy='true'] {
+  animation: loading-pulse 1s ease-in-out infinite;
+}
+.product-info > div:first-child {
+  min-width: 0;
+}
+.product-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.product-card-actions .wishlist-button {
+  position: static;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+.product-card-actions strong {
+  margin-top: 0;
+}
+.product-card-actions .wishlist-button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .product-card-actions {
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 760px) {
+  .site-shell {
+    --page-gutter: clamp(16px, 4.5vw, 24px);
+    --section-space: 32px;
+  }
+}

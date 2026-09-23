@@ -1,20 +1,56 @@
 # Page and route inventory
 
+2026-09-23 home newsletter: duplicate active email receives a persistent inline “This email is already subscribed.” error plus existing five-second snackbar, retains the email and disables resubmission. Server rejects repeat provider work across requests. Browser/mobile acceptance pending.
+
+
+2026-09-23: /seller/products adds Manage media storage, showing upload count/bytes, image/video preview, attached/unused status and confirmation before deletion. Shared drawer/pending guards and dedicated responsive CSS are implemented; keyboard, mobile and error-state acceptance remain pending.
+
+
+2026-09-23: Admin Notifications includes dispute jobs and a missing-private-support-configuration notice without exposing the inbox. Order support drawers retain saved-conversation semantics independently of provider failures. Rendered/device verification is deferred.
+
+
+2026-09-23: /seller/orders, /orders/shipments and /admin/fulfillment now include support conversation filters and order-specific messages/escalation; only admins resolve. /support and footer show the public configured support contact while directing customers to the form. No mailto redirect to private recipients. Keyboard/mobile/auth checks remain pending.
+
+
+2026-09-23 publication: /products and /product/:id display seller identity and purchase availability; /shops/:slug links published product details. Seller edits withdraw catalog visibility until approval. Admin seller approval now publishes catalog projections; existing product editor remains for Gadgify. Browser/mobile acceptance pending. See MARKETPLACE_PURCHASING.md.
+
+
+2026-09-23 fulfillment: /seller/orders now provides scoped shipment actions and return review; /admin/fulfillment provides oversight; /orders/shipments provides owned shop details and return requests. Shared drawers include loading/error/empty states, versioned actions and preserved drafts. Gadgify returns remain on original order details. Authenticated, keyboard and phone acceptance is pending. See SELLER_FULFILLMENT.md.
+
+
+2026-09-23 marketplace route batch: /seller/products (approved-member drafts/media), /seller/orders (private snapshot-item reads), /admin/seller-products (admin content moderation), /shops and /shops/:slug (approved showcase only). Connected to onboarding/review through SellerNavigation and admin links. Shared drawers, paging and explicit failure/empty/pending states are coded but unverified. No purchasing/payout controls are exposed; see SELLER_WORKSPACE.md.
+
+MP-02 adds /seller (login-required own application/status, rejected revision) and /admin/sellers (administrator paginated review and access decisions). Both use reading-width layouts and shared form drawers. Navigation adds Sell with us and admin Sellers. Approval requires the unapplied ownership migration; device/auth/concurrency acceptance remains pending. See SELLER_ONBOARDING.md.
+
+MP-01: no seller page or route is registered. Shop/ownership foundations and migration are prepared only. Existing storefront/admin routes remain single-store until MP-02–MP-05 add the required seller workflows and enforcement.
+
+Session update 2026-09-22: signed-in routes share activity renewal and last-minute warning; expiry clears private identity/cache. Login issues role-limited sessions; old 30-day cookies require fresh login. Multi-tab/mobile/browser acceptance remains pending; see SESSION_SECURITY.md.
+
+Shared header scroll fix (2026-09-22): all routes, including Support, keep a consistently sticky header with stable height/padding. Scroll state controls only its shadow. Desktop/mobile scrolling acceptance remains pending.
+
+UI priority 2026-09-22: /profile uses personal-detail/address drawers and summary cards. /admin Products/Coupons/Payments use product/category, coupon and refund drawers; small-screen admin navigation is horizontally scrollable. Shared modal focus/scroll and notification placement changed. All affected success/failure/loading/keyboard/device states remain unverified. Numbered UI scope is in APPLICATION_BACKLOG.md.
+
+E33 Admin Payments adds independent loading/error states, explicit full-refund approval/reason and provider verification. Latest 100 selected payment records; no optimistic financial success. Mobile/browser acceptance remains pending; see REFUND_OPERATIONS.md.
+
+E32: Admin Notifications adds queue states, attempt counts, retry eligibility and a guarded processing action. Recipient/payload data remains private. Browser/mobile checks and worker scheduling remain pending; see NOTIFICATION_QUEUE.md.
+
 Reviewed against [src/router.tsx](src/router.tsx) on 2026-09-12. Routing uses browser History API and a component switch, not the react-router package. This lists actual behavior; desired behavior belongs in [REQUIREMENTS.md](REQUIREMENTS.md), and completion is tracked only in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md).
 
 The app waits for storefront/session checks before rendering navigation and route content. The new session loader prevents a temporary guest form while /api/auth/me is pending. Login/logout invalidate older probes. The loader has build evidence; live refresh verification remains pending.
 
 ## Registered pages
 
+E31 adds initial server product HTML at `/product/:id` with current metadata/structured data and 404/503 handling; client navigation updates the same metadata. `/sitemap.xml` and `/robots.txt` are public text/XML endpoints through the sole API dispatcher, not React pages. Private route headers and configured-origin checks are added; see SEO_OPERATIONS.md. Runtime/crawler/HMR acceptance remains unverified.
+
 | Route | Component | Access | Current implementation and gaps |
 | --- | --- | --- | --- |
 | / | HomePage | Public | API catalog slices plus locally configured hero/story/sections and newsletter. Full section CMS pending. |
 | /products | ShopPage | Public | Query-backed search/category/sort/color/rating filtering. 300ms debounced cancellable search, explicit error/retry and cursor Load more. Multiple rating bands and database-backed hex swatches implemented (E21); complete catalog facets remain pending. |
 | /product/:id | ProductDetailPage | Public; review writes require session | Product/media/review reads, own-review edit pencil, media uploads. Only server reviews are displayed; compact product loader. Live review ownership/media checks pending. |
-| /support | SupportPage | Public | Authenticated support form with saved-ticket and conditional receipt handling (E22); migration/provider acceptance and attachments pending. |
-| /support-requests | SupportPage list | Authenticated for API; guest login guidance | Owned paginated tickets, status/reason and open cancellation; migration/device acceptance pending. |
-| /admin/support | SupportPage admin | Administrator | Paginated tickets and guarded status/resolution updates; migration/device acceptance pending. |
-| /track-order | TrackOrderPage | Public page; API requires session | Guarded pending lookup accepts owned order number or internal ID; handles not-found and request errors. Provider integration remains incomplete. |
+| /support | SupportPage | Public | Authenticated support form with saved-ticket handling; after creation customers can add private bounded JPEG/PNG attachments. Migrations/scanning/device acceptance pending. |
+| /support-requests | SupportPage list | Authenticated for API; guest login guidance | Owned paginated tickets, status/reason, open cancellation, private attachments and paginated replies. Migrations/device acceptance pending. |
+| /admin/support | SupportPage admin | Administrator | Paginated tickets, private attachment access, conversations and guarded status/resolution updates; migrations/device acceptance pending. |
+| /track-order | TrackOrderPage | Public page; API requires session | Owned order number/internal-ID lookup shows carrier, reference and latest manually recorded events. Live carrier integration remains incomplete. |
 | /privacy | PolicyPage (privacy) | Public | Published-only localized query with loading/error/unpublished states; approved text remains owner-supplied (E29). |
 | /returns | PolicyPage (returns) | Public | Published-only localized query with loading/error/unpublished states; approved text remains owner-supplied (E29). |
 | /refund-policy | PolicyPage (refund) | Public | Published-only localized query with loading/error/unpublished states; approved text remains owner-supplied (E29). |
@@ -31,7 +67,7 @@ The app waits for storefront/session checks before rendering navigation and rout
 | /wishlist | WishlistRedirect | Public redirect | Temporarily hidden by request; replaces the URL with /products. Header link removed. WishlistPage is retained but inactive; product hearts and saved-item APIs remain available. |
 | /checkout | PaymentPage | Authenticated | Real cart/address selection, private server quote and idempotent order submission when explicitly configured; navigates to order payment (E23). |
 | /orders | OrdersPage | Authenticated | Private paginated customer history with stored totals/items/status and loading/empty/error/retry states (E20); owner mobile/production acceptance pending. |
-| /orders/:id | OrderDetailPage | Authenticated | Private real order/items/totals/address/payment/shipment query; eligible pending Razorpay orders have guarded payment controls (E23). |
+| /orders/:id | OrderDetailPage | Authenticated | Private order/items/totals/address/payment/shipment query, discount summary, payment controls and delivered-order return request/status. E30 source is unverified. |
 | /admin | AdminPage | Administrator for page content | Products/categories CRUD subset and operational reads; see tab map below. Unauthorized users get login or access-required content. |
 | /debug-error | DebugErrorPage | Intentional throw only in development | In production renders a development-only notice. |
 | Any unmatched path | NotFoundPage / AdminRedirect | Public fallback | Unknown /admin/* redirects to /admin; other unknown routes show not-found. Invalid encoded IDs are rejected. |
@@ -50,11 +86,14 @@ All tabs are component state under /admin, not separate URL routes.
 | Products | Reads products; create/edit, strict category select/add, image/video upload, primary image, colors, stock, archive and immediate list updates. |
 | Orders | Reads orders; status selector keeps confirmed values on failure and reconciles on success. E13 guards cancellation/restock and closed states; full fulfillment/production verification pending. |
 | Payments | Reads payments and verifies a provider-reported full Razorpay refund (E25); never issues refunds. Legacy manual status action rejected; initiation/partial refunds and live acceptance pending. |
-| Returns | Private latest-100 real history and guarded requested-to-approved/rejected review with mandatory reason (E26). No refund/stock effects; customer submission, logistics and live acceptance pending. |
+| Returns | Private latest-100 history and guarded review with mandatory reason. E30 adds delivered-order customer submission/status; refund/stock effects, approved eligibility, collection and live acceptance remain pending. |
 | Customers | Reads customer data/order counts; no full account-management UI. |
 | Messages | Private latest-100 history and transactional email form for verified customers; UUID duplicate protection and accepted/unconfirmed feedback (E24). Provider/device acceptance and durable delivery tracking remain pending. |
 | Feedback | Private latest-100 first-purchase ratings/comments/order numbers (E28); unapplied migration and owner/device acceptance pending. |
 | Settings | Private settings query and validated checkout fee/tax/availability editor (E23); broader store configuration remains incomplete. |
+| Coupons | Draft/activate/archive, dates, minimums, caps, usage limits and checkout redemption configuration; E30 checks/business approval pending. |
+| Shipments | Guarded carrier/reference/status updates and customer-visible event history; external carrier integration pending. |
+| Notifications | Private order-email attempt history with accepted/unconfirmed semantics; durable retry/delivery tracking pending. |
 
 ## Server-state coverage
 

@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { getProduct, type StorefrontApiResponse } from '../api/storefront'
 import { queryClient } from '../api/queryClient'
+import { useProductMetadata } from '../api/productMetadata'
 
 type ReviewMedia = { id: string; url: string }
 
@@ -71,6 +72,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
   const productLoading = !catalogProduct && productQuery.isLoading
   const productError = !catalogProduct && productQuery.isError
   const product = productQuery.data ?? null
+  useProductMetadata(product, productQuery.isFetching, productQuery.isError)
   const [showAll, setShowAll] = useState(false)
   const [limit, setLimit] = useState(4)
   const [reviewRating, setReviewRating] = useState(5)
@@ -418,6 +420,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
         <div className="detail-copy">
           <p className="eyebrow">{product.category}</p>
           <h1>{product.name}</h1>
+          {product.seller && <p>Sold by {product.seller.isPlatform ? product.seller.name : <a href={`/shops/${encodeURIComponent(product.seller.slug)}`}>{product.seller.name}</a>}</p>}
           <div
             className="detail-rating"
             aria-label={`${product.rating.toFixed(1)} out of 5 from ${product.reviewCount} reviews`}
@@ -428,8 +431,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
           </div>
           <p className="detail-price">{currency.format(product.price)}</p>
           <p className="detail-description">
-            {storefront.identity.tagline} Designed for everyday use, with considered details and a
-            finish that feels good to live with.
+            {product.description || storefront.identity.tagline}
           </p>
           {product.colors && product.colors.length > 0 && (
             <div className="detail-colors">
@@ -453,6 +455,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             <p>✓ Easy help from our customer care team</p>
           </div>
           <AddToCartButton
+            unavailableReason={product.purchase?.available === false ? product.purchase.reason ?? 'Currently unavailable' : undefined}
             productId={product.id}
             onAdd={onAdd}
             label={storefront.content.collection.addToCartLabel}

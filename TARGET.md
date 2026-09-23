@@ -1,5 +1,21 @@
 # Implementation target and delivery order
 
+Marketplace publication is implemented in source; seller checkout remains gated by approved commercial/provider rules and verification. See MARKETPLACE_PURCHASING.md for exact scope and deployment prerequisites.
+
+
+Shop-owned delivery/returns and Gadgify oversight are confirmed requirements. Scoped fulfillment source is present; mixed-shop commerce and financial rules remain gated. See SELLER_FULFILLMENT.md and the sole APPLICATION_BACKLOG.md checklist.
+
+
+2026-09-23: connected catalog-preparation/moderation/showcase and seller order-read source is present. Continue MP-05–MP-07 only with explicit fulfillment/commission/provider rules; current showcase approval cannot enable purchases. See SELLER_WORKSPACE.md and the single backlog for remaining implementation/acceptance.
+
+MP-02 onboarding/review source is prepared. Continue with MP-03 isolated seller product drafts and MP-04 moderation/publication/checkout enforcement; do not enable marketplace sales before those gates and provider/business decisions are verified.
+
+MP-01 source now includes additive shop/membership/ownership/snapshot models and helpers. Migration and verification are pending; see MARKETPLACE_MIGRATION.md. Next functional scope is seller onboarding/admin approval, followed by isolated product tooling and catalog/checkout gates.
+
+Current first priority (2026-09-22): [multi-vendor marketplace](MARKETPLACE_REQUIREMENTS.md), starting with MP-01 shop ownership/isolation and safe migration design, then onboarding and seller product tools. UI work remains queued behind this priority and applies to new seller screens. This supersedes earlier UI-first/separate-store-only delivery statements. Financial rules/provider acceptance remain pending.
+
+E30 extends the unverified working tree with coupons, customer return requests, manual fulfillment/tracking, milestone email attempts, private support attachments/conversations and basic route metadata. Prepared support migrations, final checks and live/provider/device acceptance remain gates.
+
 Reviewed: 2026-09-12. Deliver the configurable commerce platform described in [REQUIREMENTS.md](REQUIREMENTS.md). This is a plan; [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md) is the single completion checklist and [PROJECT_STATUS.md](PROJECT_STATUS.md) contains evidence.
 
 ## Current baseline
@@ -70,7 +86,7 @@ E19 implements the common Profile page for customers/admins with name/login-phon
 E20 implements customer Orders history only, with session-owned pagination and minimal stored order/item/payment status fields. E21/E23 subsequently add Order Details and configured Checkout; production/provider acceptance remains pending in APPLICATION_BACKLOG.
 
 
-Owner scope (2026-09-14): Gadgify sells household gadgets in India, primarily Maharashtra, using INR; other Indian states can be served. Reuse for separate family/friend stores is future configurability, not approved marketplace scope. Legal policies/reward rates/AI provider and regulated products are undecided. Complete functionality continuously, updating tests/docs; visual polish follows. E21/E22 implement detail/checkout preview/support core; full payments, attachments and release acceptance remain pending.
+Owner scope (2026-09-14): Gadgify sells household gadgets in India, primarily Maharashtra, using INR; other Indian states can be served. Reuse for separate family/friend stores is future configurability, not approved marketplace scope. Legal policies/reward rates/AI provider and regulated products are undecided. Complete functionality continuously, updating tests/docs; visual polish follows. E21/E22 implement detail/checkout preview/support core; E30 adds bounded attachment/conversation source. Payment/provider, migration and release acceptance remain pending.
 
 
 E24 connects admin transactional messaging and private latest-100 history for verified customer recipients; remaining messaging work is durable retries, delivery events, deeper history and owner acceptance.

@@ -1,5 +1,23 @@
 # Copilot project instructions
 
+SELLER_WORKSPACE.md governs connected seller catalog/moderation/showcase pages. Keep drafts separate from Product/checkout, scoped private media, explicit public approval and snapshot-only order reads. Do not infer financial marketplace completion; provider/business decisions and deferred acceptance remain pending.
+
+MP-02 source is present: follow SELLER_ONBOARDING.md for session-owned applications and transactional versioned admin review. Keep seller-application storage reserved and seller permissions separate from ADMIN. Publishing/payment gates remain closed.
+
+MP-01 ownership source/migration is prepared, not applied. Follow MARKETPLACE_MIGRATION.md, preserve platform compatibility and immutable historical shop attribution, and never grant seller access via platform admin routes. Seller publication requires later moderation/checkout gates.
+
+Latest priority override: marketplace MP-01–MP-09 precedes the earlier UI-first instruction. Read MARKETPLACE_REQUIREMENTS.md and begin shop ownership/isolation foundations. Marketplace scope is approved; fee/payout/provider/legal rules remain undecided. Preserve current commerce and owner verification/live-operation restrictions.
+
+Preserve SESSION_SECURITY.md: server-enforced role-specific idle/absolute expiry, activity-only CSRF renewal and no background-read renewal. Legacy 30-day sessions require fresh login; verification is pending.
+
+UI now takes priority: follow UI-01–UI-09 in APPLICATION_BACKLOG.md. App.css contains ordered feature imports; use dedicated styles and shared FormDialog for contextual editors. Preserve financial/auth behavior, focus and modal notifications. Primary auth/checkout remain pages; no rendered acceptance is claimed.
+
+E33 refunds: preserve reserved refund-attempt claims before provider writes, explicit full-amount approval, capture/identity checks and no financial replay. Only provider-fetched full-refund proof changes financial status. See REFUND_OPERATIONS.md; verification remains deferred.
+
+E32: preserve transactional order-notification jobs, compare-and-set leases, fixed provider payload/key and verified recipients. Retries stop at five attempts or 23 hours; legacy and UNCONFIRMED sends are never replayed. See NOTIFICATION_QUEUE.md; operations and verification remain pending.
+
+E31 SEO: preserve the sole dispatcher, filesystem/Vite precedence, bundled HTML template, escaped product text/JSON-LD, selected active-product data, real 404/503 responses and configured production origin. Do not emit customer data or fabricated ratings/policies into metadata. Follow SEO_OPERATIONS.md; tests and deployed crawler/HMR acceptance remain pending.
+
 Use [APPLICATION_BACKLOG.md](../APPLICATION_BACKLOG.md) as the single completion checklist and [PROJECT_STATUS.md](../PROJECT_STATUS.md) for current implementation/evidence. Read both before product changes. Requirements describe intended behavior; a handler or page existing does not establish completion.
 
 Read [PAGE_INVENTORY.md](../PAGE_INVENTORY.md) before page/route work. Update it, status and affected API/notification/operational docs in the same change. Keep README, TARGET, REQUIREMENTS, Codex and Copilot instructions consistent when architecture or workflow changes.
@@ -74,3 +92,10 @@ E28 feedback: follow PURCHASE_FEEDBACK.md. Preserve owner-derived first paid ord
 
 Current owner override (2026-09-15): defer format, format:check, lint and test commands until remaining implementation is finished. Continue functional/security implementation and documentation; new unverified work must remain pending. This supersedes earlier per-change verification-command instructions.
 E29 policies: follow POLICY_PUBLISHING.md. Expose published text/version/date only, never drafts or actor history; preserve explicit approval, version checks and atomic publication/history/audit. Reserved settings prefixes cannot bypass this workflow.
+
+
+E30 current working scope is unverified. Preserve coupon activation approval, server totals, serializable usage recording and no reuse of archived codes. Return requests are owner-scoped and delivered-order only; approval does not issue refunds. Shipment changes must use the shipment transaction/history workflow and cannot bypass payment/terminal-state guards. Order notification ACCEPTED is provider acceptance only; UNCONFIRMED is never automatically replayed. Support attachments/replies require the prepared migrations, ticket-owner/admin authorization, bounded inputs and no public media URLs. Private/unknown routes remain noindex; canonical URLs require valid VITE_SITE_URL. Do not claim E30 complete until deferred tests/lint/build, migrations, browser/provider/production checks and relevant business approvals are recorded.
+
+MP-05 fulfillment: preserve shop-scoped SellerOrder/versioned actions and selected delivery data, existing Gadgify-only workflows, and financial separation. Prepared migration is unapplied. Mixed-shop checkout, allocation, refunds and payouts remain gated; follow SELLER_FULFILLMENT.md. Tests/lint/build/device acceptance remain deferred.
+
+Seller publication: use the transactional catalog projection and central marketplace purchase eligibility. External-shop purchasing stays disabled until approved commercial/provider rules; do not treat content approval as financial authorization. Both marketplace migrations and Prisma generation are rollout prerequisites. See MARKETPLACE_PURCHASING.md; all new work remains unverified under deferred checks.

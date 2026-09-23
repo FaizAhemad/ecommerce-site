@@ -6,11 +6,13 @@ export function AddToCartButton({
   onAdd,
   label,
   className,
+  unavailableReason,
 }: {
   productId: string
   onAdd: (productId: string) => Promise<void>
   label: string
   className: string
+  unavailableReason?: string
 }) {
   const locked = useRef(false)
   const [pending, setPending] = useState(false)
@@ -20,11 +22,11 @@ export function AddToCartButton({
       <button
         className={className}
         type="button"
-        disabled={pending}
+        disabled={pending || !!unavailableReason}
         aria-busy={pending}
         onClick={async (event) => {
           event.stopPropagation()
-          if (locked.current) return
+          if (locked.current || unavailableReason) return
           locked.current = true
           setPending(true)
           try {
@@ -37,7 +39,7 @@ export function AddToCartButton({
           }
         }}
       >
-        {pending ? 'Adding…' : label} <span aria-hidden="true">+</span>
+        {unavailableReason ?? (pending ? 'Adding…' : label)} {!unavailableReason && <span aria-hidden="true">+</span>}
       </button>
     </>
   )

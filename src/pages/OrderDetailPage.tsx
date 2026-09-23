@@ -5,6 +5,7 @@ import { getOrder, orderStatusLabel } from '../api/orders'
 import { privateKey } from '../api/sessionScope'
 import { OrderPayment } from '../components/OrderPayment'
 import { PurchaseFeedback } from '../components/PurchaseFeedback'
+import { CustomerReturns } from '../components/CustomerReturns'
 
 type Props = {
   storefront: StorefrontApiResponse
@@ -82,6 +83,7 @@ export function OrderDetailPage({ storefront, orderId, onNavigate }: Props) {
               {(
                 [
                   ['Subtotal', order.subtotalMinor],
+                  ['Discount', -Math.max(0, order.subtotalMinor + order.shippingMinor + order.taxMinor - order.totalMinor)],
                   ['Delivery', order.shippingMinor],
                   ['Tax', order.taxMinor],
                   ['Total', order.totalMinor],
@@ -125,6 +127,7 @@ export function OrderDetailPage({ storefront, orderId, onNavigate }: Props) {
             </aside>
           </div>
           {order.payment && ['CAPTURED','REFUNDED'].includes(order.payment.status) && <PurchaseFeedback />}
+          <CustomerReturns key={order.id} orderId={order.id} />
         </>
       )}
     </section>

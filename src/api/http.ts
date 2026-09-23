@@ -42,6 +42,8 @@ export async function apiFetch(
   const method = (init.method ?? request?.method ?? 'GET').toUpperCase()
   const callerSignal = init.signal ?? request?.signal
   const privateRequest =
+    url.startsWith('/api/seller/') ||
+    url === '/api/auth/session-activity' ||
     url === '/api/auth/email-verification-request' ||
     /^\/api\/(cart|wishlist|orders|admin|payments|profile|addresses|support|checkout|feedback)(\/|\?|$)/.test(
       url,

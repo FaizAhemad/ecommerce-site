@@ -5,6 +5,11 @@ import { CustomerMessages } from '../components/CustomerMessages'
 import { ReturnRequests } from '../components/ReturnRequests'
 import { AdminFeedback } from '../components/PurchaseFeedback'
 import { PolicyEditor } from '../components/PolicyEditor'
+import { CouponManager } from '../components/CouponManager'
+import { ShipmentManager } from '../components/ShipmentManager'
+import { NotificationHistory } from '../components/NotificationHistory'
+import { PaymentRefunds } from '../components/PaymentRefunds'
+import { FormDialog } from '../components/FormDialog'
 import { apiFetch as fetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
 import { queryClient } from '../api/queryClient'
 import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
@@ -38,6 +43,9 @@ type Section =
   | 'settings'
   | 'feedback'
   | 'policies'
+  | 'coupons'
+  | 'shipments'
+  | 'notifications'
 const tabs: { id: Section; label: string }[] = [
   'overview',
   'products',
@@ -50,6 +58,9 @@ const tabs: { id: Section; label: string }[] = [
   'settings',
   'feedback',
   'policies',
+  'coupons',
+  'shipments',
+  'notifications',
 ].map((id) => ({ id: id as Section, label: id[0].toUpperCase() + id.slice(1) }))
 export function AdminPage({ storefront, onNavigate }: Props) {
   const notify = useNotification()
@@ -60,6 +71,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
   const [saveStage, setSaveStage] = useState('Saving...')
   const [loadStates, setLoadStates] = useState<Record<string, 'loading' | 'error' | 'ready'>>({})
   const [editing, setEditing] = useState<AdminProduct | null>(null)
+  const [productOpen, setProductOpen] = useState(false)
   const [keptImages, setKeptImages] = useState<NonNullable<AdminProduct['images']>>([])
   const [keptVideos, setKeptVideos] = useState<NonNullable<AdminProduct['videos']>>([])
   const beginEdit = (product: AdminProduct | null) => {
@@ -67,7 +79,6 @@ export function AdminPage({ storefront, onNavigate }: Props) {
     setEditing(product)
     setKeptImages([...(product?.images ?? [])].sort((a, b) => a.sortOrder - b.sortOrder))
     setKeptVideos([...(product?.videos ?? [])].sort((a, b) => a.sortOrder - b.sortOrder))
-    productFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
   const createdProducts = useRef(new Map<string, AdminProduct>())
   const productFormRef = useRef<HTMLFormElement>(null)
@@ -129,7 +140,6 @@ export function AdminPage({ storefront, onNavigate }: Props) {
       analytics: ['/api/admin/analytics', 'analytics'],
       products: ['/api/admin/products', 'products'],
       orders: ['/api/admin/orders', 'orders'],
-      payments: ['/api/admin/payments', 'payments'],
       customers: ['/api/admin/customers', 'customers'],
     }
     const item = map[section]
@@ -324,6 +334,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
       formElement.reset()
       setNotice('')
       setEditing(null)
+      setProductOpen(false)
       setKeptImages([])
       setKeptVideos([])
       notify(editing ? 'Product updated successfully.' : 'Product saved successfully.', 'success')
@@ -390,7 +401,6 @@ export function AdminPage({ storefront, onNavigate }: Props) {
   const analytics = data.analytics ?? {}
   const products = data.products?.products ?? []
   const orders = data.orders?.orders ?? []
-  const payments = data.payments?.payments ?? []
   const customers = data.customers?.customers ?? []
   const activeKey = section === 'overview' ? 'analytics' : section
   return (
@@ -407,6 +417,9 @@ export function AdminPage({ storefront, onNavigate }: Props) {
       </div>
       <div className="admin-shell">
         <aside className="admin-sidebar">
+          <a href="/admin/fulfillment" onClick={onNavigate('/admin/fulfillment')}>Shop fulfillment</a>
+          <a href="/admin/sellers" onClick={onNavigate('/admin/sellers')}>Seller applications</a>
+          <a href="/admin/seller-products" onClick={onNavigate('/admin/seller-products')}>Seller products</a>
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -437,8 +450,9 @@ export function AdminPage({ storefront, onNavigate }: Props) {
           )}
           <div
             hidden={
-              !['messages', 'settings', 'returns', 'feedback', 'policies'].includes(activeKey) &&
-              loadStates[activeKey] !== 'ready'
+              !['payments', 'messages', 'settings', 'returns', 'feedback', 'policies', 'coupons', 'shipments', 'notifications'].includes(
+                activeKey,
+              ) && loadStates[activeKey] !== 'ready'
             }
           >
             {notice && (
@@ -462,6 +476,8 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                       : 'Create products with stock, colors, images, and videos.'
                   }
                 />
+                <button className="primary-button" disabled={busy} onClick={() => { beginEdit(null); setProductOpen(true) }}>Add product</button>
+                <FormDialog open={productOpen} title={editing ? 'Edit product' : 'Add product'} busy={busy || categoryBusy} onClose={() => setProductOpen(false)}>
                 <form className="category-manager" onSubmit={addCategory}>
                   <label htmlFor="new-category">Add category</label>
                   <div>
@@ -650,6 +666,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                     </button>
                   )}
                 </form>
+                </FormDialog>
                 {products.length ? (
                   <Table>
                     <table className="admin-table">
@@ -683,7 +700,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                               <button
                                 className="admin-text-button"
                                 disabled={busy}
-                                onClick={() => beginEdit(product)}
+                                onClick={() => { beginEdit(product); setProductOpen(true) }}
                               >
                                 Edit
                               </button>
@@ -725,7 +742,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                             <td>
                               <select
                                 disabled={
-                                  busy || o.status === 'CANCELLED' || o.status === 'REFUNDED'
+                                  busy || ['CANCELLED', 'REFUNDED', 'SHIPPED', 'DELIVERED'].includes(o.status)
                                 }
                                 value={o.status}
                                 onChange={(e) =>
@@ -739,8 +756,8 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                                 <option>PENDING</option>
                                 <option>CONFIRMED</option>
                                 <option>PROCESSING</option>
-                                <option>SHIPPED</option>
-                                <option>DELIVERED</option>
+                                <option disabled>SHIPPED</option>
+                                <option disabled>DELIVERED</option>
                                 <option
                                   disabled={o.status !== 'PENDING' && o.status !== 'CONFIRMED'}
                                 >
@@ -748,6 +765,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                                 </option>
                                 <option disabled>REFUNDED</option>
                               </select>
+                              <button className="secondary-button" onClick={() => setSection('shipments')}>Manage shipment</button>
                             </td>
                           </tr>
                         ))}
@@ -761,46 +779,8 @@ export function AdminPage({ storefront, onNavigate }: Props) {
             )}
             {section === 'payments' && (
               <>
-                <Title title="Payments" text="Monitor payments and verify provider refunds." />
-                <p>
-                  Process approved refunds through Razorpay, then verify their recorded status here.
-                  Verification does not issue a refund. Partial refunds and automated refund
-                  requests are not available yet.
-                </p>
-                {payments.length ? (
-                  <Table>
-                    <table className="admin-table">
-                      <tbody>
-                        {payments.map((p: any) => (
-                          <tr key={p.id}>
-                            <td>{p.order.orderNumber}</td>
-                            <td>₹{(p.amountMinor / 100).toLocaleString('en-IN')}</td>
-                            <td>{p.status}</td>
-                            <td>
-                              {p.provider === 'RAZORPAY' && p.providerPaymentId && (
-                                <button
-                                  className="admin-text-button danger"
-                                  disabled={busy}
-                                  onClick={() =>
-                                    patch(
-                                      '/api/admin/payments',
-                                      { orderId: p.orderId, action: 'reconcile-refund' },
-                                      'Provider full refund verified.',
-                                    )
-                                  }
-                                >
-                                  Verify refund
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </Table>
-                ) : (
-                  <Empty text="No payment records yet." />
-                )}
+                <Title title="Payments" text="Manage full refunds and verify provider status." />
+                <PaymentRefunds />
               </>
             )}
             {section === 'returns' && (
@@ -853,8 +833,32 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                 <CheckoutSettings />
               </>
             )}
-            {section === 'feedback' && <><Title title="Purchase feedback" text="Review private first-purchase experience feedback." /><AdminFeedback /></>}
-            {section === 'policies' && <><Title title="Policies" text="Save drafts and explicitly publish approved business policies." /><PolicyEditor /></>}
+            {section === 'feedback' && (
+              <>
+                <Title
+                  title="Purchase feedback"
+                  text="Review private first-purchase experience feedback."
+                />
+                <AdminFeedback />
+              </>
+            )}
+            {section === 'policies' && (
+              <>
+                <Title
+                  title="Policies"
+                  text="Save drafts and explicitly publish approved business policies."
+                />
+                <PolicyEditor />
+              </>
+            )}
+            {section === 'coupons' && (
+              <>
+                <Title title="Coupons" text="Configure discount drafts, dates and limits." />
+                <CouponManager />
+              </>
+            )}
+            {section === 'shipments' && <><Title title="Shipments" text="Record dispatch, tracking and delivery updates." /><ShipmentManager /></>}
+            {section === 'notifications' && <><Title title="Notifications" text="Review order and delivery email attempts." /><NotificationHistory /></>}
           </div>
         </div>
       </div>

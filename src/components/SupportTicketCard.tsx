@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import type { SupportTicket } from '../api/support'
+import { SupportAttachments } from './SupportAttachments'
+import { SupportConversation } from './SupportConversation'
 export function SupportTicketCard({
   ticket,
   admin,
@@ -20,6 +22,8 @@ export function SupportTicketCard({
       <p>Reference: {ticket.id}</p>
       <p>Status: {ticket.status.replaceAll('_', ' ')}</p>
       <p className="support-message">{ticket.body}</p>
+      <SupportAttachments ticketId={ticket.id} canUpload={!admin && ['OPEN', 'IN_PROGRESS'].includes(ticket.status)} />
+      <SupportConversation ticketId={ticket.id} open={['OPEN', 'IN_PROGRESS'].includes(ticket.status)} />
       {ticket.resolution && <p>Resolution / reason: {ticket.resolution}</p>}
       {['OPEN', 'IN_PROGRESS'].includes(ticket.status) &&
         (admin || ticket.status === 'OPEN') &&

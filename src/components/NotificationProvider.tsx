@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiRateLimitError } from '../api/http'
+import { createPortal } from 'react-dom'
 
 type Tone = 'error' | 'success' | 'info'
 type Notification = { message: string; tone: Tone }
@@ -13,6 +14,13 @@ export const useNotification = () => useContext(NotificationContext)
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation('common')
   const [queue, setQueue] = useState<Notification[]>([])
+  const [notificationHost, setNotificationHost] = useState<Element | null>(null)
+  useEffect(() => {
+    const updateHost = () => setNotificationHost(document.querySelector('dialog.form-dialog[open]'))
+    updateHost()
+    document.addEventListener('gadgify-dialog-change', updateHost)
+    return () => document.removeEventListener('gadgify-dialog-change', updateHost)
+  }, [])
   const notify = useCallback(
     (input: string | Error, tone: Tone = 'error') => {
       const message =
@@ -41,7 +49,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   return (
     <NotificationContext.Provider value={notify}>
       {children}
-      <div className="notification-region">
+      {createPortal(<div className="notification-region">
         <div role="alert" aria-atomic="true">
           {notification?.tone === 'error' && (
             <span className="notification-announcement">{notification.message}</span>
@@ -64,7 +72,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             </button>
           </div>
         )}
-      </div>
+      </div>, notificationHost ?? document.body)}
     </NotificationContext.Provider>
   )
 }

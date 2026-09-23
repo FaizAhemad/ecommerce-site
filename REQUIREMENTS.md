@@ -1,5 +1,14 @@
 # White-label Commerce Platform Requirements
 
+Marketplace purchase rollout: approved seller catalog publication is separate from authority to collect payment. Preserve server purchase gates and require approved delivery/commission/provider/refund rules before seller checkout. Current scope and pending evidence: MARKETPLACE_PURCHASING.md.
+
+
+Marketplace source scope 2026-09-23: approved sellers can prepare private catalog drafts and submit for admin review; approved content is shown in shop showcases without marketplace purchasing. Snapshot-scoped order visibility is read-only. Media/operational bounds and remaining financial/fulfillment requirements are recorded in SELLER_WORKSPACE.md, with completion only in APPLICATION_BACKLOG.md.
+
+Current scope override (2026-09-22): a multi-vendor Gadgify marketplace is approved as first priority, superseding older statements restricting expansion to separate stores. Follow [MARKETPLACE_REQUIREMENTS.md](MARKETPLACE_REQUIREMENTS.md); MP-01–MP-09 in APPLICATION_BACKLOG.md track completion. Fee amounts/models, settlement/provider and seller policy decisions remain pending; this approval does not enable financial or regulated-product behavior.
+
+E30 source adds coupon redemption, customer return requests, manual shipment history, milestone email-attempt visibility, private support images/conversations and route metadata. These remain partial requirements until checks, migrations and owner/provider/device acceptance recorded in APPLICATION_BACKLOG and PROJECT_STATUS are complete.
+
 Reviewed: 2026-09-12. This is the desired architecture/product specification, not an implementation checklist. Current source findings and evidence are in [PROJECT_STATUS.md](PROJECT_STATUS.md); completion is tracked only in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md). The original 49-section brief is retained in [requirement.md](requirement.md).
 
 ## Implementation alignment
@@ -243,7 +252,7 @@ E19 implements the common Profile page for customers/admins with name/login-phon
 E20 implements customer Orders history only, with session-owned pagination and minimal stored order/item/payment status fields. Order Details, Checkout and production/provider acceptance remain pending in APPLICATION_BACKLOG.
 
 
-Owner scope (2026-09-14): Gadgify sells household gadgets in India, primarily Maharashtra, using INR; other Indian states can be served. Reuse for separate family/friend stores is future configurability, not approved marketplace scope. Legal policies/reward rates/AI provider and regulated products are undecided. Complete functionality continuously, updating tests/docs; visual polish follows. E21/E22 implement detail/checkout preview/support core; full payments, attachments and release acceptance remain pending.
+Owner scope (2026-09-14): Gadgify sells household gadgets in India, primarily Maharashtra, using INR; other Indian states can be served. Reuse for separate family/friend stores is future configurability, not approved marketplace scope. Legal policies/reward rates/AI provider and regulated products are undecided. Complete functionality continuously, updating tests/docs; visual polish follows. E21/E22 implement detail/checkout preview/support core; E30 adds bounded attachment/conversation source. Payment/provider, migration and release acceptance remain pending.
 
 
 E23 implements a narrow configurable India/INR checkout with a uniform per-order delivery charge and item-subtotal tax. Rates are explicitly owner-configured, never inferred. Product/regional GST, inclusive taxes, incentive stacking and shipping rules remain requirements when applicable. See CHECKOUT_PAYMENTS.md; provider success and legal approval remain acceptance gates.

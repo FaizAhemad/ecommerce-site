@@ -73,6 +73,7 @@ export function ProductCard({
         <div>
           <p className="product-category">{product.category}</p>
           <h3 className="product-card-title">{product.name}</h3>
+          {product.seller && <p>Sold by {product.seller.name}</p>}
         </div>
         <div className="product-card-actions">
           <strong>{currency.format(product.price)}</strong>
@@ -121,6 +122,7 @@ export function ProductCard({
         </div>
       )}
       <AddToCartButton
+        unavailableReason={product.purchase?.available === false ? product.purchase.reason ?? 'Currently unavailable' : undefined}
         productId={product.id}
         onAdd={onAdd}
         label={addToCartLabel}

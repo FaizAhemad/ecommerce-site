@@ -1,0 +1,16 @@
+# Product SEO and sitemap
+
+Seller publication: sitemap and product SEO filter approved shop ownership. Catalog-only seller products omit Offer structured data until purchasing is authorized. Browser/SEO acceptance remains pending; see MARKETPLACE_PURCHASING.md.
+
+
+The E31 source uses the existing single Vercel dispatcher. After filesystem resolution, `/product/:id` serves the built SPA shell with current active-product metadata and visible product text. The server returns 404 for unavailable products and 503/noindex for temporary failures. Escaped titles/descriptions, canonical/Open Graph/Twitter metadata and JSON-LD Product/Offer use stored INR price and stock. No synthetic review ratings, shipping promises or return-policy claims are emitted. Client navigation refreshes metadata from the product API and removes stale structured data on other routes.
+
+Set `VITE_SITE_URL` to the approved HTTPS production origin, with no credentials, path, query or fragment, in the build and runtime environment. This is public configuration, never a secret. No value was inspected or configured by Codex. The canonical host must match the request host and Vercel production environment for server indexing. Preview/unconfigured hosts receive blocking robots and empty sitemaps. Product HTML without valid configuration has no canonical/Offer schema and remains noindex. Public static route metadata remains client-managed.
+
+`/sitemap.xml` is a sitemap index; numbered pages contain at most 1,000 active products plus public routes and published English policy routes on page zero. Product `updatedAt` supplies lastmod. Customer/account/admin/API records are excluded. `/robots.txt` advertises the sitemap on the configured production host, disallows API crawling and blocks other hosts. Private application routes also receive X-Robots-Tag through Vercel routing; robots rules are not authorization.
+
+The function bundles `dist/index.html` for production and `index.html` for development. Vite module/assets/filesystem routing remains before SEO rewrites; development HTML includes the React refresh preamble. No additional serverless function, migration, provider or build-time database query is introduced. Server SEO requests read public product data at runtime and use no-store responses.
+
+Verification command: `npm run test:seo` covers metadata escaping, canonical validation, price/stock schema and routing alongside existing Vercel routing cases. Tests, lint, format, offline build, Vercel artifact tracing, actual refresh/HMR, mobile browser behavior, Google rich-results validation and social-preview acceptance have not been run in this implementation pass under the owner's deferral. Source completion does not establish deployed crawler behavior. Check production HTML, removed-product 404s, sitemap pagination and preview exclusion before marking E31 complete.
+
+References: [Google product snippets](https://developers.google.com/search/docs/appearance/structured-data/product-snippet), [Vercel project configuration](https://vercel.com/docs/project-configuration/vercel-json).

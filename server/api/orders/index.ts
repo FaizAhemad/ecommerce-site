@@ -4,6 +4,9 @@ import {
   isTransactionConflict,
 } from '../_lib/order-transactions.js'
 import { db } from '../_lib/db.js'
+import { notifyOrder } from '../_lib/order-notifications.js'
+import { enqueueOrderNotification } from '../_lib/notification-queue.js'
+import { sendTransactionalEmail } from '../_lib/email.js'
 import { requireUser } from '../_lib/auth.js'
 import { ownedOrderAddress } from '../_lib/order-address.js'
 import { orderHistory } from '../_lib/order-history.js'
@@ -35,8 +38,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const address = await ownedOrderAddress(db, user.id, body.addressId)
     if (!address)
       return sendError(response, 400, 'INVALID_ADDRESS', 'Select a valid shipping address.', id)
-    const order = await createCartOrder(db, user.id, address.id)
-    return response.status(201).json({ order, requestId: id })
+    const order = await createCartOrder(db, user.id, address.id, undefined, enqueueOrderNotification)
+    const emailStatus = await notifyOrder(db, order.id, 'ORDER_RECORDED', sendTransactionalEmail)
+    return response.status(201).json({ order, requestId: id, emailStatus })
   } catch (error) {
     if (error instanceof OrderActionError)
       return sendError(response, error.status, error.code, error.message, id)

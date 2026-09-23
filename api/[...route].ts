@@ -2,6 +2,7 @@ import categories from '../server/api/categories.js'
 import checkout from '../server/api/checkout.js'
 import policies from '../server/api/policies.js'
 import adminPolicies from '../server/api/admin/policies.js'
+import adminCoupons from '../server/api/admin/coupons.js'
 import feedback from '../server/api/feedback.js'
 import adminFeedback from '../server/api/admin/feedback.js'
 import { webhookBody } from '../server/api/_lib/webhook-body.js'
@@ -19,12 +20,29 @@ import adminOrders from '../server/api/admin/orders.js'
 import adminPayments from '../server/api/admin/payments.js'
 import adminProducts from '../server/api/admin/products.js'
 import adminReturns from '../server/api/admin/returns.js'
+import seo from '../server/api/seo.js'
+import adminNotifications from '../server/api/admin/notifications.js'
+import supportAttachments from '../server/api/support-attachments.js'
+import supportReplies from '../server/api/support-replies.js'
+import adminShipments from '../server/api/admin/shipments.js'
+import customerReturns from '../server/api/returns.js'
 import adminSettings from '../server/api/admin/settings.js'
 import adminUpload from '../server/api/admin/upload.js'
 import adminProduct from '../server/api/admin/products/[id].js'
 import authLogin from '../server/api/auth/login.js'
 import authLogout from '../server/api/auth/logout.js'
 import authMe from '../server/api/auth/me.js'
+import sellerApplication from '../server/api/seller/application.js'
+import sellerCatalog from '../server/api/seller/catalog.js'
+import sellerOrders from '../server/api/seller/orders.js'
+import sellerFulfillment from '../server/api/seller/fulfillment.js'
+import adminFulfillment from '../server/api/admin/fulfillment.js'
+import customerFulfillment from '../server/api/orders/fulfillment.js'
+import shops from '../server/api/shops.js'
+import sellerMedia from '../server/api/seller/media.js'
+import sellerProductsReview from '../server/api/admin/seller-products.js'
+import adminSellers from '../server/api/admin/sellers.js'
+import sessionActivity from '../server/api/auth/session-activity.js'
 import authMobileRequest from '../server/api/auth/mobile-request.js'
 import authMobileVerify from '../server/api/auth/mobile-verify.js'
 import authPasswordResetRequest from '../server/api/auth/password-reset-request.js'
@@ -79,6 +97,7 @@ const routes: Record<string, Handler> = {
   checkout,
   policies,
   'admin/policies': adminPolicies,
+  'admin/coupons': adminCoupons,
   feedback,
   'admin/feedback': adminFeedback,
   health,
@@ -91,11 +110,28 @@ const routes: Record<string, Handler> = {
   'admin/payments': adminPayments,
   'admin/products': adminProducts,
   'admin/returns': adminReturns,
+  seo,
+  'admin/notifications': adminNotifications,
+  'support-attachments': supportAttachments,
+  'support-replies': supportReplies,
+  'admin/shipments': adminShipments,
+  returns: customerReturns,
   'admin/settings': adminSettings,
   'admin/upload': adminUpload,
   'auth/login': authLogin,
   'auth/logout': authLogout,
   'auth/me': authMe,
+  'seller/application': sellerApplication,
+  'seller/catalog': sellerCatalog,
+  'seller/orders': sellerOrders,
+  'seller/fulfillment': sellerFulfillment,
+  'admin/fulfillment': adminFulfillment,
+  'orders/fulfillment': customerFulfillment,
+  shops,
+  'seller/media': sellerMedia,
+  'admin/seller-products': sellerProductsReview,
+  'admin/sellers': adminSellers,
+  'auth/session-activity': sessionActivity,
   'auth/mobile-request': authMobileRequest,
   'auth/mobile-verify': authMobileVerify,
   'auth/password-reset-request': authPasswordResetRequest,

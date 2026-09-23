@@ -1,4 +1,4 @@
-import { privateKey, sessionUser } from '../api/sessionScope'
+import { privateKey, sessionUser, sessionGeneration, assertCurrentSession } from '../api/sessionScope'
 import { useNotification } from '../components/NotificationProvider'
 import { apiFetch as fetch } from '../api/http'
 import { useRef, useState, type FormEvent, type MouseEvent } from 'react'
@@ -17,6 +17,9 @@ export function TrackOrderPage({ onNavigate }: Props) {
   type Tracking = {
     status: string
     shipment?: {
+      carrier?: string | null
+      trackingCode?: string | null
+      status?: string
       events:
         | {
             id: string
@@ -49,6 +52,7 @@ export function TrackOrderPage({ onNavigate }: Props) {
     setTracking(null)
     lock.current = true
     setPending(true)
+    const generation = sessionGeneration()
     try {
       const result = await queryClient.fetchQuery({
         queryKey: privateKey('tracking', normalized),
@@ -63,8 +67,10 @@ export function TrackOrderPage({ onNavigate }: Props) {
           return (await response.json()) as Tracking
         },
       })
+      assertCurrentSession(generation)
       setTracking(result)
     } catch (error) {
+      if (generation !== sessionGeneration()) return
       setTracking(null)
       if (error instanceof Error && error.message === 'NOT_FOUND')
         setError('We could not find that order. Check the number and try again.')
@@ -114,8 +120,12 @@ export function TrackOrderPage({ onNavigate }: Props) {
               <p className="eyebrow">ORDER {orderId}</p>
               <h2>{tracking.status}</h2>
             </div>
-            <span className="tracking-badge">Live status</span>
+            <span className="tracking-badge">Recorded status</span>
           </div>
+          {tracking.shipment?.carrier && <p>Carrier: {tracking.shipment.carrier}</p>}
+          {tracking.shipment?.trackingCode && <p>Tracking reference: {tracking.shipment.trackingCode}</p>}
+          {tracking.shipment?.status && <p>Shipment: {tracking.shipment.status.replaceAll('_', ' ')}</p>}
+          <p>Latest recorded updates (up to 100). Carrier updates are entered by the store.</p>
           {tracking.shipment?.events?.length ? (
             <div className="tracking-progress">
               {tracking.shipment.events.map((event) => (

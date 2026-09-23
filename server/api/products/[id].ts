@@ -1,4 +1,6 @@
 import { db } from '../_lib/db.js'
+import type { Prisma } from '@prisma/client'
+import { publishedProductWhere, purchaseEligibility, publicSeller } from '../_lib/marketplace-purchases.js'
 import {
   requestId,
   sendError,
@@ -7,10 +9,15 @@ import {
   type VercelResponse,
 } from '../_lib/http.js'
 
-function toProduct(product: any) {
+function toProduct(product: Prisma.ProductGetPayload<{ include: { images: true; videos: true; colors: true; shopOwnership: { include: { shop: true } } } }>) {
   return {
     id: product.id,
+    seller: publicSeller(product.shopOwnership),
+    purchase: purchaseEligibility(product.shopOwnership),
     name: product.name,
+    description: product.description,
+    stock: product.stock,
+    priceMinor: product.priceMinor,
     category: product.category,
     price: product.priceMinor / 100,
     rating: product.rating,
@@ -44,15 +51,16 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const id = requestId(request)
   if (request.method !== 'GET')
     return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Only GET is supported.', id)
-  setCacheControl(response, 'public')
+  setCacheControl(response, 'private')
   const productId = Array.isArray(request.query?.id) ? request.query?.id[0] : request.query?.id
   if (!productId)
     return sendError(response, 400, 'VALIDATION_ERROR', 'A product id is required.', id)
 
   try {
     const product = await db.product.findFirst({
-      where: { id: productId, isActive: true },
+      where: { id: productId, ...publishedProductWhere },
       include: {
+        shopOwnership: { include: { shop: true } },
         images: { orderBy: { sortOrder: 'asc' } },
         videos: { orderBy: { sortOrder: 'asc' } },
         colors: true,
