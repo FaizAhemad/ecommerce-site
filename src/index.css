@@ -54,7 +54,7 @@ a {
 button {
   cursor: pointer;
 }
-a {
+a:not(.primary-button):not(.secondary-button) {
   color: inherit;
 }
 

@@ -1,5 +1,9 @@
 # Project status
 
+## Home primary CTA text contrast - 2026-09-26
+
+Fixed the Home “Explore the collection” link whose dark label was inheriting the body color over the dark primary-button background. The unlayered global anchor color now excludes shared primary/secondary button links, allowing the shared controls variant to own foreground and background colors consistently. `npm run build:offline` passed; rendered/browser contrast acceptance remains pending.
+
 ## Products grid overlap and scroll regression - 2026-09-26
 
 The first row-height correction did not resolve scroll jumps. Removed the unnecessary absolute-position virtualizer and replaced it with `ProductGrid`, which renders cursor-loaded products in normal CSS grid flow. The grid shares ProductCard across Home and Products; the API returns bounded cursor pages. The native grid determines row heights and keeps the collection divider/footer after content. `npm run build:offline` passed; rendered/device acceptance remains pending.

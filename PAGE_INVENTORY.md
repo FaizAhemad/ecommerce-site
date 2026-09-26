@@ -20,6 +20,8 @@ UI handoff: [LUNA_ANALYSIS.md](LUNA_ANALYSIS.md) defines the visual language and
 
 2026-09-26 grid scroll regression correction: after screenshot evidence showed the row measurement patch still allowed cards to jump during scroll, removed absolute-position virtualization. `ProductGrid` now shares the ProductCard across Home and Products and lets CSS grid size rows naturally; Products still requests additional cursor pages on explicit action. Rendered acceptance remains pending.
 
+2026-09-26 Home CTA contrast: global inherited anchor color no longer overrides the shared primary/secondary button colors on CTA links. The Home “Explore the collection” action now uses the common high-contrast primary treatment; rendered contrast acceptance remains pending.
+
 2026-09-25 /checkout: phone-first saved-address cards, India eligibility, coupon controls and reusable server-total breakdown. An order attempt freezes the visible cart/address/quote; explicit retries retain the original request. Empty/loading/error/unavailable and persistent submission feedback remain on the page. Payment stays in owned Order Details, now with persistent status feedback. Address creation continues through the shared Profile workflow. Device/browser verification deferred.
 
 2026-09-25 Admin Messages: composition uses shared FormDialog with draft resume and recorded-message view. Close/reopen preserves input while the panel remains mounted; pending submission blocks dismissal. Inline errors and saved/provider-acceptance feedback remain visible. Shared history cards and controls retained; device/keyboard checks deferred.
