@@ -1,5 +1,13 @@
 # Shop fulfillment and returns
 
+2026-09-24 mixed platform extension: Gadgify groups in mixed orders now use scoped admin shipments and owned customer returns. Platform-only orders retain legacy workflows. The server derives this distinction from stored groups, never client input. External-shop sales, allocation and financial rules remain gated; source/regression cases unverified.
+
+Quality inspection extension (2026-09-24): optional admin-requested inspection holds external-shop customer dispatch until PASSED. Receipt/pass/fail, return/replacement records, private photos and seller notifications are coded. This is separate from listing moderation and does not imply refunds, stock movements or booked transport. Current seller-managed delivery remains; universal/central inspection is undecided. See QUALITY_INSPECTION.md.
+
+
+2026-09-24 update: scoped shipment and return decisions now enqueue verified-customer notices in the transaction and attempt sending after commit. Provider failures cannot roll back a saved shipment/return decision. Email identifies the shop/order and directs the customer to current authenticated details; it does not confirm refunds or settlement. Legacy Gadgify return actions are unchanged. Tests and delivery remain unverified.
+
+
 Source implementation, 2026-09-23. Unverified; this is not a production completion claim.
 
 The owner confirmed that each shop handles its own deliveries and returns. Gadgify handles its products and retains administrator oversight. Rates, settlement arrangements, mixed-shop shipping charges and financial refund allocation remain undecided.
@@ -24,4 +32,4 @@ Before owner rollout, rehearse both migrations on a backup, compare historical o
 
 Transition regression cases are authored but not executed. Tests, lint, build, migration, authenticated browser, concurrency and mobile checks remain deferred under owner instructions. Source review is not runtime evidence. Verify isolation, session changes, lost responses, competing updates, cancellation races, historical returns and private address visibility at the final checkpoint.
 
-Marketplace checkout/publication, mixed-shop charge allocation, shop cancellation/refund allocation, return eligibility policies, notifications and payouts are not enabled by these pages. Platform items within a future mixed order need a scoped fulfillment/return extension before mixed sales can be enabled. Existing Gadgify-only commerce remains the intended live path. MP-05 stays pending in APPLICATION_BACKLOG.md.
+Marketplace checkout/publication, mixed-shop charge allocation, shop cancellation/refund allocation, return eligibility policies, notifications and payouts are not enabled by these pages. Platform items within future mixed orders have a scoped fulfillment/return extension in source; acceptance remains pending before mixed sales can be enabled. Existing Gadgify-only commerce remains the intended live path. MP-05 stays pending in APPLICATION_BACKLOG.md.

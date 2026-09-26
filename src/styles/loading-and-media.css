@@ -1,12 +1,17 @@
 /* Product loading skeletons */
 .product-skeleton-grid {
+  /* Keep the catalog viewport stable while the virtualized grid resolves. */
   min-height: 980px;
+  align-items: start;
+  align-content: start;
+  row-gap: 32px;
 }
 .product-skeleton {
   pointer-events: none;
 }
 .product-skeleton .product-art {
-  background: linear-gradient(110deg, var(--surface) 8%, #eeeae2 18%, var(--surface) 33%);
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(110deg, var(--skeleton-base) 8%, var(--skeleton-highlight) 18%, var(--skeleton-base) 33%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s linear infinite;
 }
@@ -14,46 +19,109 @@
 .skeleton-line,
 .skeleton-button {
   display: block;
-  background: linear-gradient(110deg, #e9e5dc 8%, #f5f2eb 18%, #e9e5dc 33%);
+  background: linear-gradient(110deg, var(--skeleton-base) 8%, var(--skeleton-highlight) 18%, var(--skeleton-base) 33%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s linear infinite;
 }
 .skeleton-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
   width: 68px;
   height: 9px;
-  margin: 18px;
+  margin: 0;
 }
-.skeleton-circle {
+.product-skeleton .skeleton-circle {
   position: absolute;
+  z-index: 2;
   top: 18px;
+  left: auto;
   right: 18px;
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #e9e5dc;
+  background: var(--skeleton-shape);
+}
+.product-skeleton .skeleton-wishlist {
+  position: static;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+}
+.product-skeleton .product-art::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  left: 22%;
+  right: 22%;
+  top: 28%;
+  bottom: 18%;
+  border-radius: 42% 42% 18% 18%;
+  background: var(--skeleton-shape);
+  box-shadow: 14px 10px 0 rgba(190, 187, 177, 0.72);
 }
 .skeleton-category {
   width: 78px;
+  height: 9px;
   margin-bottom: 12px;
 }
 .skeleton-title {
   width: 72%;
   height: 15px;
 }
+.skeleton-seller {
+  width: 54%;
+  height: 14px;
+  margin-top: 7px;
+}
 .skeleton-price {
   width: 42px;
+  height: 14px;
 }
 .skeleton-rating {
-  width: 130px;
-  margin-top: 16px;
+  width: 96px;
+  height: 10px;
+  margin-top: 2px;
 }
 .skeleton-button {
-  height: 42px;
-  margin-top: 18px;
+  width: calc(100% - 16px);
+  height: 44px;
+  margin: auto 8px 8px;
+  border-top: 1px solid var(--line);
+}
+.skeleton-color-swatch {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(110deg, var(--skeleton-base) 8%, var(--skeleton-highlight) 18%, var(--skeleton-base) 33%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s linear infinite;
 }
 @keyframes skeleton-shimmer {
   to {
     background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-loading::after {
+    animation: none;
+  }
+  .product-skeleton .product-art,
+  .skeleton-block,
+  .skeleton-line,
+  .skeleton-button {
+    animation: none;
+  }
+  .skeleton-color-swatch {
+    animation: none;
+  }
+}
+@media (max-width: 760px) {
+  .product-skeleton-grid {
+    min-height: 1180px;
   }
 }
 /* App bootstrap loading state */
@@ -62,10 +130,32 @@
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 12px;
-  background: var(--paper);
+  gap: 24px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(215, 225, 208, 0.62), transparent 24rem),
+    var(--paper);
   color: var(--ink);
   text-align: center;
+}
+.app-loading > p {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+}
+.app-loading::after {
+  content: '';
+  width: min(180px, 55vw);
+  margin-inline: auto;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(40, 49, 59, 0.72), transparent);
+  background-size: 200% 100%;
+  animation: loading-slide 1.8s ease-in-out infinite;
 }
 .app-loading-mark {
   display: grid;
@@ -379,4 +469,3 @@
   outline: 2px solid var(--green);
   outline-offset: 3px;
 }
-

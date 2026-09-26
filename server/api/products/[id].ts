@@ -18,6 +18,7 @@ function toProduct(product: Prisma.ProductGetPayload<{ include: { images: true; 
     description: product.description,
     stock: product.stock,
     priceMinor: product.priceMinor,
+    compareAtPriceMinor: product.compareAtPriceMinor,
     category: product.category,
     price: product.priceMinor / 100,
     rating: product.rating,

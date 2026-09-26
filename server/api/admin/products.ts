@@ -28,12 +28,14 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const name = typeof body.name === 'string' ? body.name.trim() : ''
     const category = typeof body.category === 'string' ? body.category.trim() : ''
     const priceMinor = Number(body.priceMinor)
+    const compareAtPriceMinor = body.compareAtPriceMinor == null ? null : Number(body.compareAtPriceMinor)
     const stock = Number(body.stock)
     if (
       !name ||
       !category ||
       !Number.isInteger(priceMinor) ||
-      priceMinor < 0 ||
+      priceMinor < 0 || priceMinor > 2147483647 ||
+      (compareAtPriceMinor !== null && (!Number.isInteger(compareAtPriceMinor) || compareAtPriceMinor <= priceMinor || compareAtPriceMinor > 2147483647)) ||
       !Number.isInteger(stock) ||
       stock < 0
     )
@@ -41,7 +43,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
         response,
         400,
         'VALIDATION_ERROR',
-        'Name, category, price, and stock are required.',
+        'Name, category, a valid price, and stock are required. Original price must exceed the selling price.',
         id,
       )
     if (!(await db.category.findUnique({ where: { name: category } })))
@@ -96,6 +98,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
         name,
         category,
         priceMinor,
+        compareAtPriceMinor,
         stock,
         description: typeof body.description === 'string' ? body.description : null,
         colors: {

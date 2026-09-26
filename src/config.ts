@@ -38,6 +38,7 @@ export type CatalogProduct = {
   description?: string | null
   stock?: number
   priceMinor?: number
+  compareAtPriceMinor?: number | null
   colorValues?: Readonly<Record<string, string>>
   id: string
   name: string

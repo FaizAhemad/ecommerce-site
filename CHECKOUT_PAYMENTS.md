@@ -1,5 +1,7 @@
 # Checkout and payment operations
 
+2026-09-25 UI completion scope: checkout uses a phone-first layout and reusable OrderTotals. Cart/address/quote are frozen in memory after submission begins; address/coupon edits are disabled and explicit retry retains the original UUID and total. Background reads cannot replace that snapshot. Uncertain results show persistent guidance to check Orders; reload/navigation still loses the in-memory attempt, so do not start another checkout before checking Orders. Existing server recalculation, ownership, stock, coupon and capture checks remain authoritative. Payment feedback persists inline. This is source-only work with provider/mobile/regression acceptance pending.
+
 Marketplace gate, 2026-09-23: quote and order creation recheck approved ownership; only Gadgify products are financially enabled. External-shop carts cannot bypass this via legacy COD. Seller charge/commission/provider/refund decisions remain pending; no mixed-shop charges introduced. See MARKETPLACE_PURCHASING.md.
 
 

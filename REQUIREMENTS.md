@@ -1,5 +1,10 @@
 # White-label Commerce Platform Requirements
 
+Current UI direction (2026-09-25): follow [UI_UX_REVIEW_GUIDE.md](UI_UX_REVIEW_GUIDE.md) for every component, notification, overlay, page and state. Consolidate shared tokens/layout/primitives before page polish; preserve current commerce and security gates. APPLICATION_BACKLOG.md remains the sole checklist; source changes do not establish browser/device acceptance.
+
+Gadgify quality inspection: distinguish catalog moderation from physical checks. Selected external-shop orders may be held by admins until receipt and a passed inspection, with recorded defects, private photos, return/replacement progress, seller notification and staff call notes. No automated calls or financial changes. Mandatory inspection and central delivery are undecided; follow QUALITY_INSPECTION.md.
+
+
 Marketplace purchase rollout: approved seller catalog publication is separate from authority to collect payment. Preserve server purchase gates and require approved delivery/commission/provider/refund rules before seller checkout. Current scope and pending evidence: MARKETPLACE_PURCHASING.md.
 
 

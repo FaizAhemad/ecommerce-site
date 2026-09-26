@@ -4,7 +4,7 @@ import { ApiRateLimitError } from '../api/http'
 import { createPortal } from 'react-dom'
 
 type Tone = 'error' | 'success' | 'info'
-type Notification = { message: string; tone: Tone }
+type Notification = { message: string; tone: Tone; action?: 'sign-in' }
 export const SNACKBAR_DURATION_MS = 5_000
 const NotificationContext = createContext<(message: string | Error, tone?: Tone) => void>(
   () => undefined,
@@ -32,7 +32,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setQueue((current) =>
         current.some((item) => item.message === message && item.tone === tone)
           ? current
-          : [...current, { message, tone }],
+          : [...current, { message, tone, action: /sign in/i.test(message) ? 'sign-in' : undefined }],
       )
     },
     [t],
@@ -63,6 +63,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         {notification && (
           <div className={`error-snackbar snackbar-${notification.tone}`}>
             <p>{notification.message}</p>
+            {notification.action === 'sign-in' && (
+              <button
+                type="button"
+                className="snackbar-action"
+                onClick={() => {
+                  const returnTo = `${window.location.pathname}${window.location.search}`
+                  window.history.pushState({}, '', `/login?returnTo=${encodeURIComponent(returnTo)}`)
+                  window.dispatchEvent(new PopStateEvent('popstate'))
+                  setQueue((current) => current.slice(1))
+                }}
+              >
+                Sign in
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setQueue((current) => current.slice(1))}

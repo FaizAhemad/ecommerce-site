@@ -75,7 +75,10 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
   const initialLoading = loading && catalog.length === 0
   const skeletons = Array.from({ length: 8 }, (_, index) => index)
   return (
-    <section className="collection-section page-section" aria-labelledby="collection-title">
+    <section
+      className={`collection-section page-section${catalog.length === 1 ? ' catalog-single' : ''}`}
+      aria-labelledby="collection-title"
+    >
       {!hasSearch && (
         <PromoCarousel
           promos={storefront.content.promotions}
@@ -131,7 +134,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
           onColorToggle={toggleColor}
           onClear={clear}
         />
-        <div className="catalog-results">
+        <div className={`catalog-results${catalog.length === 1 ? ' catalog-results--single' : ''}`}>
           {productQuery.isError ? (
             <div className="state-panel" role="alert">
               <p>Unable to load products.</p>
@@ -159,9 +162,17 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
                 reviewsLabel={collection.reviewsLabel}
                 onAdd={onAdd}
                 onOpenProduct={onOpenProduct}
+                virtualize={catalog.length > 6}
               />
               {!loading && catalog.length === 0 && (
-                <p className="empty-state">{collection.noResultsLabel}</p>
+                <div className="empty-state catalog-empty-state" role="status">
+                  <span className="empty-state-mark" aria-hidden="true">⌕</span>
+                  <h2>No products found</h2>
+                  <p>{collection.noResultsLabel}</p>
+                  <button className="secondary-button" type="button" onClick={clear}>
+                    {collection.clearFiltersLabel}
+                  </button>
+                </div>
               )}
             </>
           )}
@@ -198,17 +209,27 @@ function ProductSkeleton() {
     <article className="product-card product-skeleton" aria-hidden="true">
       <div className="product-art">
         <span className="skeleton-block skeleton-badge" />
-        <span className="skeleton-circle" />
       </div>
       <div className="product-info">
         <div>
           <span className="skeleton-line skeleton-category" />
-          <span className="skeleton-line skeleton-title" />
+          <div className="product-title-row">
+            <span className="skeleton-line skeleton-title" />
+            <span className="skeleton-circle skeleton-wishlist" />
+          </div>
+          <span className="skeleton-line skeleton-seller" />
         </div>
-        <span className="skeleton-line skeleton-price" />
+        <div className="product-card-actions">
+          <span className="skeleton-line skeleton-price" />
+        </div>
       </div>
       <div className="product-rating">
         <span className="skeleton-line skeleton-rating" />
+      </div>
+      <div className="product-swatches" aria-hidden="true">
+        <span className="skeleton-color-swatch" />
+        <span className="skeleton-color-swatch" />
+        <span className="skeleton-color-swatch" />
       </div>
       <div className="skeleton-button" />
     </article>

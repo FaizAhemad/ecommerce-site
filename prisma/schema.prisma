@@ -169,6 +169,7 @@ model Product {
   category    String
   categoryRecord Category @relation(fields: [category], references: [name], onDelete: Restrict, onUpdate: Cascade)
   priceMinor  Int
+  compareAtPriceMinor Int?
   currency    String         @default("INR")
   rating      Float          @default(0)
   reviewCount Int            @default(0)

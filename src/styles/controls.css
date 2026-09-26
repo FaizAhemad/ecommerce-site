@@ -1,0 +1,27 @@
+/* Shared button primitives. Feature files may control placement, not redefine variants. */
+.primary-button,
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: var(--control-height);
+  min-width: var(--control-height);
+  max-width: 100%;
+  padding: 12px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font: 600 14px/1.5 var(--font-body);
+  letter-spacing: normal;
+  text-align: center;
+  text-decoration: none;
+  text-transform: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.primary-button { background: var(--green); color: var(--surface); }
+.secondary-button { background: var(--surface); color: var(--ink); border-color: var(--line); }
+@media (hover: hover) {
+  .primary-button:not(:disabled):not([aria-disabled='true']):hover { filter: brightness(1.12); }
+  .secondary-button:not(:disabled):not([aria-disabled='true']):hover { border-color: var(--ink); }
+}

@@ -58,10 +58,10 @@ export function FilterSidebar({
   onColorToggle,
   onRating,
 }: Props) {
-  const [mobileExpanded, setMobileExpanded] = useState(false)
+  const [mobileExpanded, setMobileExpanded] = useState(true)
   return (
     <aside
-      className="filter-sidebar expanded"
+      className={`filter-sidebar ${mobileExpanded ? 'expanded' : 'collapsed'}`}
       data-mobile-expanded={mobileExpanded}
       aria-label="Catalog filters"
     >

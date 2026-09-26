@@ -23,6 +23,8 @@ function toProduct(
     purchase: purchaseEligibility(product.shopOwnership),
     name: product.name,
     category: product.category,
+    priceMinor: product.priceMinor,
+    compareAtPriceMinor: product.compareAtPriceMinor,
     price: product.priceMinor / 100,
     rating: product.rating,
     reviewCount: product.reviewCount,

@@ -220,8 +220,12 @@ function App() {
       <NotificationProvider>
         <ConnectionStatus />
         <main className="app-loading" aria-busy="true">
+          <div className="app-loading-brand" aria-label="Gadgify">
+            <span className="app-loading-mark" aria-hidden="true">G</span>
+            <span>GADGIFY</span>
+          </div>
           <span className="loading-spinner" aria-hidden="true" />
-          <p role="status">{loading ? 'Checking your session...' : 'Loading the store...'}</p>
+          <p role="status">{loading ? 'Checking your account…' : 'Getting things ready…'}</p>
         </main>
       </NotificationProvider>
     )

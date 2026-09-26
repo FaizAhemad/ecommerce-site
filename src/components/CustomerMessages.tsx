@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/http'
-import { privateKey } from '../api/sessionScope'
+import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScope'
 import { useNotification } from './NotificationProvider'
+import { FormDialog } from './FormDialog'
 type Message = {
   id: string
   recipientEmail: string
@@ -18,12 +19,18 @@ export function CustomerMessages() {
     attempt = useRef<string | null>(null)
   const [pending, setPending] = useState(false),
     [saved, setSaved] = useState(false)
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [hasDraft, setHasDraft] = useState(false)
+  const [sendError, setSendError] = useState('')
+  const [outcome, setOutcome] = useState('')
+  const [cursors, setCursors] = useState<string[]>([])
+  const cursor = cursors.at(-1)
   const query = useQuery({
-    queryKey: privateKey('admin', 'messages'),
+    queryKey: privateKey('admin', 'messages', cursor ?? ''),
     queryFn: async ({ signal }) => {
-      const response = await apiFetch('/api/admin/messages', { signal })
+      const response = await apiFetch(`/api/admin/messages${cursor ? `?before=${encodeURIComponent(cursor)}` : ''}`, { signal })
       if (!response.ok) throw new Error('Unable to load message history.')
-      return (await response.json()) as { messages: Message[] }
+      return (await response.json()) as { messages: Message[]; nextCursor: string | null }
     },
     retry: false,
   })
@@ -35,12 +42,13 @@ export function CustomerMessages() {
     attempt.current ??= crypto.randomUUID()
     lock.current = true
     setPending(true)
-    const abort = new AbortController()
+    setSendError('')
+    const abort = new AbortController(), generation = sessionGeneration()
     controller.current = abort
     try {
       const response = await apiFetch('/api/admin/messages', {
         method: 'POST',
-        signal: abort.signal,
+        signal: AbortSignal.any([abort.signal, sessionSignal()]),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: attempt.current,
@@ -57,27 +65,38 @@ export function CustomerMessages() {
         throw new Error(
           body.error?.message ?? 'Unable to confirm the message. Check history before retrying.',
         )
-      if (!abort.signal.aborted) {
+      if (!abort.signal.aborted && generation === sessionGeneration()) {
         setSaved(true)
+        setOutcome(body.message.status === 'ACCEPTED' ? 'Email accepted by the provider. Delivery is not confirmed.' : 'Message saved; email acceptance is unconfirmed. Check history before sending another message.')
         notify(
           body.message.status === 'ACCEPTED'
             ? 'Email accepted by the provider.'
             : 'Message saved; email acceptance is unconfirmed.',
           body.message.status === 'ACCEPTED' ? 'success' : 'info',
         )
-        void query.refetch({ cancelRefetch: false })
+        if (cursors.length) setCursors([])
+        else void query.refetch({ cancelRefetch: false })
       }
     } catch (error) {
-      if (!abort.signal.aborted)
-        notify(error instanceof Error ? error : new Error('Unable to confirm message acceptance.'))
+      if (!abort.signal.aborted && generation === sessionGeneration()) {
+        const failure = error instanceof Error ? error : new Error('Unable to confirm message acceptance.')
+        setSendError(failure.message)
+        notify(failure)
+      }
     } finally {
       lock.current = false
-      if (!abort.signal.aborted) setPending(false)
+      if (!abort.signal.aborted && generation === sessionGeneration()) setPending(false)
     }
   }
   return (
     <>
-      <form className="admin-form" onSubmit={(event) => void submit(event)}>
+      <div className="profile-actions">
+        <button type="button" className="primary-button" onClick={() => setComposerOpen(true)}>
+          {saved ? 'View recorded message' : hasDraft ? 'Continue message draft' : 'Write a customer message'}
+        </button>
+      </div>
+      <FormDialog open={composerOpen} title="Customer message" busy={pending} onClose={() => { if (!lock.current) setComposerOpen(false) }}>
+      <form className="admin-form" onChange={() => setHasDraft(true)} onSubmit={(event) => void submit(event)}>
         <label>
           Verified customer email
           <input name="email" type="email" maxLength={254} required disabled={pending || saved} />
@@ -100,17 +119,29 @@ export function CustomerMessages() {
             onClick={() => {
               attempt.current = null
               setSaved(false)
+              setHasDraft(false)
+              setSendError('')
+              setOutcome('')
             }}
           >
             Write another message
           </button>
         )}
-        <p>
+        {sendError && <p className="full" role="alert">{sendError}</p>}
+        {outcome && <p className="full" role="status">{outcome}</p>}
+        <p className="full">
           Provider acceptance does not confirm inbox delivery. After an interrupted request, check
           history before sending again.
         </p>
+        {!saved && <p className="full">Closing this drawer keeps the draft while this panel remains open.</p>}
       </form>
-      <h3>Latest messages (up to 100)</h3>
+      </FormDialog>
+      <h3>Message history</h3>
+      <div className="profile-actions">
+        <button className="secondary-button" disabled={pending || query.isFetching || cursors.length === 0} onClick={() => setCursors(values => values.slice(0, -1))}>Newer messages</button>
+        <button className="secondary-button" disabled={pending || query.isFetching || query.isError || !query.data?.nextCursor} onClick={() => { if (query.data?.nextCursor) setCursors(values => [...values, query.data.nextCursor!]) }}>Older messages</button>
+        <button className="secondary-button" disabled={pending || query.isFetching} onClick={() => { setCursors([]); if (!cursors.length) void query.refetch() }}>Refresh latest</button>
+      </div>
       {query.isPending ? (
         <p role="status">Loading messages…</p>
       ) : query.isError ? (

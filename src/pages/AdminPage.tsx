@@ -23,6 +23,7 @@ type AdminProduct = {
   name: string
   category: string
   priceMinor: number
+  compareAtPriceMinor?: number | null
   stock: number
   isActive: boolean
   description?: string | null
@@ -298,6 +299,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
         category: String(form.get('category') ?? ''),
         description: String(form.get('description') ?? ''),
         priceMinor: Number(form.get('price')) * 100,
+        compareAtPriceMinor: form.get('compareAtPrice') ? Math.round(Number(form.get('compareAtPrice')) * 100) : null,
         stock: Number(form.get('stock')),
         colors,
         images: orderedImages,
@@ -544,6 +546,18 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                       step="0.01"
                       required
                     />
+                  </label>
+                  <label>
+                    Original price (optional)
+                    <input
+                      disabled={busy}
+                      name="compareAtPrice"
+                      defaultValue={editing?.compareAtPriceMinor ? editing.compareAtPriceMinor / 100 : ''}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                    />
+                    <small>Shown crossed out when higher than the selling price.</small>
                   </label>
                   <label>
                     Stock

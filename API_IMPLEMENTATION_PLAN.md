@@ -1,5 +1,15 @@
 # API implementation and remaining plan
 
+2026-09-24 GET /api/admin/messages accepts optional before=ISO_TIMESTAMP|MESSAGE_ID (URL encoded), returns messages (max25), nextCursor or null, and requestId. Cursor validation precedes lookup; admin authorization and private/no-store apply. POST contract unchanged.
+
+2026-09-24 fulfillment DTO adds usesScopedFulfillment, derived from persisted groups. Platform groups in mixed orders use admin-scoped shipment actions and owned customer return requests; legacy platform-only routing remains. No financial activation or parent-status write.
+
+Inspection extension: existing admin fulfillment POST handles inspection-request/receive/pass/fail/return/returned/replace/call/photo with admin authorization, version/UUID checks and serializable records/audit/outbox. Scoped GET exposes inspection metadata and authorized photo reads; customers cannot read photos or notes. inspectionOnly=1 filters order lists. Dispatch rejects non-passed inspection holds. No new function/migration/environment variable; existing marketplace prerequisites remain.
+
+
+MP-05 shipment/return notifications now enqueue on successful fulfill SHIPPED/DELIVERED and review-return APPROVED/REJECTED/RECEIVED. Existing response contracts and post-commit provider processing are preserved. No notification job is created for rejected/stale writes or unsupported states. Admin notification DTOs remain recipient/payload-free.
+
+
 POST newsletter/subscribe now returns 409 ALREADY_SUBSCRIBED for active duplicates. Unique creation/conditional reactivation elects a single provider sender. Provider failures after local activation use saved-subscription partial-success semantics; no automatic replay. No migration or environment change; deferred verification remains pending.
 
 
@@ -109,6 +119,8 @@ Public catalog/category/product/review handlers use short public cache headers; 
 [Rate-limit policies](RATE_LIMITING.md) run in the single dispatcher. 429 responses include RATE_LIMITED, retryAfterSeconds, requestId and Retry-After. Counter failures return RATE_LIMIT_UNAVAILABLE (503). Apply the additive third migration before deploying; no new external counter service or rate-limit secret is required. Session restoration, logout, normal GET reads and payment webhooks are excluded.
 
 Product/review uploads accept supported image/video formats after MIME agreement, canonical base64, byte limit and signature checks, storing generated names/extensions. Existing encoded caps remain; provider body limits can be lower. Public Blob upload is not private-media authorization, decoding, malware scanning or moderation.
+
+Blob upload failures retain the same generic client response. Server logs include only an allowlisted provider failure category, fixed endpoint/phase labels and sanitized request ID; raw provider messages, file data, credentials and URLs are never logged. Local Vercel Blob authentication must be available to the local API runtime independently of the database connection.
 
 ## Next implementation and verification
 

@@ -6,6 +6,7 @@ import {
 } from '../api/sessionScope'
 import { useNotification } from '../components/NotificationProvider'
 import { AddToCartButton } from '../components/AddToCartButton'
+import { RatingStars } from '../components/RatingStars'
 import { apiFetch as fetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
@@ -420,12 +421,17 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
         <div className="detail-copy">
           <p className="eyebrow">{product.category}</p>
           <h1>{product.name}</h1>
-          {product.seller && <p>Sold by {product.seller.isPlatform ? product.seller.name : <a href={`/shops/${encodeURIComponent(product.seller.slug)}`}>{product.seller.name}</a>}</p>}
+          {product.seller && !product.seller.isPlatform && (
+            <p>
+              Sold by{' '}
+              <a href={`/shops/${encodeURIComponent(product.seller.slug)}`}>{product.seller.name}</a>
+            </p>
+          )}
           <div
             className="detail-rating"
             aria-label={`${product.rating.toFixed(1)} out of 5 from ${product.reviewCount} reviews`}
           >
-            <span aria-hidden="true">★★★★★</span>
+            <RatingStars rating={product.rating} size="medium" />
             <strong>{product.rating.toFixed(1)}</strong>
             <span>({product.reviewCount} reviews)</span>
           </div>
@@ -497,7 +503,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
           {reviews.slice(0, 3).map((review) => (
             <article className="review-item" key={review.id}>
               <div>
-                <strong>{'★'.repeat(review.rating)}</strong>
+                <RatingStars rating={review.rating} label={`${review.rating} out of 5 stars`} />
                 <span>
                   {review.author} · {review.date}
                 </span>
@@ -551,7 +557,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             {reviews.slice(0, limit).map((review) => (
               <article className="review-item" key={review.id}>
                 <div>
-                  <strong>{'★'.repeat(review.rating)}</strong>
+                  <RatingStars rating={review.rating} label={`${review.rating} out of 5 stars`} />
                   <span>
                     {review.author} · {review.date}
                   </span>

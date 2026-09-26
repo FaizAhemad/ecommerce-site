@@ -41,7 +41,7 @@ export function NotificationHistory() {
     }
   }
   return <>
-    <p>Order, delivery and dispute emails. Accepted does not confirm inbox delivery. Queued messages support bounded retries; legacy and unconfirmed attempts are never replayed automatically.</p>
+    <p>Order, shop shipment, return and dispute emails. Accepted does not confirm inbox delivery. Queued messages support bounded retries; legacy and unconfirmed attempts are never replayed automatically.</p>
     {query.data?.pages[0]?.supportConfigured === false && <p role="status">The private support inbox is not configured. Staff dispute notifications will wait; saved conversations remain available.</p>}
     {query.data?.pages[0]?.configured === false && <p role="status">Email provider configuration is missing. Queued messages wait for configuration.</p>}
     <button className="secondary-button" disabled={processing || !query.data?.pages[0]?.configured} onClick={() => void processDue()}>{processing ? 'Processing…' : 'Process due notifications'}</button>

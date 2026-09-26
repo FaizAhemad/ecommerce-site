@@ -83,6 +83,9 @@
 }
 .site-shell {
   max-width: 1440px;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
   margin: 0 auto;
   overflow: clip;
   background: var(--paper);
@@ -123,20 +126,6 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 30px;
-}
-.secondary-button {
-  min-height: 44px;
-  min-width: 44px;
-  display: inline-flex;
-  align-items: center;
-  padding: 14px 20px;
-  border: 1px solid var(--line);
-  color: var(--ink);
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  text-transform: uppercase;
 }
 .support-business {
   margin-top: 80px;

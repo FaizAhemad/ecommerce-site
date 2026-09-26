@@ -9,6 +9,41 @@ const extensions = {
 
 type MediaType = keyof typeof extensions
 
+type MediaUploadEndpoint = 'admin_upload' | 'review_upload'
+
+const blobFailureCategories: Record<string, string> = {
+  BlobAccessError: 'blob_access_denied',
+  BlobOidcEnvironmentNotAllowedError: 'blob_oidc_environment_not_allowed',
+  BlobStoreNotFoundError: 'blob_store_not_found',
+  BlobStoreSuspendedError: 'blob_store_suspended',
+  BlobServiceNotAvailable: 'blob_service_unavailable',
+  BlobServiceRateLimited: 'blob_service_rate_limited',
+  BlobFileTooLargeError: 'blob_provider_size_limit',
+  BlobUnknownError: 'blob_provider_unknown',
+  BlobError: 'blob_request_failed',
+  TypeError: 'blob_transport_error',
+}
+
+/** Log a safe, allowlisted Blob failure category without exposing provider error details. */
+export function logMediaStorageFailure(error: unknown, id: string, endpoint: MediaUploadEndpoint) {
+  const name = error instanceof Error ? error.constructor.name : ''
+  const message = error instanceof Error ? error.message : ''
+  const category =
+    name === 'BlobError' && /No blob credentials found|No read-write token found/.test(message)
+      ? 'blob_credentials_missing'
+      : (blobFailureCategories[name] ?? 'blob_provider_unknown')
+
+  console.error(
+    JSON.stringify({
+      event: 'media_storage_upload_failed',
+      phase: 'blob_put',
+      endpoint,
+      requestId: id,
+      category,
+    }),
+  )
+}
+
 /** Signature checks are an additional layer, not full decoding or malware scanning. */
 function matchesSignature(bytes: Buffer, type: MediaType): boolean {
   switch (type) {

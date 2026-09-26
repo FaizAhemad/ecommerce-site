@@ -25,7 +25,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
         event.createdAt = event.at
       }
       if (
-        !['policy.published', 'coupon.saved', 'coupon.archived', 'shipment.updated', 'shop-dispute.updated', 'seller-product.reviewed', 'seller.reviewed'].includes(String(event.action)) ||
+        !['policy.published', 'coupon.saved', 'coupon.archived', 'shipment.updated', 'shop-dispute.updated', 'inspection.updated', 'seller-product.reviewed', 'seller.reviewed'].includes(String(event.action)) ||
         typeof event.actorId !== 'string' ||
         typeof event.resource !== 'string' ||
         !Number.isSafeInteger(event.version) ||

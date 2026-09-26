@@ -1,5 +1,11 @@
 # Order notification queue
 
+Inspection seller notifications: INSPECTION_SELLER jobs are scoped to shop/order/version/recipient. Only active members of approved non-platform shops with verified emails are eligible; access and email are rechecked before each send. Generic messages exclude findings/photos/call notes. Call-note/photo-only writes do not email. Existing lease/idempotency/retry rules remain; worker operation and delivery are unverified.
+
+
+2026-09-24 MP-05 extension: SHOP_DISPATCHED, SHOP_DELIVERED, SHOP_RETURN_APPROVED, SHOP_RETURN_REJECTED and SHOP_RETURN_RECEIVED use shop/version event IDs and the existing order-email namespace. They commit with the scoped status/history change and send only afterward. They retain verified-customer checks, frozen payloads/idempotency keys, five attempts/23-hour retry limits and admin/worker processing. Packing, customer withdrawal and refund states do not produce these emails. No new migration/configuration; operational scheduling and delivery remain owner acceptance.
+
+
 Dispute extension (2026-09-23): DISPUTE_SUPPORT and DISPUTE_CUSTOMER jobs use an order/shop/version identity and commit with the conversation. Non-admin actions notify the server-only SUPPORT_EMAIL; seller/admin actions notify the verified order customer, excluding self-notifications. Staff config is read at sending and the first attempted recipient is frozen; recipient changes block retries. Missing configuration leaves jobs waiting. Immediate post-commit attempts and existing admin/worker processing apply. Emails contain a generic sign-in instruction, no conversation text, private support address in customer messages, or delivery address. Acceptance remains distinct from delivery. No new migration or scheduling setup was performed.
 
 

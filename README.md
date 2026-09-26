@@ -1,5 +1,12 @@
 # White-label Commerce Platform
 
+Current UI direction (2026-09-25): follow [UI_UX_REVIEW_GUIDE.md](UI_UX_REVIEW_GUIDE.md) for every component, notification, overlay, page and state. Consolidate shared tokens/layout/primitives before page polish; preserve current commerce and security gates. APPLICATION_BACKLOG.md remains the sole checklist; source changes do not establish browser/device acceptance.
+
+UI testing plan: see [UI_UX_REVIEW_GUIDE.md](UI_UX_REVIEW_GUIDE.md#automated-ui-and-validation-testing-strategy). Playwright Test and axe are planned; existing Node.js suites remain. Installation/execution and browser/device acceptance are pending, tracked in APPLICATION_BACKLOG.md.
+
+Optional quality inspection is documented in QUALITY_INSPECTION.md: admins can inspect selected external-shop orders and hold their dispatch until passed. Mandatory central inspection remains undecided; code is unverified and existing marketplace rollout prerequisites still apply.
+
+
 Seller catalog projections and checkout restrictions are described in MARKETPLACE_PURCHASING.md. Apply/rehearse both marketplace migrations and regenerate Prisma before owner deployment; external seller purchasing remains disabled pending business/provider approval.
 
 

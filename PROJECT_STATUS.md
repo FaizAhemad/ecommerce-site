@@ -1,5 +1,161 @@
 # Project status
 
+## Product card title and surface refinement - 2026-09-26
+
+Restored a subtle border, warm raised surface and restrained shadow. Changed the shared card information area to stack category/title/seller above a full-width price/wishlist row, giving titles the card's full text width and preventing short names from breaking beside large prices. Matched the CTA inset to the framed card. Source-only; browser/mobile rendering and regression checks remain pending.
+
+## Product catalog card density - 2026-09-26
+
+The product grid now auto-fits 230px minimum columns up to a 260px shared card width. Virtualized rendering measures the actual catalog container and derives its column count from the same minimum width and gap as CSS, so it no longer renders only two products into a wide desktop grid. Reduced excess metadata minimum height so price and rating sit closer to the title. Source-only; no browser/device checks or automated checks were run under current owner deferrals.
+
+## Product card wishlist placement - 2026-09-26
+
+Moved the shared product-card wishlist button beside the title with a quieter outline treatment after the image overlay looked too prominent. Reserved compact consistent slots for seller attribution, optional discounts and swatches, and aligned cards and add actions within each grid row. Accessible label and pressed/pending states are preserved. Rendered and phone tap-target verification remain pending.
+
+## Product card and skeleton size consistency - 2026-09-26
+
+Reserved matching title/wishlist, seller, price, rating and swatch areas so optional product data does not change card height within a row. Updated the Products loading skeleton to use those same slots and the title-row wishlist position; its add-action spacing now follows the loaded card. Source-only; rendered parity and device acceptance are pending.
+
+## Blob upload failure diagnostics - 2026-09-25
+
+Admin product-media and customer review uploads now log an allowlisted Blob exception category with fixed phase/endpoint values and the sanitized request ID. Credentials, file data, URLs and raw exception messages stay out of logs and the generic 503 response is unchanged. This supports diagnosis on the next local/production request; it cannot recover the cause of earlier failures. Source-only; no local API/provider call, tests, lint or build were run.
+
+## Shared product and loading card sizing - 2026-09-25
+
+Standardized the ProductCard maximum width and square media across Home, Products and Wishlist. The Products skeleton now reserves the same information, rating, swatch and CTA rows as a loaded card; the virtualized catalog row offset follows the measured card height plus its 32px grid gap instead of a fixed oversized minimum. Source-only: rendered comparison and mobile acceptance remain pending; no tests/build were run under the current owner deferral.
+
+## Product card title, price and color pass - 2026-09-25
+
+Updated the shared `ProductCard` used by catalog and wishlist views: long names wrap safely and clamp to two lines, the current selling price has stronger hierarchy and can wrap in narrow cards, saved product colors render as larger circular swatches using catalog hex values, and valid optional compare-at data renders with a struck-through original price and computed discount. Added the optional compare-at schema field, prepared additive migration, public DTO mapping, validation and admin/seller input. Checkout continues to use `priceMinor`. Migration and Prisma Client regeneration remain pending; no tests, lint, build or rendered/mobile checks were run under the current owner deferral. See [PRODUCT_PRICING.md](PRODUCT_PRICING.md).
+
+Prisma Client regeneration was attempted to resolve the stale generated-type diagnostic shown in the owner screenshot. Windows denied replacing the loaded `query_engine-windows.dll.node`; the generation stopped and its temporary engine artifact was removed. No migration or application process was stopped.
+
+## Fractional shared rating stars - 2026-09-25
+
+Added `RatingStars`, which draws five independently clipped SVG stars from a clamped 0–5 numeric rating. Product cards, the product detail rating summary and customer review rows now share it; fractional values render partial stars while whole rating values render exactly that many filled stars. Visual/browser and accessibility checks remain unverified; no tests or builds were run under the current instruction.
+
+## Product card image edge and frame refinement - 2026-09-25
+
+Removed the card's outer border and inset padding so the square product image fills the card width. Kept text and actions inset below the image, retained a visible non-black keyboard focus ring, and matched the loading skeleton image ratio to loaded cards. Source-only; no browser/mobile verification or tests were run.
+
+## Homepage screenshot UI pass - 2026-09-25
+
+Applied a focused mobile storefront pass from the owner's homepage screenshot. The mobile header now uses tighter spacing and a single horizontally scrollable navigation row instead of wrapping links into a tall block. Hero spacing and artwork height were reduced, heading/body sizing was constrained for narrow screens, and homepage section gutters now match the 16px mobile token. Existing palette, navigation behavior, product actions and responsive semantics remain intact. Browser recheck is blocked by the current automatic review usage limit; source changes are recorded as unverified until the page is rendered again.
+
+## Luna analysis and Astra handoff - 2026-09-25
+
+Added [LUNA_ANALYSIS.md](LUNA_ANALYSIS.md) with the application-wide color, spacing, typography, layout, wording, component and page review direction. Added [ASTRA_CHANGES.md](ASTRA_CHANGES.md) as the implementation handoff for the next agent, including current shared-foundation changes, safeguards and sequence. These documents do not claim UI completion or production readiness.
+
+## Shared visual foundations started - 2026-09-25
+
+Aligned README/TARGET/REQUIREMENTS with the component-wide UI guide and started the source consumer inventory in PAGE_INVENTORY.md. Consolidated three base button definitions into controls.css, standardized button typography/padding/wrapping, added shared font/spacing/control tokens, set central page gutters to 16/24/32px, and increased snackbar dismissal targets to 44px. Existing focus/disabled rules, notification timing/queue and application behavior retained. No tests/lint/build, rendered/device checks, environment reads or live operations performed. UI-01/02/09 remain pending; page-local typography/cards/forms and startup redesign remain.
+
+Catalog loading skeleton pass - 2026-09-25
+The `/products` initial loading state now has a compact, card-shaped skeleton: image silhouette, badge/heart affordance, category/title/price, rating and add-action placeholders. Contrast was raised within the warm neutral palette and animation is disabled for reduced-motion users. This is source evidence only; no browser/device verification or tests were run under the current owner deferral.
+
+Follow-up screenshot pass: strengthened the central product silhouette and price placeholder contrast after reviewing the supplied loading screenshot. The screenshot remains an owner-provided observation; browser recheck is still separate.
+
+Skeleton header alignment pass: explicitly scoped the badge and circle positions so the shared product-art span rule cannot overlap them.
+
+Palette refinement: adjusted shared paper, muted text and border tokens for stronger hierarchy and added named skeleton contrast tokens. Loading styles now use the tokens instead of page-local neutrals. Source-only; visual browser/device acceptance remains deferred.
+
+Homepage palette refinement: brightened the shared paper/surface neutrals and increased the sage contrast of hero and product-art surfaces. This addresses the supplied home-page screenshots where the hierarchy appeared washed out while retaining readable dark text and controls. Source-only; browser/device acceptance remains deferred.
+
+Footer social icon fix: the footer link color reset used `!important`, which overrode the white icon color inherited by the colored social buttons. Added a scoped footer social override so footer SVG icons match the white icons in the fixed social rail.
+
+Shared typography/card pass: added display/body font, size and line-height tokens and applied them to the catalog product-card title, category, seller and price. This is a focused consumer migration; the full route/component audit remains pending.
+
+Brand/loading implementation: the app bootstrap screen now uses a shared Gadgify G lockup and wordmark, and the site shell has a subtle sage radial background accent. These are native CSS/markup assets and remain source-level until browser/device review.
+
+Loader first-paint refinement: added a document-level warm background so the page does not flash blank before React mounts, enlarged and aligned the G/wordmark lockup, and improved status text sizing and loader contrast.
+
+Loader visual scale refinement: enlarged the startup lockup and status hierarchy, strengthened the centered sage glow, and added a restrained progress accent with reduced-motion handling so the full-screen state does not read as an empty page.
+
+Loader copy pass: changed technical status labels to “Checking your account…” and “Getting things ready…”, and moved the status text to the display typeface with a lighter centered progress accent.
+
+Header search refinement: expanded the search field into a 360px responsive panel below the header with a 50px touch target, readable 15px input text, focus-visible treatment, and reduced-motion-safe entrance animation.
+
+Filtered-empty catalog pass: replaced the thin no-results strip with a centered empty-results panel, branded mark, clear heading, explanatory copy and clear-filters action. The panel uses the shared surface, typography and accent tokens and has a shorter phone layout.
+
+Filter control refinement: the “Show/Hide filters” control is now a compact mobile-only disclosure button; the filter fields correctly collapse when `data-mobile-expanded="false"`, while desktop keeps the sidebar open without showing a contradictory oversized button.
+
+Filter toggle behavior fix: the disclosure now owns an explicit expanded/collapsed class, starts open, and collapses the filter fields without translating the sidebar off-screen. Desktop and phone layouts retain a visible reversible control.
+
+Collapsed-filter visual fix: neutralized the legacy vertical rail rule for the new collapsed class so the “FILTER” label stays horizontal and the compact toolbar remains readable when fields are hidden.
+
+Product card polish: the shared catalog card now has a light surface shell, consistent radius and internal padding, rounded media, clearer action spacing, and a restrained hover elevation while preserving the existing focus state and skeleton variant.
+
+Product card hover/layout refinement: cards now keep a raised surface and border in the resting state, use a restrained hover tint instead of appearing suddenly white, and catalog cards no longer stretch their add action to the bottom of an unnecessary full-height flex row.
+
+Catalog density refinement: wide desktop layouts now render five product cards per row at 1440px+, with matching virtualization column calculations; standard desktop remains four and phones two. Source-only; rendered responsive acceptance remains pending.
+
+Loading-grid spacing fix: retained the reserved skeleton viewport height but set the skeleton grid’s row alignment to start with an explicit 32px row gap, preventing the reserved height from stretching the space between rows. Loading and loaded states continue to use the same product-card structure and shared card styles.
+
+Single-card scale refinement: reduced the desktop single-product grid width to 260px after the supplied screenshots showed the one loaded card still dominating the catalog. Multi-product five-column density remains unchanged.
+
+Single-card compactness refinement: reduced the one-product width to 220px and removed catalog-only minimum heights from product info, rating and swatch rows so the loaded card does not retain the large blank band reserved for multi-product alignment.
+
+Product-card internal rhythm pass: tightened card padding and metadata spacing, aligned the price/wishlist row, reduced the mobile action gap, and standardized the add-to-cart control to a 42px minimum touch height with consistent horizontal padding.
+
+Product-card title and wishlist pass: product titles now wrap safely at any length without pushing the price/action column out of the card; the price and heart action are aligned in a dedicated grid column. Existing wishlist behavior is already account-backed: authenticated toggles POST/DELETE `/api/wishlist`, guests receive a sign-in message, optimistic state rolls back on failure, and the Wishlist page reconciles server state. No navbar entry was reintroduced because it was intentionally removed earlier.
+
+Product-card visual hierarchy pass: changed the shared card media to a balanced square tile, strengthened title and price hierarchy, reduced the wishlist control to a secondary circular action, grouped the rating in a compact pill, and standardized the CTA to a rounded 44px touch target.
+
+Platform seller-label refinement: platform-owned Gadgify products no longer show redundant “Sold by Gadgify” copy on cards or product details; external approved marketplace products continue to show their shop attribution and link.
+
+Auth snackbar refinement: sign-in-required errors now include a direct “Sign in” action that preserves the current path/query as `returnTo`, while the snackbar sits above card actions to avoid covering the add-to-cart control. Dismiss remains available and the existing five-second timeout is preserved.
+
+Shared page-height fix: `site-shell` is now a full-viewport flex column and `PageContainer` grows to fill remaining space. Short routes keep the footer at the bottom of the viewport, while content-heavy routes continue naturally without a forced fixed height.
+
+Catalog virtualization regression fix: restored a responsive reserved height for the initial skeleton grid (980px desktop, 1180px phone) so the footer does not jump directly beneath loading cards while the virtualized product layout resolves.
+
+Sparse catalog layout fix: catalogs with six or fewer products now render without virtualization; a single product uses a deliberate 300px desktop card width and full-width phone layout, with a shorter catalog-end gap. Larger catalogs retain the virtualized grid.
+
+Loaded catalog card pass - 2026-09-25
+Product cards now use a dedicated muted seller-attribution style and tighter mobile information spacing, keeping image, seller, price, rating and add action visually grouped. The shared `ProductCard` is used by both catalog render paths. Source-only; rendered acceptance remains deferred.
+
+## Complete UI component scope - 2026-09-25
+
+Expanded UI_UX_REVIEW_GUIDE.md to cover every component, page-local control, notification, overlay and applicable interaction state. Added component-to-consumer inventory requirements alongside route coverage; shared tokens/layout/primitives precede isolated loader changes. Aligned agent instructions and UI backlog scope. Documentation only; inventory execution, redesign and rendered/device verification remain pending.
+
+## Architecture and AI working standard - 2026-09-25
+
+Added the owner-requested senior architecture standard and token-efficient execution workflow to AGENTS.md, with matching references in Codex/Copilot instructions. Covers cross-disciplinary judgment, targeted context reads, shared-component reuse, concise batch reporting/documentation and evidence-based AI work. No application code, dependencies or verification settings changed.
+
+## UI testing strategy documented - 2026-09-25
+
+Documented Playwright Test plus axe accessibility checks, retained Node.js validation/security suites and optional future Vitest in UI_UX_REVIEW_GUIDE.md. Added full-route/state/viewport coverage, reviewed screenshot baselines, isolated synthetic fixtures, separate provider acceptance and CI/release evidence expectations. Added a pending backlog entry. Documentation only: no dependency installation, tests, live operations or change to verification deferrals.
+
+## Application-wide UI review instructions - 2026-09-25
+
+Added UI_UX_REVIEW_GUIDE.md with shared-first review order, route/tab/state/viewport coverage and evidence requirements. Owner targets publishing in 10-15 days; guide now includes consistent color/spacing/typography/wording rules and a proposed sequence reserving final days for verification. This is planning, not a readiness claim. Owner screenshot shows bare full-screen session loading; App.tsx source confirms standalone app-loading before SiteLayout. Loader redesign is pending under UI-09. No rendered/browser review, tests or live operations performed. Instruction files now require whole-application coverage and distinguish source changes from observed acceptance.
+
+## UI-07 Gadgify checkout - 2026-09-25
+
+Implemented phone-first checkout styling in PaymentPage.css using shared PageContainer, button and summary patterns, plus reusable OrderTotals with component-owned CSS. Fixed the legacy mobile rule hiding saved address text by replacing the conflicting payment-option classes. Full address/phone and India eligibility are visible; server quote shows subtotal, discount, delivery, tax and payable amount. Submission freezes the cart/address/quote snapshot and coupon controls, preserves the original UUID for explicit retry even after quote failures, and prevents background cart/profile errors from discarding that attempt. Added persistent inline checkout/payment feedback and session-generation guards. Razorpay capture verification and server financial rules are unchanged. No environment access, live/provider calls, migrations, deployment or tests/lint/build/browser commands run. Source implementation is not production completion; final keyboard/mobile, concurrency, rejected/uncertain submission and provider test acceptance remain pending.
+
+## UI-04 shared message composer - 2026-09-25
+
+Moved Admin Messages composition into existing FormDialog, reusing its mobile drawer, pending dismissal protection, native modal/focus behavior and notification portal. The mounted form retains drafts across close/reopen and history paging; a resume control distinguishes draft/saved states. Persistent inline send errors/outcomes supplement the five-second snackbar. Existing UUID, authorization and session guards are retained. No new modal or CSS system introduced. Source inspection only; tests/lint/build/browser/mobile checks remain deferred. Whole-application shared-component adoption is ongoing, not complete.
+
+Admin message history ? 2026-09-24
+
+Replaced the latest-100 cutoff with bounded 25-message keyset pagination ordered by creation time/id, validated cursors and private no-store responses. Admin panel adds older/newer/refresh controls without clearing the composer, returns to latest after a saved message, and guards asynchronous mutation feedback with session generation/signal. Existing admin authorization, UUID send binding and provider acceptance semantics remain. Source reviewed only; tests/lint/build and authenticated/device acceptance deferred.
+
+Mixed-order platform handling ? 2026-09-24
+
+Gadgify child shipments/returns within an order containing external-shop groups now use scoped fulfillment. The server derives routing from stored shop groups inside the transaction; only admins manage platform shipments and customer return requests remain owner-scoped. Gadgify-only orders retain legacy shipment/return workflows. Shared UI follows the selected routing flag. No parent financial status, stock or sibling group is changed. Regression cases authored, not run; migrations, generated Prisma, runtime/concurrency/device acceptance remain pending. External-shop purchasing is still disabled. No environment inspection, live calls, migration, deployment or verification commands run.
+
+## Optional shop quality inspection — 2026-09-24
+
+Implemented admin-requested inspection on external-shop orders before customer dispatch: receipt, pass/fail, return-to-shop and replacement stages, server dispatch hold, three private 1 MB evidence photos, admin-only call notes, scoped list/detail views and audit. Generic seller email jobs recheck active membership/shop approval and verified address before sending. Up to two jobs are attempted post-commit; the worker handles remaining jobs. Customer DTOs exclude findings/photos/call notes; generic Settings cannot access reserved inspection records. Owner was unsure about universal inspection, so mandatory inspection/central dispatch is not enabled. QUALITY_INSPECTION.md records workflow and limits. Marked MP-05c and MP-10a coding scopes done under the owner's source-only tracking request; verification and business decisions remain pending. Regression cases authored, not run. No environment read, migration, provider/live call, test/lint/build/format or deployment performed.
+
+
+## MP-05 shop shipment and return notifications — 2026-09-24
+
+Added shop-scoped dispatch/delivery and return approved/rejected/received jobs to the existing private notification queue. Fulfillment mutations enqueue after conditional status/event writes in the same transaction, then reuse post-commit processing. Version-bound keys isolate shops and suppress duplicates; recipients derive from the order owner and verification is rechecked by the processor. Copy escapes shop/order text, omits delivery addresses and decision bodies, and explicitly avoids payment/refund/settlement claims. Existing Gadgify shipment notifications remain unchanged; legacy return email coverage is not added. Admin Notifications recognizes the new kinds. Regression cases authored and included in test:marketplace, not executed. No environment reads, migration, live/provider calls or deployment. Worker scheduling, delivery, browser/device and deferred checks remain pending.
+
+
 ## Owner-requested coding completion marks — 2026-09-23
 
 Split marketplace entries in APPLICATION_BACKLOG.md into checked coding scopes MP-01a/02a/03a/04a/05a/08a and separate unchecked remaining work/acceptance entries. The owner explicitly requested marking the implemented work done. These marks acknowledge source implementation described in the dated entries below; they do not establish verified feature completion. No additional code, tests, migration, provider call or deployment occurred in this tracking update. MP-06, MP-07, MP-09 and the remaining b-scopes stay pending.

@@ -1,5 +1,33 @@
 # Page and route inventory
 
+2026-09-25 owner homepage screenshot review: mobile header/navigation occupied excessive vertical space because links wrapped; hero heading and copy were oversized for the viewport and hero art began after a large gap. Source fix tightens the mobile header, keeps navigation horizontally scrollable, reduces hero spacing/art height and improves mobile heading/body sizing. Rendered recheck is still required after the browser review limit clears.
+
+UI handoff: [LUNA_ANALYSIS.md](LUNA_ANALYSIS.md) defines the visual language and full page/component review map; [ASTRA_CHANGES.md](ASTRA_CHANGES.md) records the implementation sequence. The component inventory below is source coverage evidence, not a completion checklist.
+
+2026-09-25 coverage requirement: UI_UX_REVIEW_GUIDE.md now requires a component-to-consumer inventory alongside routes/admin tabs, including page-local controls, notifications and overlays. Record style owner, variants, consumers, applicable states and evidence references when the audit runs. This inventory has not yet been completed; no rendered coverage implied.
+
+2026-09-25 review process: follow UI_UX_REVIEW_GUIDE.md and reconcile this inventory with router/App/admin tabs before each full UI review. Include startup/session states and standalone marketplace routes, not only registered-page table entries. `/products` initial loading now uses card-shaped image, metadata, rating and action skeletons with reduced-motion support; loaded cards now style seller attribution and phone spacing consistently. Rendered phone/tablet/desktop acceptance remains separate. No new browser coverage established.
+
+2026-09-25 catalog sizing refinement: Home, `/products`, and Wishlist share square image sizing; the Products loading skeleton reserves the same content rows as the loaded card, including color swatches and action controls. 2026-09-26 density refinement: the catalog grid auto-fits 230px minimum tracks (up to the shared 260px card cap), while virtualization measures the available catalog width to render the same number of columns; card title-to-price spacing is reduced. Responsive rendered comparison remains pending.
+
+2026-09-26 card readability pass: restored a subtle border and shadow around the card shell. Product title now spans the content width above the price and wishlist row, so short names no longer wrap into single letters beside a long price. Browser and device comparison remain pending.
+
+2026-09-26 wishlist/card consistency refinement: the wishlist control sits beside the title with a quiet outline treatment, away from the product image. Shared cards and the Products skeleton reserve matching compact slots for title/wishlist, seller attribution, discount, rating and swatches, keeping card and add-action sizes aligned within each row. Keyboard focus and phone tap-target rendering remain pending browser/device verification.
+
+2026-09-25 /checkout: phone-first saved-address cards, India eligibility, coupon controls and reusable server-total breakdown. An order attempt freezes the visible cart/address/quote; explicit retries retain the original request. Empty/loading/error/unavailable and persistent submission feedback remain on the page. Payment stays in owned Order Details, now with persistent status feedback. Address creation continues through the shared Profile workflow. Device/browser verification deferred.
+
+2026-09-25 Admin Messages: composition uses shared FormDialog with draft resume and recorded-message view. Close/reopen preserves input while the panel remains mounted; pending submission blocks dismissal. Inline errors and saved/provider-acceptance feedback remain visible. Shared history cards and controls retained; device/keyboard checks deferred.
+
+2026-09-24 Admin Messages: 25-record older/newer history pages and refresh-latest controls replace the latest-100 cutoff. Composer drafts survive navigation; send feedback is session guarded. Rendered/keyboard/mobile acceptance pending.
+
+2026-09-24 mixed-order extension: /admin/fulfillment can manage Gadgify groups within mixed orders; /orders/shipments accepts owned delivered-group returns for those items. Gadgify-only legacy links remain. UI/device verification pending.
+
+2026-09-24 inspection: /admin/fulfillment includes optional per-order quality actions, evidence images and staff call notes. /seller/orders exposes only the authorized shop's shared findings/photos; /orders/shipments exposes status/dispatch hold only. Inspection filtering and status badges are available. Uses the shared drawer and mutation lock with focused ShopInspection styling. Browser/keyboard/mobile and concurrency acceptance remain pending.
+
+
+2026-09-24: Admin Notifications includes shop shipment/return jobs using existing status and retry controls. Customer/seller fulfillment screens continue to report saved updates independently of email delivery. No email delivery/browser/device verification performed.
+
+
 2026-09-23 home newsletter: duplicate active email receives a persistent inline “This email is already subscribed.” error plus existing five-second snackbar, retains the email and disables resubmission. Server rejects repeat provider work across requests. Browser/mobile acceptance pending.
 
 
@@ -45,8 +73,8 @@ E31 adds initial server product HTML at `/product/:id` with current metadata/str
 | Route | Component | Access | Current implementation and gaps |
 | --- | --- | --- | --- |
 | / | HomePage | Public | API catalog slices plus locally configured hero/story/sections and newsletter. Full section CMS pending. |
-| /products | ShopPage | Public | Query-backed search/category/sort/color/rating filtering. 300ms debounced cancellable search, explicit error/retry and cursor Load more. Multiple rating bands and database-backed hex swatches implemented (E21); complete catalog facets remain pending. |
-| /product/:id | ProductDetailPage | Public; review writes require session | Product/media/review reads, own-review edit pencil, media uploads. Only server reviews are displayed; compact product loader. Live review ownership/media checks pending. |
+| /products | ShopPage | Public | Query-backed search/category/sort/color/rating filtering. Shared ProductCard uses edge-to-edge square product images without an outer frame, catalog-color swatches, long-title clamping, fractional `RatingStars`, and optional compare-at markdown only when persisted original price exceeds selling price; checkout continues to use selling price. 300ms debounced cancellable search, explicit error/retry and cursor Load more. Multiple rating bands and database-backed hex swatches implemented (E21); complete catalog facets remain pending. Product pricing migration is prepared but unapplied; generated client/runtime acceptance pending. |
+| /product/:id | ProductDetailPage | Public; review writes require session | Product/media/review reads, shared fractional rating stars in the rating summary and review rows, own-review edit pencil and media uploads. Only server reviews are displayed; compact product loader. Live review ownership/media checks pending. |
 | /support | SupportPage | Public | Authenticated support form with saved-ticket handling; after creation customers can add private bounded JPEG/PNG attachments. Migrations/scanning/device acceptance pending. |
 | /support-requests | SupportPage list | Authenticated for API; guest login guidance | Owned paginated tickets, status/reason, open cancellation, private attachments and paginated replies. Migrations/device acceptance pending. |
 | /admin/support | SupportPage admin | Administrator | Paginated tickets, private attachment access, conversations and guarded status/resolution updates; migrations/device acceptance pending. |
@@ -153,3 +181,16 @@ E28 Orders and captured/refunded Order Details include an independent first-purc
 
 
 E29: existing policy pages now query published-only text in the selected language, with loading/error/unpublished states. Added /shipping, /cancellation and /cookies under the reading layout, with footer links. Admin Policies saves drafts and explicitly publishes approved text with version/history/audit. No approved copy or consent completion is implied.
+
+## Component coverage inventory - first source batch (2026-09-25)
+
+| Component/style owner | Consumers and variants | Findings / evidence |
+| --- | --- | --- |
+| SiteLayout / PageContainer / layout-and-feedback.css | All routed pages; form/reading/content/wide widths, header/footer | Central gutters aligned to 16/24/32px; page-specific inner spacing still needs review. Source only. |
+| controls.css primary/secondary buttons | Shared class consumers across storefront, cart, checkout, profile, seller/admin and dialogs | Three competing base definitions replaced with one. Shared padding, typography, radius, wrapping and touch size. Contextual selectors need consumer review. Source only. |
+| index.css tokens | Global control and typography foundations | Added font family, 44px control and missing spacing tokens. Legacy hard-coded typography remains for later batches. |
+| NotificationProvider / layout-and-feedback.css | Global snackbars including dialog portal; error/success/info | Dismiss target now at least 44px. Existing queue, five-second lifetime and announcements preserved. Overlay/phone checks pending. |
+| FormDialog / FormDialog.css | Contextual editors across account, commerce and marketplace | Existing shared implementation identified; focus/backdrop/notification combinations require rendered review. |
+| record-cards.css / feature cards | Record lists, product/order cards | Shared record style exists; other card variants not yet fully inventoried. |
+
+This is a partial source inventory, not completed component or route acceptance. Continue with startup/loading, fields, cards and page-local controls per UI_UX_REVIEW_GUIDE.md.

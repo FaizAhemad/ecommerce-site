@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "test:marketplace": "node --experimental-strip-types --test tests/marketplace-purchases.test.mjs tests/seller-media-library.test.mjs tests/shop-disputes.test.mjs tests/seller-fulfillment.test.mjs tests/order-transactions.test.mjs tests/seller-catalog.test.mjs tests/seller-applications.test.mjs tests/shop-access.test.mjs",
+    "test:marketplace": "node --experimental-strip-types --test tests/marketplace-purchases.test.mjs tests/shop-inspection.test.mjs tests/shop-order-notifications.test.mjs tests/seller-media-library.test.mjs tests/shop-disputes.test.mjs tests/seller-fulfillment.test.mjs tests/order-transactions.test.mjs tests/seller-catalog.test.mjs tests/seller-applications.test.mjs tests/shop-access.test.mjs",
     "test:seller-catalog": "node --experimental-strip-types --test tests/seller-catalog.test.mjs tests/seller-applications.test.mjs tests/shop-access.test.mjs",
     "test:seller-applications": "node --experimental-strip-types --test tests/seller-applications.test.mjs tests/shop-access.test.mjs",
     "test:shop-access": "node --experimental-strip-types --test tests/shop-access.test.mjs",

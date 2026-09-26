@@ -99,3 +99,28 @@ E30 current working scope is unverified. Preserve coupon activation approval, se
 MP-05 fulfillment: preserve shop-scoped SellerOrder/versioned actions and selected delivery data, existing Gadgify-only workflows, and financial separation. Prepared migration is unapplied. Mixed-shop checkout, allocation, refunds and payouts remain gated; follow SELLER_FULFILLMENT.md. Tests/lint/build/device acceptance remain deferred.
 
 Seller publication: use the transactional catalog projection and central marketplace purchase eligibility. External-shop purchasing stays disabled until approved commercial/provider rules; do not treat content approval as financial authorization. Both marketplace migrations and Prisma generation are rollout prerequisites. See MARKETPLACE_PURCHASING.md; all new work remains unverified under deferred checks.
+
+Quality inspection (2026-09-24): follow QUALITY_INSPECTION.md. Optional admin-requested external-shop order inspection blocks customer dispatch until PASSED; no universal/central logistics rule is approved. Preserve reserved shop-inspection/inspection-media keys, admin-only writes/call notes, scoped seller evidence and customer status-only DTOs, version/UUID/serializable guards, and seller membership/email checks on notification sends. No automatic calls, refunds or stock changes. Existing migration prerequisites and deferred verification remain.
+
+Shared-component direction (owner, 2026-09-25): reuse shared layout, FormDialog, form/control styles, notifications and private query conventions across the application. Extend existing shared components when necessary; avoid parallel page-specific implementations. Roll adoption forward through the backlog without claiming all pages are already converted.
+
+Application-wide UI review (2026-09-25): follow UI_UX_REVIEW_GUIDE.md before UI work. Inventory every route/admin tab and review loading/empty/error/pending/success states across phone/tablet/desktop; fix shared primitives first. Record source, owner screenshot, browser and real-device evidence separately. Existing live-operation and verification deferrals remain; no whole-app completion claim from isolated page changes.
+
+## Senior architecture standard and efficient AI workflow
+
+UI handoff documents: read [LUNA_ANALYSIS.md](LUNA_ANALYSIS.md) for the design analysis and [ASTRA_CHANGES.md](ASTRA_CHANGES.md) for the current implementation handoff before UI work. These documents support the single APPLICATION_BACKLOG.md checklist and must not be treated as proof of verification.
+
+Owner direction (2026-09-25): approach work with the rigor expected of a senior architect with 16+ years of industry experience across architecture, frontend, backend, UI/UX, content, testing, security and AI engineering. This defines the expected standard of judgment, not a claim that the AI has personal employment history or infallible expertise.
+
+Responsibilities: consider the complete customer/admin/seller journey, data contracts, authorization, failure recovery, accessibility, mobile usability, clear wording, maintainability and deployment constraints together. Explain material tradeoffs briefly, preserve working behavior and shared components, and distinguish implemented code from verified outcomes. Use available relevant skills and primary documentation when needed; never invent tool access, provider results or business decisions. AI features require approved purpose/provider, privacy boundaries, evaluation and cost controls before activation.
+
+Token-efficient execution:
+- Start with current instructions, relevant backlog/status sections and the affected feature contract. Use targeted rg searches and bounded file reads; avoid repeatedly dumping whole files or historical discussions. Reuse context already read, checking changes when necessary.
+- Work in bounded batches with a concrete outcome. Inspect existing components/helpers before creating new ones; fix shared causes and review affected consumers instead of repeating per-page implementations.
+- Batch independent reads/searches, limit output to useful evidence, and inspect focused diffs. Keep required edits and dependent actions sequential. Do not delegate unless explicitly authorized by applicable instructions.
+- Keep commentary and handoffs concise: current item, material finding, result and remaining verification. Avoid repeated plans, long recaps, unnecessary alternatives and per-item approval requests within authorized scope.
+- Update affected documentation once per completed batch, with one concise evidence entry. APPLICATION_BACKLOG.md is the only completion checklist; link to feature contracts instead of copying their text into multiple documents.
+- Preserve security and functional coverage when saving tokens. Never skip required context, hide uncertainty, suppress failures or mark untested work complete to reduce cost. Respect current test/live-operation deferrals and record their impact.
+- Use AI to assist implementation/review, not as evidence that code is correct. Tests, browser observations and provider verification supply distinct evidence. Do not promise exact token savings or production dates without measured support.
+
+Complete UI coverage (owner, 2026-09-25): follow UI_UX_REVIEW_GUIDE.md component coverage requirements. Audit every component and page-local UI, including notifications, overlays and all interaction states. Start with shared tokens/layout/primitives, then migrate consumers; do not style the loader in isolation. Maintain component-to-route coverage in PAGE_INVENTORY.md and evidence in PROJECT_STATUS.md; APPLICATION_BACKLOG.md remains the only checklist. Existing security and verification deferrals remain.

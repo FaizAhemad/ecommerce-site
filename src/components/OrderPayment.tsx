@@ -10,6 +10,7 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
     widget = useRef<PaymentWidget | null>(null),
     verifying = useRef(false)
   const [pending, setPending] = useState(false)
+  const [feedback, setFeedback] = useState('')
   useEffect(
     () => () => {
       controller.current?.abort()
@@ -21,15 +22,17 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
     if (lock.current) return
     lock.current = true
     setPending(true)
+    setFeedback('Opening secure payment...')
     const abort = new AbortController()
     controller.current = abort
     const generation = sessionGeneration()
     const release = () => {
       lock.current = false
-      if (!abort.signal.aborted) setPending(false)
+      if (!abort.signal.aborted && generation === sessionGeneration()) setPending(false)
     }
     const fail = (error: unknown) => {
       if (!abort.signal.aborted && generation === sessionGeneration()) {
+        setFeedback(error instanceof Error ? error.message : 'Payment could not be confirmed. Refresh your order before paying again.')
         notify(
           error instanceof Error
             ? error
@@ -70,6 +73,7 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
       async function verify(result: PaymentResult) {
         if (verifying.current || abort.signal.aborted) return
         verifying.current = true
+        if (generation === sessionGeneration()) setFeedback('Verifying payment with the server...')
         try {
           assertCurrentSession(generation)
           const response = await apiFetch('/api/payments/razorpay-verify', {
@@ -92,7 +96,8 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
               body.error?.message ??
                 'Payment is not confirmed. Check the order status before paying again.',
             )
-          if (!abort.signal.aborted) {
+          if (!abort.signal.aborted && generation === sessionGeneration()) {
+            setFeedback('Payment confirmed.')
             notify('Payment confirmed.', 'success')
             onRefresh()
           }
@@ -113,7 +118,8 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
         modal: {
           ondismiss: () => {
             if (!verifying.current) {
-              if (!abort.signal.aborted) {
+              if (!abort.signal.aborted && generation === sessionGeneration()) {
+                setFeedback('Payment window closed. Refresh your order before paying again.')
                 notify('Payment window closed. Check the order status before trying again.', 'info')
                 onRefresh()
               }
@@ -123,7 +129,8 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
         },
       })
       widget.current.on('payment.failed', () => {
-        if (!abort.signal.aborted) {
+        if (!abort.signal.aborted && generation === sessionGeneration()) {
+          setFeedback('Payment attempt failed. Check your order status before paying again.')
           notify('Payment attempt failed. You can retry in the payment window or close it.')
           onRefresh()
         }
@@ -138,6 +145,7 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
       <button className="primary-button" disabled={pending} onClick={() => void pay()}>
         {pending ? 'Payment in progress…' : 'Pay with Razorpay'}
       </button>
+      {feedback && <p role="status" aria-live="polite">{feedback}</p>}
       <p>
         Payment is complete only after confirmation. If interrupted, refresh this order before
         paying again.

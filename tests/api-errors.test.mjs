@@ -568,3 +568,45 @@ test('subscription form blocks duplicate submissions and keeps a failed draft', 
   assert.equal(states[1], 'error')
   assert.match(notices[0].message, /Subscription saved/)
 })
+
+test('admin message history validates cursors and bounds older records without offset drift', async () => {
+  let calls = 0, captured
+  globalThis.messageHistoryFixture = {
+    admin: true,
+    findMany: async args => {
+      calls++; captured = args
+      return Array.from({ length: 26 }, (_, index) => ({ id: `message-${String(30-index).padStart(2, '0')}`, createdAt: new Date('2026-09-24T00:00:00.000Z') }))
+    },
+  }
+  try {
+    const handler = (await load('../server/api/admin/messages.ts', (binding, path) => {
+      if (path.endsWith('/http.js')) return `import ${binding} from ${JSON.stringify(new URL('../server/api/_lib/http.ts', import.meta.url).href)}`
+      if (path.endsWith('/db.js')) return 'const db = { customerMessage: { findMany: (...args) => globalThis.messageHistoryFixture.findMany(...args) } }'
+      if (path.endsWith('/auth.js')) return 'const requireAdmin = async (_req, res) => globalThis.messageHistoryFixture.admin ? { id: "admin" } : (res.status(403).json({ error: "Forbidden" }), null)'
+      if (path.endsWith('/customer-messages.js')) return 'class MessageError extends Error {}; const createCustomerMessage = () => { throw new Error("unexpected send") }'
+      if (path.endsWith('/email.js')) return 'const sendTransactionalEmail = () => { throw new Error("unexpected provider call") }'
+      if (path.endsWith('/support.js')) return 'const escapeEmail = value => value'
+    })).default
+    const first = response()
+    await handler({ method: 'GET', query: {} }, first)
+    assert.equal(first.code, 200)
+    assert.equal(first.body.messages.length, 25)
+    assert.equal(captured.take, 26)
+    assert.equal(first.body.nextCursor, '2026-09-24T00:00:00.000Z|message-06')
+    assert.match(first.headers['Cache-Control'], /private.*no-store/)
+    await handler({ method: 'GET', query: { before: first.body.nextCursor } }, response())
+    assert.equal(captured.where.OR[1].id.lt, 'message-06')
+    assert.equal(captured.where.OR[0].createdAt.lt.toISOString(), '2026-09-24T00:00:00.000Z')
+    for (const before of ['invalid', ['repeated'], '2026-09-24T00:00:00.000Z|x|extra', '2026-09-24|x']) {
+      const invalid = response(), previousCalls = calls
+      await handler({ method: 'GET', query: { before } }, invalid)
+      assert.equal(invalid.code, 400)
+      assert.equal(calls, previousCalls)
+    }
+    globalThis.messageHistoryFixture.admin = false
+    const denied = response(), previousCalls = calls
+    await handler({ method: 'GET', query: {} }, denied)
+    assert.equal(denied.code, 403)
+    assert.equal(calls, previousCalls)
+  } finally { delete globalThis.messageHistoryFixture }
+})

@@ -28,7 +28,7 @@ export async function publishSellerProduct(tx: Prisma.TransactionClient, draft: 
     if (media.contentType.startsWith('image/')) images.push({ url, alt: draft.name, sortOrder: images.length })
     else videos.push({ url, sortOrder: videos.length })
   }
-  const fields = { name: draft.name, description: draft.description, category: draft.category, priceMinor: draft.priceMinor, stock: draft.stock, isActive: true }
+  const fields = { name: draft.name, description: draft.description, category: draft.category, priceMinor: draft.priceMinor, compareAtPriceMinor: draft.compareAtPriceMinor ?? null, stock: draft.stock, isActive: true }
   if (existing) {
     // Approval is not a stock replenishment. Preserve reservations made since publication.
     const stock = existing.stock + draft.stock - (draft.publishedStock ?? existing.stock)

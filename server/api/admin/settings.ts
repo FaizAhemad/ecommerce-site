@@ -9,7 +9,7 @@ import {
   type VercelResponse,
 } from '../_lib/http.js'
 const ordinarySettings = {
-  NOT: ['shop-dispute.', 'seller-product.', 'seller-media.', 'seller-application.', 'refund-attempt.', 'policy.', 'policy-history.', 'coupon.', 'coupon-history.', 'coupon-use.', 'order-email.', 'audit.'].map((prefix) => ({
+  NOT: ['shop-inspection.', 'inspection-media.', 'shop-dispute.', 'seller-product.', 'seller-media.', 'seller-application.', 'refund-attempt.', 'policy.', 'policy-history.', 'coupon.', 'coupon-history.', 'coupon-use.', 'order-email.', 'audit.'].map((prefix) => ({
     key: { startsWith: prefix },
   })),
 }
@@ -30,7 +30,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const values = bodyRecord(request)
     if (
       Object.keys(values).some((key) =>
-        /^(shop-dispute\.|seller-product\.|seller-media\.|seller-application\.|refund-attempt\.|policy\.|policy-history\.|coupon\.|coupon-history\.|coupon-use\.|order-email\.|audit\.)/.test(key),
+        /^(shop-inspection\.|inspection-media\.|shop-dispute\.|seller-product\.|seller-media\.|seller-application\.|refund-attempt\.|policy\.|policy-history\.|coupon\.|coupon-history\.|coupon-use\.|order-email\.|audit\.)/.test(key),
       )
     )
       return sendError(

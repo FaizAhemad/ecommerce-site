@@ -4,6 +4,8 @@ Priority: first, approved by the owner on 2026-09-22. This supersedes the earlie
 
 ## Business intent
 
+Quality inspection request (2026-09-24): Gadgify retains administrator oversight of every shop's catalog/orders. Listing approval remains separate from physical inspection. The owner is unsure about routing all goods through Gadgify; retain seller-managed delivery and implement optional per-order inspection first. An admin-requested inspection holds only that shop order's customer dispatch until received and passed. Failure supports return-to-shop/replacement records, private evidence, seller email and staff call notes. Mandatory inspection, central logistics, cost/liability and partial-item acceptance remain undecided. See QUALITY_INSPECTION.md and MP-10 in the single backlog.
+
 2026-09-23 source update: connected workspace, moderation, shop showcase and seller-order-read pages are implemented as bounded preparation flows. See SELLER_WORKSPACE.md. Financial marketplace activation, independent fulfillment and payout pages remain pending business/provider decisions and implementation; no full-completion claim is made.
 
 MP-02 application and review source is now present; see SELLER_ONBOARDING.md. This adds onboarding only, not product publishing or financial readiness. Migration and all newly deferred acceptance gates remain pending.

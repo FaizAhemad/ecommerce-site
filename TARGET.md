@@ -1,5 +1,10 @@
 # Implementation target and delivery order
 
+Current UI direction (2026-09-25): follow [UI_UX_REVIEW_GUIDE.md](UI_UX_REVIEW_GUIDE.md) for every component, notification, overlay, page and state. Consolidate shared tokens/layout/primitives before page polish; preserve current commerce and security gates. APPLICATION_BACKLOG.md remains the sole checklist; source changes do not establish browser/device acceptance.
+
+Quality inspection scope: optional per-order Gadgify checks, defect/return/replacement records and private evidence are implemented in source. Universal inspection/central logistics and operational acceptance remain pending. See QUALITY_INSPECTION.md.
+
+
 Marketplace publication is implemented in source; seller checkout remains gated by approved commercial/provider rules and verification. See MARKETPLACE_PURCHASING.md for exact scope and deployment prerequisites.
 
 

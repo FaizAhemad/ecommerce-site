@@ -8,7 +8,7 @@ import './SellerCatalogPage.css'
 import { SellerNavigation } from '../components/SellerNavigation'
 import { SellerMediaLibrary } from '../components/SellerMediaLibrary'
 
-type Draft = { id: string; shopId: string; shopName: string; name: string; category: string; description: string; priceMinor: number; stock: number; mediaIds: string[]; status: string; version: number; reason: string }
+type Draft = { id: string; shopId: string; shopName: string; name: string; category: string; description: string; priceMinor: number; compareAtPriceMinor?: number | null; stock: number; mediaIds: string[]; status: string; version: number; reason: string }
 type Result = { shops: { id: string; name: string }[]; products: Draft[]; nextPage: number | null }
 async function json<T>(path: string, init?: Parameters<typeof apiFetch>[1]): Promise<T> {
   const response = await apiFetch(path, init)
@@ -27,7 +27,7 @@ function MediaPreview({ shopId, id }: { shopId: string; id: string }) {
 export function SellerCatalogPage({ admin = false }: { admin?: boolean }) {
   const notify = useNotification(), lock = useRef(false), abortRef = useRef<AbortController | null>(null)
   const [shopId, setShopId] = useState(''), [page, setPage] = useState(0)
-  const [draft, setDraft] = useState<Draft | null>(null), [price, setPrice] = useState('')
+  const [draft, setDraft] = useState<Draft | null>(null), [price, setPrice] = useState(''), [comparePrice, setComparePrice] = useState('')
   const [reason, setReason] = useState(''), [decision, setDecision] = useState('APPROVED')
   const [archiveConfirm, setArchiveConfirm] = useState(false)
   const [mediaShop, setMediaShop] = useState<string | null>(null)
@@ -46,6 +46,7 @@ export function SellerCatalogPage({ admin = false }: { admin?: boolean }) {
     if (!item && !currentShop) return
     setDraft(item ? { ...item, mediaIds: [...item.mediaIds] } : { id: crypto.randomUUID(), shopId: currentShop!.id, shopName: currentShop!.name, name: '', category: '', description: '', priceMinor: 0, stock: 0, mediaIds: [], status: 'DRAFT', version: 0, reason: '' })
     setPrice(item ? (item.priceMinor / 100).toFixed(2) : '')
+    setComparePrice(item?.compareAtPriceMinor ? (item.compareAtPriceMinor / 100).toFixed(2) : '')
     setFiles([]); setReason(''); setDecision('APPROVED'); setError(''); setArchiveConfirm(false)
   }
   async function save(action: 'save' | 'submit' | 'archive' | 'review') {
@@ -58,6 +59,7 @@ export function SellerCatalogPage({ admin = false }: { admin?: boolean }) {
       const mediaIds = [...draft.mediaIds]
       if (!admin && action !== 'archive') {
         if (!/^\d+(?:\.\d{1,2})?$/.test(price)) throw new Error('Enter a price with up to two decimal places.')
+        if (comparePrice && (!/^\d+(?:\.\d{1,2})?$/.test(comparePrice) || Number(comparePrice) <= Number(price))) throw new Error('Original price must be higher than the selling price.')
         if (mediaIds.length + files.length > 3) throw new Error('Keep up to three media attachments.')
         for (const file of files) {
           if (file.size > 1000000) throw new Error('Each attachment must be no larger than 1 MB.')
@@ -74,7 +76,7 @@ export function SellerCatalogPage({ admin = false }: { admin?: boolean }) {
           mediaIds.push(id)
         }
       }
-      await json(endpoint, { method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...draft, priceMinor: Math.round(Number(price) * 100), mediaIds, expectedVersion: draft.version, action, ...(admin ? { status: decision, reason } : {}) }) })
+      await json(endpoint, { method: 'POST', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...draft, priceMinor: Math.round(Number(price) * 100), compareAtPriceMinor: comparePrice ? Math.round(Number(comparePrice) * 100) : null, mediaIds, expectedVersion: draft.version, action, ...(admin ? { status: decision, reason } : {}) }) })
       if (generation !== sessionGeneration() || signal.aborted) return
       setDraft(null); setFiles([])
       notify(action === 'archive' ? 'Product draft archived.' : admin ? 'Review recorded. This product is not published for sale.' : action === 'submit' ? 'Product submitted for review.' : 'Product draft saved.', 'success')
@@ -112,6 +114,7 @@ export function SellerCatalogPage({ admin = false }: { admin?: boolean }) {
           <label>Category<select required value={draft.category} disabled={busy || !categories.data} onChange={event => setDraft({ ...draft, category: event.target.value })}><option value="">Choose category</option>{categories.data?.categories.map(category => <option key={category}>{category}</option>)}</select></label>
           {categories.isError && <button type="button" className="secondary-button" onClick={() => void categories.refetch()}>Retry categories</button>}
           <label>Price (INR)<input type="number" required min="1" max="1000000" step="0.01" value={price} disabled={busy} onChange={event => setPrice(event.target.value)} /></label>
+          <label>Original price (optional)<input type="number" min="1" max="1000000" step="0.01" value={comparePrice} disabled={busy} onChange={event => setComparePrice(event.target.value)} /><small>Shown crossed out when higher than the selling price.</small></label>
           <label>Stock<input type="number" required min="0" max="1000000" step="1" value={draft.stock} disabled={busy} onChange={event => setDraft({ ...draft, stock: Number(event.target.value) })} /></label>
         </>}
         <div className="seller-media-grid">{draft.mediaIds.map(id => <div key={id}><MediaPreview shopId={draft.shopId} id={id} />{!admin && <button type="button" className="secondary-button" disabled={busy} onClick={() => setDraft({ ...draft, mediaIds: draft.mediaIds.filter(value => value !== id) })}>Remove attachment</button>}</div>)}</div>

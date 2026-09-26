@@ -1,5 +1,6 @@
 /* Ordered imports preserve the existing cascade during feature migration. */
 @import "./styles/foundation.css";
+@import "./styles/controls.css";
 @import "./styles/storefront.css";
 @import "./styles/cart-and-reviews.css";
 @import "./styles/checkout.css";

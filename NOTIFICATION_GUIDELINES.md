@@ -1,5 +1,12 @@
 # Application message guidelines
 
+2026-09-25 admin composition uses the shared drawer. Closing does not resend or clear a mounted draft; recorded messages stay locked until explicitly starting another message. Inline feedback distinguishes saved/unconfirmed from provider acceptance; neither implies inbox delivery.
+
+2026-09-24 admin message history is paginated beyond the former 100-record cutoff. This adds browsing only; it does not retry sends or establish inbox delivery. Verification deferred.
+
+Shop shipment/return email copy identifies only the relevant shop/order, escapes dynamic text and directs customers to authenticated details. It must not imply payment, refund or bank settlement. Return reasons, delivery addresses and private support destinations are excluded. Provider acceptance is not delivery.
+
+
 Newsletter duplicate handling: 409 ALREADY_SUBSCRIBED is a terminal already-active outcome, shown as an error without resending a welcome email. Unique/conditional activation occurs before provider operations. Saved subscription survives provider failures; repeated signup is not a synchronization-retry mechanism. Provider synchronization failures still need operational review using sanitized phase/requestId diagnostics.
 
 

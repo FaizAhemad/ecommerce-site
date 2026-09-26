@@ -1,6 +1,6 @@
 import { put } from '@vercel/blob'
 import { randomUUID } from 'node:crypto'
-import { validateMediaUpload } from '../../_lib/media.js'
+import { logMediaStorageFailure, validateMediaUpload } from '../../_lib/media.js'
 import { requireUser } from '../../_lib/auth.js'
 import {
   bodyRecord,
@@ -53,7 +53,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
       addRandomSuffix: true,
     })
     return response.status(201).json({ url: blob.url, requestId: id })
-  } catch {
+  } catch (error) {
+    logMediaStorageFailure(error, id, 'review_upload')
     return sendError(
       response,
       503,

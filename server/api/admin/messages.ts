@@ -24,15 +24,32 @@ export default async function handler(request: VercelRequest, response: VercelRe
     admin = await requireAdmin(request, response)
   if (!admin) return
   try {
-    if (request.method === 'GET')
+    response.setHeader?.('Cache-Control', 'private, no-store, max-age=0')
+    if (request.method === 'GET') {
+      const cursor = request.query?.before
+      let before: { createdAt: Date; id: string } | undefined
+      if (cursor !== undefined) {
+        if (typeof cursor !== 'string' || cursor.length > 160)
+          return sendError(response, 400, 'INVALID_CURSOR', 'Invalid history cursor.', id)
+        const [timestamp, messageId, extra] = cursor.split('|')
+        const date = new Date(timestamp)
+        if (extra !== undefined || !messageId || !/^[a-zA-Z0-9_-]{1,100}$/.test(messageId) || !Number.isFinite(date.getTime()) || date.toISOString() !== timestamp)
+          return sendError(response, 400, 'INVALID_CURSOR', 'Invalid history cursor.', id)
+        before = { createdAt: date, id: messageId }
+      }
+      const rows = await db.customerMessage.findMany({
+        select,
+        where: before ? { OR: [{ createdAt: { lt: before.createdAt } }, { createdAt: before.createdAt, id: { lt: before.id } }] } : undefined,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: 26,
+      })
+      const messages = rows.slice(0, 25), last = messages.at(-1)
       return response.status(200).json({
-        messages: await db.customerMessage.findMany({
-          select,
-          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-          take: 100,
-        }),
+        messages,
+        nextCursor: rows.length > 25 && last ? `${last.createdAt.toISOString()}|${last.id}` : null,
         requestId: id,
       })
+    }
     if (request.method !== 'POST')
       return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET or POST.', id)
     const message = await createCustomerMessage(

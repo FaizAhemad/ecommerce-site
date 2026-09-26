@@ -1,5 +1,16 @@
 # Architecture, security and UI/UX audit
 
+2026-09-25 scope clarification: every UI component/state, including notifications and overlays, requires review. Shared color/spacing/type/layout/control foundations come before isolated loader styling. UI_UX_REVIEW_GUIDE.md defines component and route coverage; verification remains pending.
+
+2026-09-25 process update: UI_UX_REVIEW_GUIDE.md defines application-wide route/state/device review and shared-component regression coverage. Owner screenshot reports bare full-screen session loading; source confirms the standalone bootstrap screen. Prioritize shared startup/loading/error treatment under UI-09 without weakening identity gates. Redesign and rendered acceptance remain pending.
+
+2026-09-25 checkout: removed its use of legacy payment-option span styles that hid mobile address content. Focused PaymentPage styles and reusable OrderTotals use existing tokens/controls/layout. Frozen in-memory submission snapshots prevent background data changes from misleading same-request retries; session guards protect asynchronous feedback. No rendered/device verification yet.
+
+2026-09-25 UI-04: Admin Messages now reuses FormDialog and existing form/button/record-card styles. Persistent inline feedback complements shared snackbars; no parallel drawer implementation. App-wide reuse remains the standard for subsequent changes, with visual/device acceptance pending.
+
+2026-09-24 optional inspection: focused ShopInspection component shares the parent mutation lock, modal pending guard, generation/abort controls and preserved drafts. Role-specific DTOs exclude private evidence from customers and call notes from sellers. Server dispatch hold remains authoritative. UI/device/concurrency verification is deferred; see QUALITY_INSPECTION.md.
+
+
 2026-09-23 publication: shared add-to-cart controls expose unavailable purchase reasons, while server eligibility remains authoritative. Shop ownership is required across catalog/checkout and server SEO. Media responses are bounded rather than embedding base64 in product DTOs. Verification deferred; see MARKETPLACE_PURCHASING.md.
 
 

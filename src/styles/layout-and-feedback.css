@@ -1,6 +1,7 @@
 .site-shell {
-  --page-gutter: 48px;
+  --page-gutter: 32px;
   --section-space: 48px;
+  background-image: radial-gradient(circle at 88% 8%, rgba(215, 225, 208, 0.32), transparent 28rem);
 }
 
 .site-shell .site-header,
@@ -13,6 +14,7 @@
 .page-container {
   width: 100%;
   max-width: 1440px;
+  flex: 1 0 auto;
   margin-inline: auto;
   min-width: 0;
 }
@@ -35,7 +37,7 @@
 }
 @media (min-width: 761px) and (max-width: 1199px) {
   .site-shell {
-    --page-gutter: 32px;
+    --page-gutter: 24px;
   }
 }
 .loading-spinner {
@@ -46,6 +48,29 @@
   border-top-color: var(--ink);
   border-radius: 50%;
   animation: loading-spin 0.8s linear infinite;
+}
+.app-loading-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.app-loading-brand .app-loading-mark {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border: 1px solid rgba(255, 254, 250, 0.28);
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--surface);
+  font-family: var(--font-display);
+  font-size: 32px;
+  letter-spacing: 0;
 }
 @keyframes loading-spin {
   to {
@@ -69,7 +94,7 @@
 }
 .notification-region {
   position: fixed;
-  bottom: max(24px, env(safe-area-inset-bottom));
+  bottom: max(88px, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 1100;
@@ -78,7 +103,7 @@
 .error-snackbar {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
   padding: 16px 20px;
   border-radius: 6px;
   background: #28313b;
@@ -96,6 +121,8 @@
 }
 .error-snackbar button {
   flex-shrink: 0;
+  min-height: var(--control-height);
+  min-width: var(--control-height);
   padding: 8px 0;
   border: 0;
   background: transparent;
@@ -203,32 +230,65 @@
 .product-card-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
 }
-.product-card-actions .wishlist-button {
+.error-snackbar .snackbar-action {
+  min-width: auto;
+  border: 0;
+  background: transparent;
+  color: var(--yellow);
+  font-weight: 700;
+}
+.product-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.product-title-row .product-card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.product-title-row .wishlist-button {
   position: static;
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 21px;
+  line-height: 1;
+}
+.product-title-row .wishlist-button.is-wishlisted {
+  border-color: rgba(213, 47, 69, 0.32);
+  background: rgba(213, 47, 69, 0.06);
+  color: #d52f45;
 }
 .product-card-actions strong {
   margin-top: 0;
 }
-.product-card-actions .wishlist-button:focus-visible {
+.product-title-row .wishlist-button:focus-visible {
   outline: 2px solid var(--green);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 @media (max-width: 760px) {
   .product-card-actions {
     justify-content: space-between;
-    margin-top: 10px;
+    margin-top: 6px;
   }
 }
 
 @media (max-width: 760px) {
   .site-shell {
-    --page-gutter: clamp(16px, 4.5vw, 24px);
+    --page-gutter: 16px;
     --section-space: 32px;
   }
 }

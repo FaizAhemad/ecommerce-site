@@ -23,12 +23,16 @@ Owner-requested tracking update (2026-09-23): checked entries explicitly labelle
 - [x] ✅ MP-04a **Coding done:** moderation/publication/withdrawal, shop showcase, seller identity, media checks, suspension/SEO filtering and server purchase eligibility. See MARKETPLACE_PURCHASING.md.
 - [ ] MP-04b Enable external-shop purchasing only after approved commercial rules and migration/runtime acceptance; it remains disabled.
 - [x] ✅ MP-05a **Coding done:** shop order grouping, scoped shipment updates, customer returns and seller/admin review, with prepared fulfillment migration. See SELLER_FULFILLMENT.md.
-- [ ] MP-05b Mixed-shop checkout/allocation, platform mixed-order handling, cancellations/refunds, remaining fulfillment notifications and runtime/device acceptance.
+- [ ] MP-05b Mixed-shop checkout/allocation, cancellations/refunds and runtime/device acceptance. Platform mixed-order shipment/return handling is coded, unverified (2026-09-24).
+- [x] ✅ MP-05c **Coding done:** shop dispatch/delivery and return approval/rejection/receipt email jobs with transactional enqueue and verified recipients; this does not extend legacy Gadgify return emails.
+- [ ] MP-05d Verify shipment/return email regressions, worker operation and provider/device delivery acceptance.
 - [ ] MP-06 Approved configurable fee rules and immutable item-level commission ledger.
 - [ ] MP-07 Approved payment arrangement, earnings, payouts and settlement reconciliation.
 - [x] ✅ MP-08a **Coding done:** order support conversations, escalation, admin resolution/audit and dispute email outbox with private staff routing and verified-customer notices.
 - [ ] MP-08b Seller policies, worker operation, verified email delivery, direct inbound email forwarding setup and isolation/device/production acceptance.
 - [ ] MP-09 Isolation/regression/migration/provider/mobile acceptance and controlled rollout.
+- [x] ✅ MP-10a **Coding done:** optional admin-requested physical inspection per external-shop order, receipt/pass/fail, dispatch hold, return-to-shop/replacement records, private evidence photos, staff call notes, scoped shop views and seller email jobs. See QUALITY_INSPECTION.md; checked scope is source implementation only, as requested.
+- [ ] MP-10b Decide mandatory inspection/central delivery, custody/transport costs, partial-item inspection and evidence retention; verify isolation, concurrency, migration prerequisites, email and phone/browser behavior before production acceptance.
 
 - [ ] Session security: role-based idle/absolute expiry, legacy-session rejection, activity renewal and warning coded on 2026-09-22. No migration. Deferred checks and owner multi-tab/device/production acceptance remain pending; see SESSION_SECURITY.md.
 
@@ -36,15 +40,15 @@ Owner-requested tracking update (2026-09-23): checked entries explicitly labelle
 
 UI remains in scope but follows the newly prioritized marketplace work above. Preserve existing API/security behavior. All entries remain unchecked until their stated scope and deferred device/interaction checks are complete.
 
-- [ ] UI-01 CSS organization: extracted App.css into nine ordered feature groups plus dedicated record-card/dialog styles; extraction preserved existing rule order. Further subdivision and legacy override cleanup remain.
-- [ ] UI-02 Visual foundation: shared spacing/radius tokens, readable controls, checkbox fixes and record cards implemented; page-wide color/contrast/spacing review remains.
+- [ ] UI-01 CSS organization and component-to-consumer inventory (including page-local controls): extracted App.css into nine ordered feature groups plus dedicated record-card/dialog styles; extraction preserved existing rule order. Initial component inventory and shared button ownership consolidation added (2026-09-25); further subdivision and legacy override cleanup remain.
+- [ ] UI-02 Visual foundation: shared spacing/radius tokens, readable controls, checkbox fixes and record cards implemented; shared button styling, font/control tokens and 16/24/32px page gutters consolidated (2026-09-25); application-wide color, typography, card/field and consumer verification remains.
 - [ ] UI-03 Shared dialog/drawer: native modal, focus restoration, inert background, scroll locking, pending dismissal guard and top-layer snackbar placement implemented; keyboard/mobile checks remain.
-- [ ] UI-04 Admin: product/category and coupon editors plus refund approval moved into drawers; navigation is horizontally scrollable on small screens. Remaining admin forms/tables and all states need review.
+- [ ] UI-04 Admin: product/category and coupon editors, refund approval and customer-message composition moved into shared drawers; navigation is horizontally scrollable on small screens. Remaining admin forms/tables and all states need review.
 - [ ] UI-05 Profile: personal details and address forms moved into drawers with record-card summaries. Deletion, keyboard, failed drafts and device review remain.
-- [ ] UI-06 Catalog/product/reviews: complete spacing, filters, cards, media, review editor and mobile interactions.
-- [ ] UI-07 Cart/checkout/orders: complete responsive summaries, controls, financial feedback and loading states.
+- [ ] UI-06 Catalog/product/reviews: homepage screenshot pass tightened mobile header/navigation and hero rhythm (2026-09-25); product loading skeleton mirrors image, metadata, rating, color-row and action slots, while shared product cards use the same square media across Home, Products and Wishlist. The catalog grid auto-fits 230px minimum tracks and cards cap at 260px; virtualization derives its row count from the rendered catalog width so loaded products fill the same tracks. Product cards use a lightly bordered, raised surface with subtle shadow; title gets the full content width above the price row, avoiding narrow-column letter wrapping, and excess title-to-price whitespace has been reduced. The wishlist action is a subtle control beside the title, leaving both the image and price row uncluttered. Cards clamp long titles and reserve consistent compact slots for seller, discount, rating and colors so cards and add actions align within each row; current price is emphasized, saved color swatches are enlarged, and valid compare-at discounts render. Reusable fractional `RatingStars` is shared by cards, detail summaries and reviews. Admin/seller price editing and validation plus the prepared schema migration are coded; apply migration, regenerate Prisma, verify rendered/mobile behavior and finish remaining catalog/review work. See [PRODUCT_PRICING.md](PRODUCT_PRICING.md).
+- [ ] UI-07 Cart/checkout/orders: Gadgify checkout mobile addresses, reusable totals, frozen submission/retry state and persistent payment feedback coded (2026-09-25). Remaining cart/order UI review and deferred keyboard/mobile/provider/regression acceptance are pending.
 - [ ] UI-08 Support/account/information pages: review forms, conversations, recovery, help and policy readability. Keep primary login/checkout flows as pages.
-- [ ] UI-09 Navigation/loading/overlays and acceptance: complete phone-first review across every route/admin panel, then tablet/desktop. Tests/lint/format and live checks remain deferred under owner instructions.
+- [ ] UI-09 Navigation/loading/overlays and acceptance: After shared foundation work, address the reported startup loader and every loading/error/notification/overlay state using UI_UX_REVIEW_GUIDE.md. Audit every route/admin tab and component consumer on phone, tablet and desktop. Tests/lint/format and live checks remain deferred under owner instructions.
 
 UI-09 source update: removed header geometry changes at the scroll threshold to address reported Support-page flicker. Stable sticky positioning and shadow-only scroll styling are implemented; rendered acceptance remains pending.
 
@@ -76,7 +80,7 @@ These entries are not untouched tasks: their stated implementation is present. T
 - [x] ✅ E23 bounded offline implementation: configured checkout quote/submission, atomic UUID retry protection, admin charge controls, customer Razorpay controls, strict capture matching and original-body webhook handling. 157 synthetic tests pass; see PROJECT_STATUS E23 and CHECKOUT_PAYMENTS.md.
 - [ ] E23 owner acceptance: approve charges/policies, validate provider capture and Vercel raw webhooks, stock/retry concurrency and mobile behavior. Refunds, reconciliation jobs and remaining commerce rules are still pending.
 - [x] ✅ E24 bounded offline implementation: connected admin message composition/history, verified-recipient validation, saved-before-send records and duplicate-ID protection. 161 synthetic tests pass; see PROJECT_STATUS E24.
-- [ ] E24 owner acceptance: admin authorization, provider delivery/rejection, interrupted sends, account switching and phone form/history behavior. Durable retries, delivery events and history beyond the latest 100 remain incomplete.
+- [ ] E24 owner acceptance: admin authorization, provider delivery/rejection, interrupted sends, account switching and phone form/history behavior. History beyond the latest 100 is now coded with cursor pagination (2026-09-24), unverified. Durable retries and delivery events remain incomplete.
 - [x] ✅ E25 bounded offline refund integrity: replace manual refund status mutation with provider-backed full-refund reconciliation and reject manual REFUNDED edits through order/return controls. 164 synthetic tests pass; see PROJECT_STATUS E25.
 - [ ] E25 owner acceptance and remaining refunds: verify provider full/partial/failed outcomes, audit legacy manually-refunded records, implement approved refund initiation/eligibility, partial refunds and durable audit/reconciliation. Verification does not issue refunds or establish bank settlement.
 - [x] ✅ E26 bounded offline implementation: admin return history and guarded explicit review decisions, with owner/order consistency checks and no financial/stock effects. Fixed independent admin panel visibility; 169 tests pass (PROJECT_STATUS E26).
@@ -132,6 +136,8 @@ Owner: Codex for implementation and offline regression evidence; product owner f
 - [ ] Product owner: validate E13 against production with controlled test orders, competing checkout/cancellation requests and delayed payment events. Real database concurrency and provider behavior are not established by the synthetic transaction tests.
 
 ## Release gates: security and resilience
+
+- [ ] UI testing foundation: set up Playwright Test and @axe-core/playwright, preserve Node.js suites, and add route/state/mobile/validation/visual coverage per UI_UX_REVIEW_GUIDE.md. Setup/execution remain deferred; Vitest is optional later. Record browser, provider test-mode and real-device evidence separately.
 
 These must be addressed before calling the application stable or production-ready:
 

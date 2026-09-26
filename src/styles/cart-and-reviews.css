@@ -63,12 +63,7 @@
 .latest-reviews .review-item {
   order: 2;
 }
-.latest-reviews .reviews-heading .secondary-button {
-  order: 3;
-  align-self: flex-start;
-  margin-top: 22px;
-}
-.latest-reviews {
+.latest-reviews .reviews-heading .latest-reviews {
   gap: 0;
 }
 .latest-reviews .reviews-heading {

@@ -17,6 +17,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const ownership = await db.shopProduct.findUnique({ where: { productId }, include: { shop: { select: { isPlatform: true } } } })
     if (ownership && !ownership.shop.isPlatform) return sendError(response, 409, 'SELLER_REVIEW_REQUIRED', 'Manage this product through Seller products and moderation.', id)
+    const currentProduct = await db.product.findUnique({ where: { id: productId }, select: { priceMinor: true, compareAtPriceMinor: true } })
+    if (!currentProduct) return sendError(response, 404, 'NOT_FOUND', 'Product not found.', id)
     if (request.method === 'DELETE') {
       await db.product.update({ where: { id: productId }, data: { isActive: false } })
       return response.status(204).json(null)
@@ -29,6 +31,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       category?: string
       description?: string
       priceMinor?: number
+      compareAtPriceMinor?: number | null
       stock?: number
       isActive?: boolean
     } = {}
@@ -36,6 +39,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (typeof body.category === 'string') data.category = body.category.trim()
     if (typeof body.description === 'string') data.description = body.description
     if (Number.isInteger(body.priceMinor)) data.priceMinor = Number(body.priceMinor)
+    if (body.compareAtPriceMinor === null) data.compareAtPriceMinor = null
+    else if (Number.isInteger(body.compareAtPriceMinor)) data.compareAtPriceMinor = Number(body.compareAtPriceMinor)
     if (Number.isInteger(body.stock)) data.stock = Number(body.stock)
     if (typeof body.isActive === 'boolean') data.isActive = body.isActive
     if (
@@ -43,7 +48,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
       (body.category !== undefined &&
         (typeof body.category !== 'string' || !body.category.trim())) ||
       (body.priceMinor !== undefined &&
-        (!Number.isInteger(body.priceMinor) || Number(body.priceMinor) < 0)) ||
+        (!Number.isInteger(body.priceMinor) || Number(body.priceMinor) < 0 || Number(body.priceMinor) > 2147483647)) ||
+      (body.compareAtPriceMinor !== undefined && body.compareAtPriceMinor !== null &&
+        (!Number.isInteger(body.compareAtPriceMinor) || Number(body.compareAtPriceMinor) < 0 || Number(body.compareAtPriceMinor) > 2147483647)) ||
       (body.stock !== undefined && (!Number.isInteger(body.stock) || Number(body.stock) < 0))
     )
       return sendError(
@@ -53,6 +60,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
         'Valid name, category, non-negative price and stock are required.',
         id,
       )
+    const effectivePrice = data.priceMinor ?? currentProduct.priceMinor
+    const effectiveCompareAtPrice = body.compareAtPriceMinor === undefined
+      ? currentProduct.compareAtPriceMinor
+      : data.compareAtPriceMinor
+    if (effectiveCompareAtPrice !== null && effectiveCompareAtPrice !== undefined && effectiveCompareAtPrice <= effectivePrice)
+      return sendError(response, 400, 'VALIDATION_ERROR', 'Original price must be higher than the selling price.', id)
     if (
       data.category !== undefined &&
       !(await db.category.findUnique({ where: { name: data.category } }))

@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { checkoutRequest } from '../api/checkout'
-import { privateKey } from '../api/sessionScope'
+import { checkoutRequest, type Quote } from '../api/checkout'
+import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScope'
 import { queryClient } from '../api/queryClient'
 import { useNotification } from './NotificationProvider'
-type CheckoutProps = { addressId: string; cartRevision: string; disabled: boolean }
+import { OrderTotals } from './OrderTotals'
+type CheckoutProps = { addressId: string; cartRevision: string; disabled: boolean; onAttempt: () => void }
 export function CheckoutSubmit(props: CheckoutProps) {
   const [draft, setDraft] = useState('')
   const [coupon, setCoupon] = useState('')
   const [locked, setLocked] = useState(false)
-  return <div>
-    <label>Coupon code
+  return <section className="checkout-confirmation" aria-label="Order total and confirmation">
+    <div className="checkout-coupon"><label>Coupon code (optional)
       <input value={draft} maxLength={32} autoCapitalize="characters" autoComplete="off"
         disabled={locked || props.disabled} onChange={(event) => setDraft(event.target.value)} />
     </label>
@@ -18,8 +19,9 @@ export function CheckoutSubmit(props: CheckoutProps) {
       onClick={() => setCoupon(draft.trim().toUpperCase())}>Apply coupon</button>
     {coupon && <button type="button" className="secondary-button" disabled={locked}
       onClick={() => { setCoupon(''); setDraft('') }}>Remove coupon</button>}
-    <CheckoutOrder {...props} couponCode={coupon} onAttempt={() => setLocked(true)} />
-  </div>
+    </div>
+    <CheckoutOrder {...props} couponCode={coupon} onAttempt={() => { setLocked(true); props.onAttempt() }} />
+  </section>
 }
 function CheckoutOrder({
   addressId,
@@ -29,28 +31,36 @@ function CheckoutOrder({
   onAttempt,
 }: CheckoutProps & { couponCode: string; onAttempt: () => void }) {
   const notify = useNotification()
+  const [attempted, setAttempted] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const quote = useQuery({
     queryKey: privateKey('checkout', cartRevision, couponCode),
     queryFn: ({ signal }) => checkoutRequest('GET', signal, undefined, couponCode),
     retry: false,
+    enabled: !attempted,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   })
+  const frozenQuote = useRef<Quote | null>(null)
+  const displayedQuote = frozenQuote.current ?? quote.data
   const lock = useRef(false),
     controller = useRef<AbortController | null>(null),
     request = useRef<{ requestId: string; addressId: string; expectedTotalMinor: number; couponCode?: string } | null>(
       null,
     )
-  const [attempted, setAttempted] = useState(false)
   const [pending, setPending] = useState(false),
     [orderId, setOrderId] = useState('')
   useEffect(() => () => controller.current?.abort(), [])
   async function submit() {
-    if (lock.current || disabled || quote.isFetching || !addressId || !Number.isSafeInteger(quote.data?.totalMinor))
+    if (lock.current || orderId || (!request.current && (disabled || quote.isFetching || !quote.data?.enabled || !addressId || !Number.isSafeInteger(quote.data?.totalMinor))))
       return
     lock.current = true
+    frozenQuote.current ??= quote.data ?? null
     onAttempt()
     setAttempted(true)
     setPending(true)
-    const abort = new AbortController()
+    setErrorMessage('')
+    const abort = new AbortController(), generation = sessionGeneration()
     controller.current = abort
     request.current ??= {
       requestId: crypto.randomUUID(),
@@ -59,10 +69,10 @@ function CheckoutOrder({
       ...(couponCode ? { couponCode } : {}),
     }
     try {
-      const result = await checkoutRequest('POST', abort.signal, request.current)
+      const result = await checkoutRequest('POST', AbortSignal.any([abort.signal, sessionSignal()]), request.current)
       if (!result.orderId)
         throw new Error('Unable to confirm the order. Check your orders before trying again.')
-      if (abort.signal.aborted) return
+      if (abort.signal.aborted || generation !== sessionGeneration()) return
       setOrderId(result.orderId)
       notify(result.emailStatus === 'UNCONFIRMED'
         ? 'Order recorded; payment is pending. The confirmation email could not be confirmed. Check Orders for details.'
@@ -72,11 +82,14 @@ function CheckoutOrder({
       window.history.pushState({}, '', '/orders/' + encodeURIComponent(result.orderId))
       window.dispatchEvent(new PopStateEvent('popstate'))
     } catch (error) {
-      if (!abort.signal.aborted)
-        notify(error instanceof Error ? error : new Error('Check your orders before trying again.'))
+      if (!abort.signal.aborted && generation === sessionGeneration()) {
+        const message = error instanceof Error ? error.message : 'Check your orders before trying again.'
+        setErrorMessage(message)
+        notify(message, 'error')
+      }
     } finally {
       lock.current = false
-      if (!abort.signal.aborted) setPending(false)
+      if (!abort.signal.aborted && generation === sessionGeneration()) setPending(false)
     }
   }
   if (orderId)
@@ -86,8 +99,8 @@ function CheckoutOrder({
         <a href={'/orders/' + encodeURIComponent(orderId)}>View order and payment</a>
       </p>
     )
-  if (quote.isPending) return <p role="status">Checking delivery charges and total…</p>
-  if (quote.isError)
+  if (!attempted && quote.isPending) return <p role="status">Checking delivery charges and total…</p>
+  if (!attempted && quote.isError)
     return (
       <div role="alert">
         <p>{quote.error instanceof Error ? quote.error.message : 'Unable to load charges.'}</p>
@@ -100,7 +113,7 @@ function CheckoutOrder({
         </button>
       </div>
     )
-  if (!quote.data?.enabled)
+  if (!attempted && !quote.data?.enabled)
     return (
       <p className="state-message">
         Online ordering is not available yet. Your cart and selected address have not been
@@ -112,18 +125,17 @@ function CheckoutOrder({
       (value ?? 0) / 100,
     )
   return (
-    <div>
-      {!!quote.data.discountMinor && <p role="status">Coupon {quote.data.couponCode}: −{money(quote.data.discountMinor)}. Usage is confirmed when the order is recorded.</p>}
-      <p>
-        Delivery: {money(quote.data.shippingMinor)} · Tax: {money(quote.data.taxMinor)} · Total:{' '}
-        {money(quote.data.totalMinor)}
-      </p>
+    <div className="checkout-submit">
+      {!!displayedQuote?.discountMinor && <p role="status">Coupon {displayedQuote?.couponCode}: −{money(displayedQuote?.discountMinor)}. Usage is confirmed when the order is recorded.</p>}
+      <OrderTotals subtotalMinor={displayedQuote?.subtotalMinor} shippingMinor={displayedQuote?.shippingMinor} taxMinor={displayedQuote?.taxMinor} discountMinor={displayedQuote?.discountMinor} totalMinor={request.current?.expectedTotalMinor ?? displayedQuote?.totalMinor} />
+      {!addressId && <p role="status">Add or select an India delivery address to continue.</p>}
+      {errorMessage && <div role="alert"><p>{errorMessage}</p><p>The outcome may be unknown. Check <a href="/orders">your orders</a> first. Retrying below uses the same order request.</p></div>}
       <button
         className="primary-button"
-        disabled={disabled || pending || !addressId || quote.isFetching}
+        disabled={pending || (!attempted && (disabled || !addressId || quote.isFetching))}
         onClick={() => void submit()}
       >
-        {pending ? 'Recording order…' : 'Place order — ' + money(quote.data.totalMinor)}
+        {pending ? 'Recording order...' : (attempted ? 'Retry same order - ' : 'Place order - ') + money(request.current?.expectedTotalMinor ?? displayedQuote?.totalMinor)}
       </button>
       <p>
         Payment is confirmed separately. If a request times out, check{' '}
