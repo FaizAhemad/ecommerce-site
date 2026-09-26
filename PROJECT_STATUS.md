@@ -1,5 +1,21 @@
 # Project status
 
+## Product card cart quantity controls - 2026-09-26
+
+Shared storefront cards now switch from Add to cart to a cart quantity control: at quantity one the left action removes the item, and from quantity two onward it decrements; the right action increments. The live count comes from the same account-scoped React Query cart cache used by the cart/header, and mutations use `updateCart` with optimistic reconciliation/rollback and per-product pending locks. Added a short Tailwind count roll animation with reduced-motion support. Product cards disable controls while the cart loads or that product updates. Offline build passed; browser/cart synchronization, guest/auth, rollback and mobile acceptance remain pending.
+
+## Application-wide font family - 2026-09-26
+
+Unified the site on one system sans family using `--font-body`, with `--font-display` and Tailwind `font-sans` mapped to that same token. Replaced explicit Arial/Georgia declarations across legacy feature styles and form controls so migrated and unmigrated pages inherit the same family while keeping their existing sizes and weights. Source-only; whole-app route, text-zoom and device typography review remains pending.
+
+## Product card text and price hierarchy - 2026-09-26
+
+Refined the shared Tailwind card typography: product names now use a compact, semibold sans face in the deep brand color; category and seller labels stay secondary; selling price has stronger weight and size; original price is subdued and struck through; valid savings render as a soft green pill. Only existing compare-at pricing drives the discount display; no extra offers are invented. Shared by Home, Products and Wishlist. Source-only; visual contrast, long-price/title wrapping and phone acceptance remain pending.
+
+## Product card cursor affordances - 2026-09-26
+
+Added Tailwind pointer cursors to the shared product image/title targets, wishlist control, and add-to-cart action; unavailable or pending buttons retain a not-allowed cursor. The outer card remains neutral because its blank areas do not open the product. Shared across Home, Products, and Wishlist. Source-only; rendered and keyboard/device acceptance remains pending.
+
 ## Home primary CTA text contrast - 2026-09-26
 
 Fixed the Home “Explore the collection” link whose dark label was inheriting the body color over the dark primary-button background. The unlayered global anchor color now excludes shared primary/secondary button links, allowing the shared controls variant to own foreground and background colors consistently. `npm run build:offline` passed; rendered/browser contrast acceptance remains pending.

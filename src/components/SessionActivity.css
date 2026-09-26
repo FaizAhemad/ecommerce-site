@@ -11,6 +11,6 @@
   background: var(--surface);
   color: var(--ink);
   box-shadow: var(--shadow);
-  font: 15px/1.5 Arial, sans-serif;
+  font: 15px/1.5 var(--font-body);
 }
 .session-warning p { margin: 0 0 12px; }

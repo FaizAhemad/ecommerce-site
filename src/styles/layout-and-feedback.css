@@ -110,8 +110,7 @@
   color: #fffdf8;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
   font:
-    14px/1.5 Arial,
-    sans-serif;
+    14px/1.5 var(--font-body);
 }
 .error-snackbar p {
   flex: 1;
@@ -169,8 +168,7 @@
 }
 .admin-existing-media p {
   font:
-    12px/1.5 Arial,
-    sans-serif;
+    12px/1.5 var(--font-body);
   color: var(--muted);
 }
 .category-manager {
@@ -184,8 +182,7 @@
 .category-manager label {
   color: var(--muted);
   font:
-    11px Arial,
-    sans-serif;
+    11px var(--font-body);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -201,8 +198,7 @@
   color: var(--ink);
   padding: 0 11px;
   font:
-    13px Arial,
-    sans-serif;
+    13px var(--font-body);
 }
 .category-manager button {
   white-space: nowrap;

@@ -23,16 +23,14 @@
   color: var(--ink);
   cursor: pointer;
   font:
-    12px Arial,
-    sans-serif;
+    12px var(--font-body);
 }
 .google-button:hover {
   border-color: var(--ink);
 }
 .google-g {
   font:
-    bold 16px Arial,
-    sans-serif;
+    bold 16px var(--font-body);
   color: #4285f4;
 }
 .auth-divider {
@@ -42,8 +40,7 @@
   margin: 26px 0;
   color: var(--muted);
   font:
-    11px Arial,
-    sans-serif;
+    11px var(--font-body);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -81,8 +78,7 @@
   gap: 7px;
   color: var(--ink);
   font:
-    14px/1.5 Arial,
-    sans-serif;
+    14px/1.5 var(--font-body);
   min-width: 0;
 }
 .auth-form input,
@@ -95,8 +91,7 @@
   color: var(--ink);
   padding: 0 12px;
   font:
-    16px/1.5 Arial,
-    sans-serif;
+    16px/1.5 var(--font-body);
   text-transform: none;
   letter-spacing: normal;
 }
@@ -116,15 +111,13 @@
   background: rgba(93, 126, 90, 0.1);
   color: var(--green);
   font:
-    12px Arial,
-    sans-serif;
+    12px var(--font-body);
 }
 .auth-switch {
   margin: 26px 0 0;
   color: var(--muted);
   font:
-    12px Arial,
-    sans-serif;
+    12px var(--font-body);
   text-align: center;
 }
 .auth-switch a {
@@ -134,8 +127,7 @@
   margin: 22px 0 0;
   color: var(--muted);
   font:
-    10px/1.5 Arial,
-    sans-serif;
+    10px/1.5 var(--font-body);
   text-align: center;
 }
 @media (max-width: 600px) {

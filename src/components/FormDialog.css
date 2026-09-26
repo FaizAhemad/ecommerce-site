@@ -28,11 +28,11 @@
   background: var(--surface);
 }
 .form-dialog-header h2 { margin: 0; font-size: clamp(24px, 4vw, 32px); letter-spacing: -.03em; }
-.form-dialog-eyebrow { margin: 0 0 6px; color: var(--muted); font: 12px/1.5 Arial, sans-serif; }
-.form-dialog-close { flex: 0 0 44px; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: var(--paper); color: var(--ink); font: 28px/1 Arial, sans-serif; }
+.form-dialog-eyebrow { margin: 0 0 6px; color: var(--muted); font: 12px/1.5 var(--font-body); }
+.form-dialog-close { flex: 0 0 44px; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: var(--paper); color: var(--ink); font: 28px/1 var(--font-body); }
 .form-dialog-body { padding: 24px 24px max(32px, env(safe-area-inset-bottom)); }
 .form-dialog-body :is(.admin-form, .auth-form) { margin: 0; padding: 0; border: 0; background: transparent; }
-.form-dialog-progress { padding: 12px 24px; font: 14px/1.5 Arial, sans-serif; }
+.form-dialog-progress { padding: 12px 24px; font: 14px/1.5 var(--font-body); }
 @media (max-width: 600px) {
   .form-dialog-header, .form-dialog-body { padding-inline: 20px; }
   .form-dialog .admin-form { grid-template-columns: minmax(0, 1fr); }

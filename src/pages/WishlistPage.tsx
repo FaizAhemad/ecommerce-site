@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next'
 import type { StorefrontApiResponse } from '../api/storefront'
 import { ProductCard } from '../components/ProductCard'
 import { queryClient } from '../api/queryClient'
+import { useCart } from '../api/cart'
+import { sessionUser } from '../api/sessionScope'
 
 type Props = {
   storefront: StorefrontApiResponse
@@ -17,6 +19,9 @@ type Props = {
 
 export function WishlistPage({ storefront, onAdd, onOpenProduct }: Props) {
   const { t } = useTranslation()
+  const cart = useCart()
+  const quantities = new Map((cart.data ?? []).map((item) => [item.product.id, item.quantity]))
+  const isCartLoading = Boolean(sessionUser() && cart.isPending)
   const [ids, setIds] = useState<string[]>(() => readWishlist())
   const wishlistQuery = useQuery({
     queryKey: privateKey('wishlist'),
@@ -71,6 +76,9 @@ export function WishlistPage({ storefront, onAdd, onOpenProduct }: Props) {
               reviewsLabel={storefront.content.collection.reviewsLabel}
               onAdd={onAdd}
               onOpen={() => onOpenProduct(product.id)}
+              quantity={quantities.get(product.id) ?? 0}
+              isCartLoading={isCartLoading}
+              isCartUpdating={cart.pending.has(product.id)}
             />
           ))}
         </div>

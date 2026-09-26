@@ -6,6 +6,7 @@ import { cn } from '../lib/utils'
 import { AddToCartButton } from './AddToCartButton'
 import { RatingStars } from './RatingStars'
 import { useNotification } from './NotificationProvider'
+import { updateCart } from '../api/cart'
 import {
   productAddButtonClass,
   productCardClass,
@@ -26,6 +27,9 @@ type ProductCardProps = {
   reviewsLabel: string
   onAdd: (productId: string) => Promise<void>
   onOpen: () => void
+  quantity?: number
+  isCartLoading?: boolean
+  isCartUpdating?: boolean
 }
 
 export function ProductCard({
@@ -36,6 +40,9 @@ export function ProductCard({
   reviewsLabel,
   onAdd,
   onOpen,
+  quantity = 0,
+  isCartLoading = false,
+  isCartUpdating = false,
 }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(() => readWishlist().includes(product.id))
   const [actionLocked, setActionLocked] = useState(() => wishlistPending(product.id))
@@ -60,6 +67,17 @@ export function ProductCard({
   }
 
   const primaryImage = product.media.images.find((image) => image.isPrimary)
+  const decreaseQuantity = () =>
+    updateCart(
+      {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        priceMinor: product.priceMinor ?? Math.round(product.price * 100),
+      },
+      Math.max(0, quantity - 1),
+      'set',
+    )
 
   return (
     <article
@@ -82,7 +100,7 @@ export function ProductCard({
         </span>
         {primaryImage ? (
           <img
-            className="catalog-product-image block size-full object-cover"
+            className="catalog-product-image block size-full cursor-pointer object-cover"
             src={primaryImage.url}
             alt={primaryImage.alt}
           />
@@ -93,11 +111,11 @@ export function ProductCard({
 
       <div className={productInfoClass}>
         <div className="flex min-w-0 flex-col">
-          <p className="mb-1 overflow-hidden text-ellipsis whitespace-nowrap text-[10px] uppercase leading-[1.3] tracking-[0.08em] text-[var(--muted)]">
+          <p className="mb-1 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-[10px] font-semibold uppercase leading-[1.3] tracking-[0.1em] text-[var(--muted)]">
             {product.category}
           </p>
           <div className={productTitleRowClass}>
-            <h3 className={cn('catalog-product-title m-0', productTitleClass)} title={product.name}>
+            <h3 className={cn('catalog-product-title m-0 cursor-pointer', productTitleClass)} title={product.name}>
               {product.name}
             </h3>
             <button
@@ -126,7 +144,7 @@ export function ProductCard({
           </div>
           <p
             className={cn(
-              'mt-1.5 min-h-3.5 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-[10px] leading-[1.4] text-[var(--muted)]',
+              'mt-1.5 min-h-3.5 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-[11px] leading-[1.4] text-[var(--muted)]',
               (!product.seller || product.seller.isPlatform) && 'invisible',
             )}
             aria-hidden={!product.seller || product.seller.isPlatform}
@@ -136,18 +154,18 @@ export function ProductCard({
         </div>
 
         <div className="flex min-h-11 w-full items-center gap-2">
-          <div className="grid min-h-[42px] min-w-0 flex-1 content-center gap-[3px]">
-            <strong className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-left font-sans text-[clamp(16px,1.2vw,19px)] font-bold leading-[1.2] text-[var(--ink)]">
+          <div className="grid min-h-[42px] min-w-0 flex-1 content-center gap-1">
+            <strong className="max-w-full break-words text-left font-sans text-[clamp(18px,1.35vw,21px)] font-extrabold leading-[1.15] tracking-[-0.025em] text-[var(--ink)]">
               {currency.format(product.price)}
             </strong>
             {product.compareAtPriceMinor != null &&
               product.priceMinor != null &&
               product.compareAtPriceMinor > product.priceMinor && (
-                <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 font-sans text-[10px] leading-tight text-[var(--muted)]">
-                  <del className="text-[var(--muted)]">
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-sans text-[11px] leading-tight">
+                  <del className="text-[var(--muted)] decoration-[var(--muted)]">
                     {currency.format(product.compareAtPriceMinor / 100)}
                   </del>
-                  <span className="font-bold text-[#416346]">
+                  <span className="rounded-full bg-[#e9efdf] px-1.5 py-1 text-[10px] font-bold text-[#36563c]">
                     {Math.round(
                       ((product.compareAtPriceMinor - product.priceMinor) /
                         product.compareAtPriceMinor) *
@@ -200,6 +218,10 @@ export function ProductCard({
         label={addToCartLabel}
         className={productAddButtonClass}
         iconClassName="ml-auto text-lg leading-none"
+        quantity={quantity}
+        isCartLoading={isCartLoading}
+        isUpdating={isCartUpdating}
+        onDecrease={decreaseQuantity}
       />
     </article>
   )

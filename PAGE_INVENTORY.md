@@ -1,5 +1,9 @@
 # Page and route inventory
 
+2026-09-26 typography foundation: one shared system sans family now backs the body/display tokens, Tailwind `font-sans`, legacy page styles and native form controls. Font sizes/weights continue to set hierarchy. Route-by-route rendered and device review remains pending.
+
+2026-09-26 product cart action: cards on Home, Products and Wishlist read the shared private cart query and expose remove at quantity one, decrement at higher quantities, plus increment, and an animated count. Per-product pending state disables actions; no duplicate write or separate client quantity store was added. Browser interaction, rollback and phone acceptance remain pending.
+
 2026-09-25 owner homepage screenshot review: mobile header/navigation occupied excessive vertical space because links wrapped; hero heading and copy were oversized for the viewport and hero art began after a large gap. Source fix tightens the mobile header, keeps navigation horizontally scrollable, reduces hero spacing/art height and improves mobile heading/body sizing. Rendered recheck is still required after the browser review limit clears.
 
 UI handoff: [LUNA_ANALYSIS.md](LUNA_ANALYSIS.md) defines the visual language and full page/component review map; [ASTRA_CHANGES.md](ASTRA_CHANGES.md) records the implementation sequence. The component inventory below is source coverage evidence, not a completion checklist.
@@ -17,6 +21,10 @@ UI handoff: [LUNA_ANALYSIS.md](LUNA_ANALYSIS.md) defines the visual language and
 2026-09-26 styling migration: Tailwind v4 utilities now own the Products catalog layout, promo banner, shared ProductCard, filter controls, loading/empty states and wishlist placement. Desktop filters remain sticky in an aside; phone filters open in a Radix Dialog Sheet with focus trapping/restoration and a visible close/done action. Existing global theme variables remain the brand source; other routes and Admin remain on the legacy stylesheet pending their migration. Build/source verification is distinct from browser/device visual acceptance.
 
 2026-09-26 pagination feedback fix: `/products` announces “Loading more products” only during an explicit next-page fetch (`isFetchingNextPage`); background refetches no longer show the pagination message, and the unused visible status line was removed. Browser acceptance remains pending.
+
+2026-09-26 shared product-card affordance: pointer cursors identify the clickable image/title, wishlist, and add-to-cart controls across Home, Products, and Wishlist; disabled actions use a not-allowed cursor. Blank card areas remain non-clickable. Rendered interaction acceptance remains pending.
+
+2026-09-26 shared product-card type hierarchy: titles use a semibold sans face in the deep brand color; selling price is emphasized, original price is muted/struck through, and valid savings use a quiet green pill. Only configured compare-at prices produce discount messaging. Contrast and long-text rendering remain pending.
 
 2026-09-26 grid scroll regression correction: after screenshot evidence showed the row measurement patch still allowed cards to jump during scroll, removed absolute-position virtualization. `ProductGrid` now shares the ProductCard across Home and Products and lets CSS grid size rows naturally; Products still requests additional cursor pages on explicit action. Rendered acceptance remains pending.
 

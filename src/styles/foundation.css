@@ -97,7 +97,7 @@
   place-items: center;
   margin: 0;
   color: var(--muted);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -130,7 +130,7 @@
 .support-business {
   margin-top: 80px;
   color: var(--muted);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -178,7 +178,7 @@
 .carousel-card-info em,
 .carousel-card-info small {
   color: var(--muted);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 10px;
   font-style: normal;
   text-transform: uppercase;
@@ -242,7 +242,7 @@
   padding: 0;
   background: transparent;
   color: var(--green);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 10px;
   text-transform: uppercase;
   cursor: pointer;
@@ -258,7 +258,7 @@
   display: grid;
   gap: 8px;
   color: var(--muted);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 10px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -284,7 +284,7 @@
 .filter-group legend {
   margin-bottom: 2px;
   color: var(--muted);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 10px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -294,7 +294,7 @@
   align-items: center;
   gap: 8px;
   color: var(--ink);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
 }
 .check-option input {
@@ -340,7 +340,7 @@
 .catalog-sentinel {
   margin: 35px 0;
   color: var(--muted);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   text-align: center;
 }
@@ -421,7 +421,7 @@
 }
 .detail-price {
   margin: 0 0 18px;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 15px;
 }
 .state-panel {
@@ -432,7 +432,7 @@
 .media-empty {
   margin: 12px 0 0;
   color: var(--muted);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   line-height: 1.5;
 }
@@ -453,7 +453,7 @@
   display: grid;
   gap: 8px;
   color: var(--muted);
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   text-transform: uppercase;
 }
@@ -497,7 +497,7 @@
 .policy-notice strong {
   display: block;
   margin-bottom: 10px;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
