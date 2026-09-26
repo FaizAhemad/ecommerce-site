@@ -6,12 +6,14 @@ export function AddToCartButton({
   onAdd,
   label,
   className,
+  iconClassName,
   unavailableReason,
 }: {
   productId: string
   onAdd: (productId: string) => Promise<void>
   label: string
   className: string
+  iconClassName?: string
   unavailableReason?: string
 }) {
   const locked = useRef(false)
@@ -39,7 +41,9 @@ export function AddToCartButton({
           }
         }}
       >
-        {unavailableReason ?? (pending ? 'Adding…' : label)} {!unavailableReason && <span aria-hidden="true">+</span>}
+        {unavailableReason ?? (pending ? 'Adding…' : label)} {!unavailableReason && (
+          <span className={iconClassName} aria-hidden="true">+</span>
+        )}
       </button>
     </>
   )

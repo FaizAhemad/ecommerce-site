@@ -1,6 +1,6 @@
 /* Product loading skeletons */
 .product-skeleton-grid {
-  /* Keep the catalog viewport stable while the virtualized grid resolves. */
+  /* Reserve enough room to keep the footer below product skeleton cards. */
   min-height: 980px;
   align-items: start;
   align-content: start;

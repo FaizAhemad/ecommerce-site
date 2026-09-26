@@ -250,14 +250,6 @@ h2 {
   column-gap: 20px;
   row-gap: 32px;
 }
-.virtualized-grid {
-  position: relative;
-}
-.virtualized-grid > .product-grid {
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-}
 .product-card {
   min-width: 0;
   width: 100%;

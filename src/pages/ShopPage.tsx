@@ -1,9 +1,20 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { getProducts, type ProductSort, type StorefrontApiResponse } from '../api/storefront'
 import { FilterSidebar } from '../components/FilterSidebar'
 import { PromoCarousel } from '../components/PromoCarousel'
-import { VirtualizedProductGrid } from '../components/VirtualizedProductGrid'
+import { ProductGrid } from '../components/ProductGrid'
+import {
+  productAddButtonClass,
+  productCardClass,
+  productGridClass,
+  productInfoClass,
+  productMediaClass,
+  productRatingClass,
+  productSwatchesClass,
+  productTitleRowClass,
+} from '../components/productCardStyles'
+import { cn } from '../lib/utils'
 
 type Props = {
   storefront: StorefrontApiResponse
@@ -24,7 +35,6 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
   const [sort, setSort] = useState<ProductSort>('newest')
   const [selectedColors, setSelectedColors] = useState<readonly string[]>([])
   const [selectedRatings, setSelectedRatings] = useState<readonly number[]>([])
-  const sentinel = useRef<HTMLDivElement>(null)
   const currency = new Intl.NumberFormat(storefront.localization.locale, {
     style: 'currency',
     currency: storefront.localization.currency,
@@ -59,6 +69,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
   const catalog = productQuery.data?.pages.flatMap((page) => page.products) ?? []
   const nextCursor = productQuery.hasNextPage
   const loading = productQuery.isFetching
+  const loadingMore = productQuery.isFetchingNextPage
   const updateSearch = (value: string) => setSearch(value)
   const updateCategory = (value: string) => setCategory(value)
   const toggleColor = (color: string) =>
@@ -76,7 +87,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
   const skeletons = Array.from({ length: 8 }, (_, index) => index)
   return (
     <section
-      className={`collection-section page-section${catalog.length === 1 ? ' catalog-single' : ''}`}
+      className="mx-auto w-full max-w-[90rem] border-t border-[var(--line)] px-4 pb-0 pt-8 md:px-8 md:pt-[86px]"
       aria-labelledby="collection-title"
     >
       {!hasSearch && (
@@ -86,16 +97,20 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
           nextLabel={collection.carouselNextLabel}
         />
       )}
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">{collection.eyebrow}</p>
-          <h1 id="collection-title">
+      <div className="mb-9 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
+        <div className="min-w-0">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--green)]">
+            {collection.eyebrow}
+          </p>
+          <h1 className="m-0 max-w-4xl font-[var(--font-display)] text-[clamp(2rem,5vw,3.25rem)] font-normal leading-[1.04] tracking-[-0.04em] text-[var(--ink)]" id="collection-title">
             {hasSearch ? `Search results for “${search}”` : collection.title}
           </h1>
         </div>
-        <p className="section-note">{collection.description}</p>
+        <p className="m-0 max-w-xs font-display text-base leading-6 text-[var(--muted)] sm:text-right">
+          {collection.description}
+        </p>
       </div>
-      <div className="catalog-layout">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-[17.5rem_minmax(0,1fr)] md:gap-8 xl:gap-10">
         <FilterSidebar
           search={search}
           category={category}
@@ -134,17 +149,17 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
           onColorToggle={toggleColor}
           onClear={clear}
         />
-        <div className={`catalog-results${catalog.length === 1 ? ' catalog-results--single' : ''}`}>
+        <div className="min-w-0">
           {productQuery.isError ? (
-            <div className="state-panel" role="alert">
-              <p>Unable to load products.</p>
-              <button className="primary-button" onClick={() => void productQuery.refetch()}>
+            <div className="grid min-h-64 place-content-center justify-items-center gap-4 rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-8 text-center" role="alert">
+              <p className="m-0 text-sm text-[var(--muted)]">Unable to load products.</p>
+              <button className="min-h-11 rounded-md bg-[var(--ink)] px-5 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]" onClick={() => void productQuery.refetch()}>
                 Try again
               </button>
             </div>
           ) : initialLoading ? (
             <div
-              className="product-grid product-grid-static product-skeleton-grid"
+              className={cn(productGridClass, 'min-h-[980px] content-start')}
               aria-label="Loading products"
               aria-busy="true"
             >
@@ -154,7 +169,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
             </div>
           ) : (
             <>
-              <VirtualizedProductGrid
+              <ProductGrid
                 products={catalog}
                 currency={currency}
                 addToCartLabel={collection.addToCartLabel}
@@ -162,14 +177,13 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
                 reviewsLabel={collection.reviewsLabel}
                 onAdd={onAdd}
                 onOpenProduct={onOpenProduct}
-                virtualize={catalog.length > 6}
               />
               {!loading && catalog.length === 0 && (
-                <div className="empty-state catalog-empty-state" role="status">
-                  <span className="empty-state-mark" aria-hidden="true">⌕</span>
-                  <h2>No products found</h2>
-                  <p>{collection.noResultsLabel}</p>
-                  <button className="secondary-button" type="button" onClick={clear}>
+                <div className="my-8 grid min-h-72 place-content-center justify-items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] px-6 py-12 text-center" role="status">
+                  <span className="grid size-12 place-items-center rounded-full bg-[var(--surface)] text-xl text-[var(--green)]" aria-hidden="true">⌕</span>
+                  <h2 className="m-0 font-display text-2xl font-normal text-[var(--ink)]">No products found</h2>
+                  <p className="m-0 max-w-sm text-sm leading-6 text-[var(--muted)]">{collection.noResultsLabel}</p>
+                  <button className="mt-2 min-h-11 rounded-md border border-[var(--line)] px-4 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]" type="button" onClick={clear}>
                     {collection.clearFiltersLabel}
                   </button>
                 </div>
@@ -180,58 +194,61 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
       </div>
       {nextCursor && (
         <button
-          className="secondary-button"
+          className="mx-auto mt-6 flex min-h-11 items-center rounded-md border border-[var(--line)] px-5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:opacity-60"
           disabled={loading}
+          aria-busy={loadingMore}
           onClick={() => {
             if (!productQuery.isFetching) void productQuery.fetchNextPage()
           }}
         >
-          {loading ? 'Loading...' : 'Load more products'}
+          {loadingMore ? collection.loadingMoreLabel : 'Load more products'}
         </button>
       )}
       {!loading && catalog.length > 0 && !nextCursor && (
-        <div className="catalog-end" role="status">
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-4 border-y border-[var(--line)] py-7 text-center text-sm text-[var(--muted)]" role="status">
           <span>{collection.catalogEndLabel}</span>
-          <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <button className="min-h-11 rounded-md border border-[var(--line)] bg-[var(--surface-raised)] px-4 text-sm text-[var(--ink)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]" type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             {collection.catalogEndActionLabel} ↑
           </button>
         </div>
       )}
-      <div className="catalog-sentinel" ref={sentinel} aria-live="polite">
-        {loading && catalog.length > 0 ? collection.loadingMoreLabel : ''}
-      </div>
+      {loadingMore && catalog.length > 0 && (
+        <p className="sr-only" role="status" aria-live="polite">
+          {collection.loadingMoreLabel}
+        </p>
+      )}
     </section>
   )
 }
 
 function ProductSkeleton() {
   return (
-    <article className="product-card product-skeleton" aria-hidden="true">
-      <div className="product-art">
-        <span className="skeleton-block skeleton-badge" />
+    <article className={cn(productCardClass, 'pointer-events-none')} aria-hidden="true">
+      <div className={cn(productMediaClass, 'animate-pulse bg-[var(--skeleton-base)]')}>
+        <span className="absolute left-3.5 top-3.5 z-10 h-2.5 w-16 animate-pulse rounded bg-[var(--skeleton-shape)]" />
+        <span className="absolute left-[28%] top-[27%] h-[54%] w-[44%] animate-pulse rounded-[44%_44%_18%_18%] bg-[var(--skeleton-shape)]" />
       </div>
-      <div className="product-info">
-        <div>
-          <span className="skeleton-line skeleton-category" />
-          <div className="product-title-row">
-            <span className="skeleton-line skeleton-title" />
-            <span className="skeleton-circle skeleton-wishlist" />
+      <div className={productInfoClass}>
+        <div className="flex min-w-0 flex-col">
+          <span className="mb-1 h-[13px] w-20 animate-pulse rounded-sm bg-[var(--skeleton-base)]" />
+          <div className={productTitleRowClass}>
+            <span className="h-4 w-3/4 animate-pulse self-center rounded-sm bg-[var(--skeleton-base)]" />
+            <span className="size-11 shrink-0 animate-pulse rounded-full bg-[var(--skeleton-shape)]" />
           </div>
-          <span className="skeleton-line skeleton-seller" />
+          <span className="mt-1.5 h-3.5 w-1/2 animate-pulse rounded-sm bg-[var(--skeleton-base)]" />
         </div>
-        <div className="product-card-actions">
-          <span className="skeleton-line skeleton-price" />
+        <div className="flex min-h-11 w-full items-center">
+          <span className="h-4 w-16 animate-pulse rounded-sm bg-[var(--skeleton-base)]" />
         </div>
       </div>
-      <div className="product-rating">
-        <span className="skeleton-line skeleton-rating" />
+      <div className={productRatingClass}>
+        <span className="h-3 w-24 animate-pulse rounded-full bg-[var(--skeleton-base)]" />
       </div>
-      <div className="product-swatches" aria-hidden="true">
-        <span className="skeleton-color-swatch" />
-        <span className="skeleton-color-swatch" />
-        <span className="skeleton-color-swatch" />
+      <div className={productSwatchesClass} aria-hidden="true">
+        <span className="size-[18px] animate-pulse rounded-full bg-[var(--skeleton-shape)]" />
+        <span className="size-[18px] animate-pulse rounded-full bg-[var(--skeleton-shape)]" />
       </div>
-      <div className="skeleton-button" />
+      <div className={cn(productAddButtonClass, 'animate-pulse bg-[var(--skeleton-base)]')} />
     </article>
   )
 }

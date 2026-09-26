@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client'
-import { validateMediaUpload } from './media.ts'
-import { InspectionError, inspectionUpdate, type Inspection } from './shop-inspection.ts'
-import { enqueueInspectionNotifications } from './inspection-notifications.ts'
+import { validateMediaUpload } from './media.js'
+import { InspectionError, inspectionUpdate, type Inspection } from './shop-inspection.js'
+import { enqueueInspectionNotifications } from './inspection-notifications.js'
 
 export async function changeInspection(tx: Prisma.TransactionClient, order: { id: string; orderId: string; shopId: string; isPlatform: boolean; status: string; orderStatus: string }, body: Record<string, unknown>, actorId: string) {
   if (order.isPlatform || !['PENDING','PACKING'].includes(order.status) || ['CANCELLED','REFUNDED'].includes(order.orderStatus))

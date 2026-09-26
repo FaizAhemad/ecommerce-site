@@ -25,7 +25,7 @@ Reviewed: 2026-09-12. Deliver the configurable commerce platform described in [R
 
 ## Current baseline
 
-Vite/React/TypeScript UI, Node.js handlers consolidated behind one Vercel function, Prisma/PostgreSQL models/migrations, Blob uploads, Resend helpers and Razorpay handlers are present. Catalog/category reads, login, cart/wishlist mutations and product/review administration have implementations. The theme is light-only Ink and Citron (#28313b / #c7d866).
+Vite/React/TypeScript UI, Node.js handlers consolidated behind one Vercel function, Prisma/PostgreSQL models/migrations, Blob uploads, Resend helpers and Razorpay handlers are present. Catalog/category reads, login, cart/wishlist mutations and product/review administration have implementations. The theme is light-only Ink and Citron (#28313b / #c7d866); Tailwind CSS v4 is the standard for new/migrated UI, with the Products route first and legacy CSS pending migration elsewhere.
 
 Backend existence is not end-to-end completion. Customer order pages use private records; E23 adds configured checkout/payment controls. Support tickets replace email links. Full settings/messages, provider acceptance and business content/localization remain incomplete. Shop consumes cursor pages. See [all pages](PAGE_INVENTORY.md).
 

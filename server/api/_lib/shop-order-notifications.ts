@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client'
-import { notificationKey, type NotificationJob, type ShopNotificationKind } from './notification-queue.ts'
+import { notificationKey, type NotificationJob, type ShopNotificationKind } from './notification-queue.js'
 
 export function shopNotificationKind(action: unknown, status: unknown): ShopNotificationKind | null {
   if (action === 'fulfill') {

@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client'
-import { CatalogError, mediaKey } from './seller-catalog.ts'
+import { CatalogError, mediaKey } from './seller-catalog.js'
 
 export type MediaEntry = { id: string; contentType: string; bytes: number; updatedAt: Date; inUse: boolean }
 export async function sellerMediaLibrary(tx: Pick<Prisma.TransactionClient, '$queryRaw'>, shopId: string) {

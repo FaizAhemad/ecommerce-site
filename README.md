@@ -23,7 +23,7 @@ Current roadmap priority: [Gadgify multi-vendor marketplace](MARKETPLACE_REQUIRE
 
 Current unverified E30 work includes coupon redemption, customer return requests, manual shipment tracking, order email-attempt history, private support attachments/conversations and basic route metadata. See APPLICATION_BACKLOG and PROJECT_STATUS before deployment; two new support migrations are prepared but not applied.
 
-Vite, React and TypeScript storefront with Node.js API handlers, Prisma/PostgreSQL, Vercel Blob, Resend and Razorpay integration code. The UI uses the light-only Ink and Citron theme. This is an application in development; remaining security and commerce work gates production readiness.
+Vite, React and TypeScript storefront with Node.js API handlers, Prisma/PostgreSQL, Vercel Blob, Resend and Razorpay integration code. The UI uses the light-only Ink and Citron theme. Tailwind CSS v4 is the styling standard for new and migrated UI; the Products page is the first migration, while legacy feature styles remain for other screens. This is an application in development; remaining security and commerce work gates production readiness.
 
 Reviewed against the current workspace on 2026-09-12, including staged changes. Workspace implementation does not imply deployment.
 
@@ -88,7 +88,7 @@ npx prisma db seed
 npm run test:rate-limits:db
 ```
 
-Seed idempotently upserts ten default categories; it does not seed products or customers. The third migration creates rate-limit counters. Without it, limited writes return safe 503s. The PostgreSQL check uses a temporary table. See [rollout and cleanup](RATE_LIMITING.md).
+Seed idempotently upserts ten default categories and 18 Gadgify platform product placeholders. New products start at ₹100 with zero stock and a neutral `Default` color swatch; reruns preserve product edits. It does not seed customers. The third migration creates rate-limit counters. Without it, limited writes return safe 503s. The PostgreSQL check uses a temporary table. See [rollout and cleanup](RATE_LIMITING.md).
 
 The user previously reported the first two migrations up to date and login working. E11 verifies the configured database has all three migrations applied and passes temporary-table SQL tests. Authenticated production/browser checks and cleanup scheduling remain open.
 

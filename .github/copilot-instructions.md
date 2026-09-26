@@ -10,7 +10,7 @@ Latest priority override: marketplace MP-01–MP-09 precedes the earlier UI-firs
 
 Preserve SESSION_SECURITY.md: server-enforced role-specific idle/absolute expiry, activity-only CSRF renewal and no background-read renewal. Legacy 30-day sessions require fresh login; verification is pending.
 
-UI now takes priority: follow UI-01–UI-09 in APPLICATION_BACKLOG.md. App.css contains ordered feature imports; use dedicated styles and shared FormDialog for contextual editors. Preserve financial/auth behavior, focus and modal notifications. Primary auth/checkout remain pages; no rendered acceptance is claimed.
+UI now takes priority: follow UI-01–UI-09 in APPLICATION_BACKLOG.md. Tailwind CSS v4 is the styling standard for new and migrated UI; use shared class composition and Radix-backed shadcn-style primitives for complex behavior. Do not add plain CSS for migrated components. App.css loads Tailwind theme/utilities before legacy feature sheets layered below them; retain legacy CSS for unmigrated screens and preserve brand variables. Preserve financial/auth behavior, focus and modal notifications. Primary auth/checkout remain pages; no rendered acceptance is claimed.
 
 E33 refunds: preserve reserved refund-attempt claims before provider writes, explicit full-amount approval, capture/identity checks and no financial replay. Only provider-fetched full-refund proof changes financial status. See REFUND_OPERATIONS.md; verification remains deferred.
 
@@ -44,7 +44,7 @@ Read [ARCHITECTURE_UI_UX_AUDIT.md](../ARCHITECTURE_UI_UX_AUDIT.md) before cache/
 
 Security comes first: establish verified identity, server-side record ownership, minimal response data, private cache scoping and safe failure handling before optimizing visible success. Never make payment/order/refund outcomes optimistic. Do not weaken authentication, validation, rate limits or CSP safeguards to hide UI failures. Preserve the single dispatcher and known Vite/Vercel compatibility constraints.
 
-Use one SiteLayout and shared PageContainer width variants, spacing/color/type/layer tokens and reusable buttons, fields, skeletons, empty/error states and dialogs. Follow the audit's responsive spacing and contrast standard. Inspect final CSS specificity; replace conflicting rules instead of appending global overrides. Every affected route and admin tab needs loading, empty, error, success, keyboard and mobile verification.
+Use one SiteLayout and shared PageContainer width variants, spacing/color/type/layer tokens and reusable buttons, fields, skeletons, empty/error states and dialogs. Apply tokens through Tailwind utilities and shared primitives for new/migrated UI; keep old feature CSS only until consumers migrate. Follow the audit's responsive spacing and contrast standard. Avoid parallel global overrides. Every affected route and admin tab needs loading, empty, error, success, keyboard and mobile verification.
 
 For button/API work, define immediate pending feedback, synchronous duplicate guards, resource-level locking, cancellation, success reconciliation, failure rollback and preserved drafts. Share query keys/hooks between headers and pages. Do not swallow API errors into empty results or keep customer data in unscoped browser storage. Keep 30/60-second request budgets and five-second snackbars; timeouts can leave an unknown server outcome.
 

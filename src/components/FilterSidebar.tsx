@@ -1,5 +1,15 @@
-import { useState } from 'react'
+import { useMemo } from 'react'
+import { Check, ChevronDown, ListFilter, RotateCcw } from 'lucide-react'
 import type { ProductSort } from '../api/storefront'
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from './ui/sheet'
+
 type Props = {
   collapseLabel?: string
   expandLabel?: string
@@ -29,6 +39,7 @@ type Props = {
   onColorToggle: (v: string) => void
   onRating: (v: number) => void
 }
+
 export function FilterSidebar({
   search,
   category,
@@ -58,51 +69,41 @@ export function FilterSidebar({
   onColorToggle,
   onRating,
 }: Props) {
-  const [mobileExpanded, setMobileExpanded] = useState(true)
-  return (
-    <aside
-      className={`filter-sidebar ${mobileExpanded ? 'expanded' : 'collapsed'}`}
-      data-mobile-expanded={mobileExpanded}
-      aria-label="Catalog filters"
-    >
-      <div className="filter-sidebar-heading">
-        <p className="eyebrow">Filter</p>
-        <button
-          className="mobile-filter-toggle secondary-button"
-          type="button"
-          aria-expanded={mobileExpanded}
-          aria-controls="catalog-filter-fields"
-          onClick={() => setMobileExpanded((value) => !value)}
-        >
-          {mobileExpanded ? 'Hide filters' : 'Show filters'}
-        </button>
-        {Boolean(
-          search ||
-          category ||
-          sort !== 'newest' ||
-          selectedColors.length ||
-          selectedRatings.length,
-        ) && (
-          <button className="clear-filters" type="button" onClick={onClear}>
-            {clearLabel}
-          </button>
-        )}
-      </div>
-      <div className="filter-fields" id="catalog-filter-fields">
-        <label className="filter-field">
-          {searchPlaceholder}
-          <input
-            type="search"
-            autoComplete="off"
-            spellCheck={false}
-            value={search}
-            onChange={(e) => onSearch(e.target.value)}
-            placeholder={searchPlaceholder}
-          />
-        </label>
-        <label className="filter-field">
-          {allCategoriesLabel}
-          <select value={category} onChange={(e) => onCategory(e.target.value)}>
+  const activeFilterCount = useMemo(
+    () =>
+      [
+        search.trim().length > 0,
+        category.length > 0,
+        sort !== 'newest',
+        selectedColors.length > 0,
+        selectedRatings.length > 0,
+      ].filter(Boolean).length,
+    [search, category, sort, selectedColors.length, selectedRatings.length],
+  )
+
+  const filterFields = (
+    <div className="grid gap-6">
+      <label className="grid gap-2 text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted)]">
+        <span>{searchPlaceholder}</span>
+        <input
+          className="min-h-11 w-full rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 text-sm font-normal normal-case tracking-normal text-[var(--ink)] outline-none transition focus-visible:border-[var(--green)] focus-visible:ring-2 focus-visible:ring-[var(--green)]/20"
+          type="search"
+          autoComplete="off"
+          spellCheck={false}
+          value={search}
+          onChange={(event) => onSearch(event.target.value)}
+          placeholder={searchPlaceholder}
+        />
+      </label>
+
+      <label className="grid gap-2 text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted)]">
+        <span>{allCategoriesLabel}</span>
+        <span className="relative">
+          <select
+            className="min-h-11 w-full appearance-none rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 pr-10 text-sm font-normal normal-case tracking-normal text-[var(--ink)] outline-none transition focus-visible:border-[var(--green)] focus-visible:ring-2 focus-visible:ring-[var(--green)]/20"
+            value={category}
+            onChange={(event) => onCategory(event.target.value)}
+          >
             <option value="">{allCategoriesLabel}</option>
             {categories.map((item) => (
               <option value={item} key={item}>
@@ -110,65 +111,176 @@ export function FilterSidebar({
               </option>
             ))}
           </select>
-        </label>
-        <label className="filter-field">
-          {sortLabel}
-          <select value={sort} onChange={(e) => onSort(e.target.value as ProductSort)}>
+          <ChevronDown
+            aria-hidden="true"
+            className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
+          />
+        </span>
+      </label>
+
+      <label className="grid gap-2 text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted)]">
+        <span>{sortLabel}</span>
+        <span className="relative">
+          <select
+            className="min-h-11 w-full appearance-none rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 pr-10 text-sm font-normal normal-case tracking-normal text-[var(--ink)] outline-none transition focus-visible:border-[var(--green)] focus-visible:ring-2 focus-visible:ring-[var(--green)]/20"
+            value={sort}
+            onChange={(event) => onSort(event.target.value as ProductSort)}
+          >
             <option value="newest">{newestSortLabel}</option>
             <option value="price-low">{priceLowSortLabel}</option>
             <option value="price-high">{priceHighSortLabel}</option>
           </select>
-        </label>
-        <fieldset className="filter-group">
-          <legend>{ratingLabel}</legend>
-          {[5, 4, 3, 2, 1].map((r) => (
-            <label className="check-option" key={r}>
+          <ChevronDown
+            aria-hidden="true"
+            className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
+          />
+        </span>
+      </label>
+
+      <fieldset className="grid gap-3 border-0 p-0">
+        <legend className="mb-1 text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted)]">
+          {ratingLabel}
+        </legend>
+        {[5, 4, 3, 2, 1].map((rating) => (
+          <label
+            className="flex min-h-8 cursor-pointer items-center gap-3 text-sm text-[var(--ink)]"
+            key={rating}
+          >
+            <input
+              className="size-4 accent-[var(--green)]"
+              type="checkbox"
+              name="rating"
+              checked={selectedRatings.includes(rating)}
+              onChange={() => onRating(rating)}
+            />
+            <span>{rating === 5 ? '5 stars' : `${rating} to under ${rating + 1} stars`}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset className="grid gap-3 border-0 border-t border-[var(--line)] p-0 pt-5">
+        <legend className="mb-1 text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted)]">
+          {colorsLabel}
+        </legend>
+        {colorOptions.map((color) => {
+          const hex = colorValues[color]
+          const validHex = /^#[\da-f]{6}$/i.test(hex ?? '')
+          return (
+            <label
+              className="flex min-h-8 cursor-pointer items-center gap-3 text-sm text-[var(--ink)]"
+              key={color}
+            >
               <input
+                className="size-4 accent-[var(--green)]"
                 type="checkbox"
-                name="rating"
-                checked={selectedRatings.includes(r)}
-                onChange={() => onRating(r)}
-              />
-              <span>{r === 5 ? '5 stars' : `${r} to under ${r + 1} stars`}</span>
-            </label>
-          ))}
-        </fieldset>
-        <fieldset className="filter-group">
-          <legend>{colorsLabel}</legend>
-          {colorOptions.map((c) => (
-            <label className="check-option" key={c}>
-              <input
-                type="checkbox"
-                checked={selectedColors.includes(c)}
-                onChange={() => onColorToggle(c)}
+                checked={selectedColors.includes(color)}
+                onChange={() => onColorToggle(color)}
               />
               <span
-                className="color-swatch"
+                className="size-4 shrink-0 rounded-full border border-[var(--line)]"
                 aria-hidden="true"
-                style={
-                  /^#[\da-f]{6}$/i.test(colorValues[c] ?? '')
-                    ? { backgroundColor: colorValues[c] }
-                    : undefined
-                }
+                style={validHex ? { backgroundColor: hex } : undefined}
               />
-              <span>
-                {c}{' '}
-                {/^#[\da-f]{6}$/i.test(colorValues[c] ?? '')
-                  ? colorValues[c].toUpperCase()
-                  : '(swatch unavailable)'}
+              <span className="min-w-0 truncate">
+                {color} {validHex ? hex.toUpperCase() : '(swatch unavailable)'}
               </span>
             </label>
+          )
+        })}
+      </fieldset>
+
+      <div className="border-t border-[var(--line)] pt-5 text-sm text-[var(--muted)]">
+        <p className="mb-3 text-xs font-medium uppercase tracking-[0.08em]">{benefits.title}</p>
+        <ul className="grid gap-2">
+          {benefits.items.map((item) => (
+            <li className="flex items-start gap-2" key={item}>
+              <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[var(--green)]" />
+              <span>{item}</span>
+            </li>
           ))}
-        </fieldset>
-        <div className="filter-benefits">
-          <p>{benefits.title}</p>
-          <ul>
-            {benefits.items.map((i) => (
-              <li key={i}>{i}</li>
-            ))}
-          </ul>
-        </div>
+        </ul>
       </div>
-    </aside>
+    </div>
+  )
+
+  return (
+    <>
+      <aside
+        className="sticky top-6 hidden h-fit max-h-[calc(100svh-3rem)] overflow-y-auto border-r border-[var(--line)] pr-6 md:block"
+        aria-label="Catalog filters"
+      >
+        <div className="mb-6 flex min-h-11 items-center justify-between border-b border-[var(--line)] pb-4">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--ink)]">Filter</h2>
+          {activeFilterCount > 0 && (
+            <button
+              className="inline-flex min-h-11 items-center gap-2 rounded px-2 text-xs font-medium uppercase tracking-wide text-[var(--green)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+              type="button"
+              onClick={onClear}
+            >
+              <RotateCcw aria-hidden="true" className="size-3.5" />
+              {clearLabel}
+            </button>
+          )}
+        </div>
+        {filterFields}
+      </aside>
+
+      <div className="mb-5 flex items-center justify-between gap-3 md:hidden">
+        <Sheet>
+          <SheetTrigger asChild>
+            <button
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--surface-raised)] px-4 text-sm font-medium text-[var(--ink)] shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+              type="button"
+            >
+              <ListFilter aria-hidden="true" className="size-4" />
+              Filter
+              {activeFilterCount > 0 && (
+                <span className="grid size-5 place-items-center rounded-full bg-[var(--ink)] text-xs text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </SheetTrigger>
+          <SheetContent closeLabel="Close filters">
+            <header className="border-b border-[var(--line)] px-5 pb-5 pr-16 pt-7">
+              <SheetTitle>Filters</SheetTitle>
+              <SheetDescription className="mt-2">
+                Refine the collection to find what you need.
+              </SheetDescription>
+            </header>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">{filterFields}</div>
+            <footer className="flex gap-3 border-t border-[var(--line)] bg-[var(--surface-raised)] p-4">
+              {activeFilterCount > 0 && (
+                <button
+                  className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md border border-[var(--line)] px-4 text-sm font-medium text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+                  type="button"
+                  onClick={onClear}
+                >
+                  <RotateCcw aria-hidden="true" className="size-4" />
+                  {clearLabel}
+                </button>
+              )}
+              <SheetClose asChild>
+                <button
+                  className="min-h-11 flex-1 rounded-md bg-[var(--ink)] px-4 text-sm font-medium text-white hover:bg-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+                  type="button"
+                >
+                  Done
+                </button>
+              </SheetClose>
+            </footer>
+          </SheetContent>
+        </Sheet>
+        {activeFilterCount > 0 && (
+          <button
+            className="min-h-11 rounded px-2 text-xs font-medium uppercase tracking-wide text-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+            type="button"
+            onClick={onClear}
+          >
+            {clearLabel}
+          </button>
+        )}
+      </div>
+    </>
   )
 }

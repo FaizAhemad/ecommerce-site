@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client'
-import { notificationKey, type NotificationJob } from './notification-queue.ts'
-import type { Inspection } from './shop-inspection.ts'
+import { notificationKey, type NotificationJob } from './notification-queue.js'
+import type { Inspection } from './shop-inspection.js'
 
 export async function enqueueInspectionNotifications(tx: Pick<Prisma.TransactionClient, 'user' | 'storeSetting'>, orderId: string, sellerOrderId: string, shopId: string, inspection: Inspection) {
   if (inspection.history.at(-1)?.action === 'inspection-call') return []

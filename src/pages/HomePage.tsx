@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 import { ArrowIcon } from '../components/ArrowIcon'
-import { VirtualizedProductGrid } from '../components/VirtualizedProductGrid'
+import { ProductGrid } from '../components/ProductGrid'
 import { SubscribeSection } from '../components/SubscribeSection'
 type HomePageProps = {
   storefront: StorefrontApiResponse
@@ -49,7 +49,7 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
             A considered selection of customer favorites and new arrivals.
           </p>
         </div>
-        <VirtualizedProductGrid
+        <ProductGrid
           products={featured}
           currency={currency}
           addToCartLabel={collection.addToCartLabel}
@@ -57,7 +57,6 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
           reviewsLabel={collection.reviewsLabel}
           onAdd={onAdd}
           onOpenProduct={onOpenProduct}
-          virtualize={false}
         />
         <a
           className="primary-button home-explore"
@@ -81,7 +80,7 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
             <h2 id="latest-products-title">Fresh for the everyday</h2>
           </div>
         </div>
-        <VirtualizedProductGrid
+        <ProductGrid
           products={trending}
           currency={currency}
           addToCartLabel={collection.addToCartLabel}
@@ -89,7 +88,6 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
           reviewsLabel={collection.reviewsLabel}
           onAdd={onAdd}
           onOpenProduct={onOpenProduct}
-          virtualize={false}
         />
         <a
           className="primary-button home-explore"

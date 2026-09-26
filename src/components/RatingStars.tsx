@@ -14,7 +14,7 @@ export function RatingStars({ rating, size = 'small', label }: RatingStarsProps)
 
   return (
     <span
-      className={`rating-stars rating-stars--${size}`}
+      className={`inline-flex flex-shrink-0 items-center gap-px align-middle leading-none ${size === 'medium' ? '[&>svg]:size-[17px]' : '[&>svg]:size-[13px]'} [&>svg]:block`}
       aria-hidden={label ? undefined : true}
       role={label ? 'img' : undefined}
       aria-label={label}
@@ -29,9 +29,13 @@ export function RatingStars({ rating, size = 'small', label }: RatingStarsProps)
                 <rect width={24 * fill} height="24" />
               </clipPath>
             </defs>
-            <path className="rating-star-empty" d={starPath} />
+            <path className="fill-[#ddd9ce]" d={starPath} />
             {fill > 0 && (
-              <path className="rating-star-filled" d={starPath} clipPath={`url(#${clipId})`} />
+              <path
+                className="fill-[var(--yellow)]"
+                d={starPath}
+                clipPath={`url(#${clipId})`}
+              />
             )}
           </svg>
         )

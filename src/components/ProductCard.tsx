@@ -1,10 +1,22 @@
-import { readWishlist } from '../api/wishlistState'
-import { toggleWishlistItem, wishlistPending } from '../api/wishlistState'
-import { useNotification } from './NotificationProvider'
+import { readWishlist, toggleWishlistItem, wishlistPending } from '../api/wishlistState'
+import type { StorefrontApiResponse } from '../api/storefront'
+import { Heart } from 'lucide-react'
+import { useEffect, useState, type MouseEvent } from 'react'
+import { cn } from '../lib/utils'
 import { AddToCartButton } from './AddToCartButton'
 import { RatingStars } from './RatingStars'
-import { useEffect, useState, type MouseEvent } from 'react'
-import type { StorefrontApiResponse } from '../api/storefront'
+import { useNotification } from './NotificationProvider'
+import {
+  productAddButtonClass,
+  productCardClass,
+  productInfoClass,
+  productMediaClass,
+  productRatingClass,
+  productSwatchesClass,
+  productTitleClass,
+  productTitleRowClass,
+  productWishlistClass,
+} from './productCardStyles'
 
 type ProductCardProps = {
   product: StorefrontApiResponse['products'][number]
@@ -27,6 +39,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(() => readWishlist().includes(product.id))
   const [actionLocked, setActionLocked] = useState(() => wishlistPending(product.id))
+
   useEffect(() => {
     const sync = () => {
       setWishlisted(readWishlist().includes(product.id))
@@ -35,6 +48,7 @@ export function ProductCard({
     window.addEventListener('wishlistchange', sync)
     return () => window.removeEventListener('wishlistchange', sync)
   }, [product.id])
+
   const notify = useNotification()
   const toggleWishlist = async (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation()
@@ -46,13 +60,14 @@ export function ProductCard({
   }
 
   const primaryImage = product.media.images.find((image) => image.isPrimary)
+
   return (
     <article
-      className="product-card"
+      className={productCardClass}
       tabIndex={0}
       onClick={(event) => {
         const target = event.target as HTMLElement
-        if (target.closest('.product-primary-image, .product-card-title')) onOpen()
+        if (target.closest('.catalog-product-image, .catalog-product-title')) onOpen()
       }}
       onKeyDown={(event) => {
         if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
@@ -61,24 +76,35 @@ export function ProductCard({
         }
       }}
     >
-      <div className={`product-art ${product.tone}`}>
-        <span>{product.badge}</span>
-
+      <div className={productMediaClass}>
+        <span className="absolute left-3.5 top-3.5 z-10 text-[9px] uppercase tracking-[0.08em] text-[#324239]">
+          {product.badge}
+        </span>
         {primaryImage ? (
-          <img className="product-primary-image" src={primaryImage.url} alt={primaryImage.alt} />
+          <img
+            className="catalog-product-image block size-full object-cover"
+            src={primaryImage.url}
+            alt={primaryImage.alt}
+          />
         ) : (
-          <div className="product-shape" />
+          <div className="absolute left-1/2 top-1/2 h-[52%] w-[42%] -translate-x-1/2 -translate-y-1/2 rotate-[-7deg] rounded-[48%_48%_18%_18%] bg-[#ebeee4] shadow-[23px_18px_0_rgba(36,92,75,0.26)]" />
         )}
       </div>
-      <div className="product-info">
-        <div>
-          <p className="product-category">{product.category}</p>
-          <div className="product-title-row">
-            <h3 className="product-card-title" title={product.name}>
+
+      <div className={productInfoClass}>
+        <div className="flex min-w-0 flex-col">
+          <p className="mb-1 overflow-hidden text-ellipsis whitespace-nowrap text-[10px] uppercase leading-[1.3] tracking-[0.08em] text-[var(--muted)]">
+            {product.category}
+          </p>
+          <div className={productTitleRowClass}>
+            <h3 className={cn('catalog-product-title m-0', productTitleClass)} title={product.name}>
               {product.name}
             </h3>
             <button
-              className={`wishlist-button${wishlisted ? ' is-wishlisted' : ''}`}
+              className={cn(
+                productWishlistClass,
+                wishlisted && 'border-[#d52f45]/30 bg-[#d52f45]/5 text-[#d52f45]',
+              )}
               type="button"
               disabled={actionLocked}
               aria-busy={actionLocked}
@@ -92,25 +118,36 @@ export function ProductCard({
               }
               aria-pressed={wishlisted}
             >
-              {wishlisted ? '♥' : '♡'}
+              <Heart
+                aria-hidden="true"
+                className={cn('size-4', wishlisted && 'fill-current')}
+              />
             </button>
           </div>
           <p
-            className={`product-seller${!product.seller || product.seller.isPlatform ? ' product-seller--empty' : ''}`}
+            className={cn(
+              'mt-1.5 min-h-3.5 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-[10px] leading-[1.4] text-[var(--muted)]',
+              (!product.seller || product.seller.isPlatform) && 'invisible',
+            )}
             aria-hidden={!product.seller || product.seller.isPlatform}
           >
             {product.seller && !product.seller.isPlatform ? `Sold by ${product.seller.name}` : ''}
           </p>
         </div>
-        <div className="product-card-actions">
-          <div className="product-price-group">
-            <strong className="product-price">{currency.format(product.price)}</strong>
+
+        <div className="flex min-h-11 w-full items-center gap-2">
+          <div className="grid min-h-[42px] min-w-0 flex-1 content-center gap-[3px]">
+            <strong className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-left font-sans text-[clamp(16px,1.2vw,19px)] font-bold leading-[1.2] text-[var(--ink)]">
+              {currency.format(product.price)}
+            </strong>
             {product.compareAtPriceMinor != null &&
               product.priceMinor != null &&
               product.compareAtPriceMinor > product.priceMinor && (
-                <div className="product-sale-details">
-                  <del>{currency.format(product.compareAtPriceMinor / 100)}</del>
-                  <span>
+                <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 font-sans text-[10px] leading-tight text-[var(--muted)]">
+                  <del className="text-[var(--muted)]">
+                    {currency.format(product.compareAtPriceMinor / 100)}
+                  </del>
+                  <span className="font-bold text-[#416346]">
                     {Math.round(
                       ((product.compareAtPriceMinor - product.priceMinor) /
                         product.compareAtPriceMinor) *
@@ -122,18 +159,20 @@ export function ProductCard({
           </div>
         </div>
       </div>
+
       <div
-        className="product-rating"
+        className={productRatingClass}
         aria-label={`${ratingLabel}: ${product.rating}, ${product.reviewCount} ${reviewsLabel}`}
       >
         <RatingStars rating={product.rating} />
-        <b>{product.rating.toFixed(1)}</b>
-        <em>
+        <b className="shrink-0 font-semibold">{product.rating.toFixed(1)}</b>
+        <em className="not-italic text-[var(--muted)]">
           ({product.reviewCount} {reviewsLabel})
         </em>
       </div>
+
       <div
-        className="product-swatches"
+        className={productSwatchesClass}
         aria-label={
           product.colors?.length ? `Available colors: ${product.colors.join(', ')}` : undefined
         }
@@ -141,7 +180,7 @@ export function ProductCard({
       >
         {product.colors?.map((color) => (
           <span
-            className={`color-swatch color-${color.toLowerCase()}`}
+            className="size-[18px] shrink-0 rounded-full border border-[rgba(37,40,33,0.2)]"
             style={{ backgroundColor: product.colorValues?.[color] ?? color.toLowerCase() }}
             key={color}
             title={color}
@@ -149,12 +188,18 @@ export function ProductCard({
           />
         ))}
       </div>
+
       <AddToCartButton
-        unavailableReason={product.purchase?.available === false ? product.purchase.reason ?? 'Currently unavailable' : undefined}
+        unavailableReason={
+          product.purchase?.available === false
+            ? product.purchase.reason ?? 'Currently unavailable'
+            : undefined
+        }
         productId={product.id}
         onAdd={onAdd}
         label={addToCartLabel}
-        className="add-button"
+        className={productAddButtonClass}
+        iconClassName="ml-auto text-lg leading-none"
       />
     </article>
   )

@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client'
-import { notificationKey, type NotificationJob } from './notification-queue.ts'
-import type { ShopDispute } from './shop-disputes.ts'
+import { notificationKey, type NotificationJob } from './notification-queue.js'
+import type { ShopDispute } from './shop-disputes.js'
 
 export async function enqueueDisputeNotifications(
   tx: Pick<Prisma.TransactionClient, 'order' | 'storeSetting'>,

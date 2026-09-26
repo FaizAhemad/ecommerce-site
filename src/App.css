@@ -1,12 +1,14 @@
-/* Ordered imports preserve the existing cascade during feature migration. */
-@import "./styles/foundation.css";
-@import "./styles/controls.css";
-@import "./styles/storefront.css";
-@import "./styles/cart-and-reviews.css";
-@import "./styles/checkout.css";
-@import "./styles/account.css";
-@import "./styles/orders-and-content.css";
-@import "./styles/admin.css";
-@import "./styles/loading-and-media.css";
-@import "./styles/layout-and-feedback.css";
-@import "./styles/record-cards.css";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+/* Keep the legacy application styles below Tailwind utilities during the gradual migration. */
+@import "./styles/foundation.css" layer(components);
+@import "./styles/controls.css" layer(components);
+@import "./styles/storefront.css" layer(components);
+@import "./styles/cart-and-reviews.css" layer(components);
+@import "./styles/checkout.css" layer(components);
+@import "./styles/account.css" layer(components);
+@import "./styles/orders-and-content.css" layer(components);
+@import "./styles/admin.css" layer(components);
+@import "./styles/loading-and-media.css" layer(components);
+@import "./styles/layout-and-feedback.css" layer(components);
+@import "./styles/record-cards.css" layer(components);

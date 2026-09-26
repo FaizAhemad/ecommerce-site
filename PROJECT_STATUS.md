@@ -1,5 +1,25 @@
 # Project status
 
+## Products grid overlap and scroll regression - 2026-09-26
+
+The first row-height correction did not resolve scroll jumps. Removed the unnecessary absolute-position virtualizer and replaced it with `ProductGrid`, which renders cursor-loaded products in normal CSS grid flow. The grid shares ProductCard across Home and Products; the API returns bounded cursor pages. The native grid determines row heights and keeps the collection divider/footer after content. `npm run build:offline` passed; rendered/device acceptance remains pending.
+
+## Production ESM import resolution - 2026-09-26
+
+The reported production crash came from a runtime value import in `order-transactions.ts` that explicitly referenced `marketplace-purchases.ts`; Vercel emits/loads the server module as JavaScript, so Node could not resolve that TypeScript extension. Replaced all server-side `.ts` relative import specifiers with `.js` specifiers (NodeNext resolves these to TypeScript sources for type checking and the emitted JavaScript files at runtime). `npm run build:offline` passed and no server imports ending in `.ts` remain; production deployment/runtime acceptance remains pending.
+
+## Default product seed entries - 2026-09-26
+
+Extended `prisma/seed.mjs` with the 18 requested platform product names and starter categories. Missing products are created at ₹100 (`priceMinor: 10000`), zero stock, active catalog visibility, and a neutral “Default” swatch; idempotent upserts do not overwrite later edits. The seed was not executed against any database. Production ownership depends on the owner-applied marketplace migration/trigger; no database or migration checks were performed.
+
+## Products pagination loading feedback - 2026-09-26
+
+The “Loading more products” label had one render site in `ShopPage`, where it followed the broad `isFetching` state and therefore appeared on initial/background catalog refreshes. Changed it to `isFetchingNextPage`, removed the unused visible sentinel line, and announce the message accessibly while an explicit next-page request is in progress. `npm run build:offline` passed (existing large-chunk warning); tests and rendered acceptance remain deferred under owner instructions.
+
+## Products route Tailwind migration - 2026-09-26
+
+Configured Tailwind CSS v4 through its Vite plugin and added Radix Dialog plus Lucide/utility-class helpers. Migrated the Products page header, promo banner, desktop filter aside, mobile filter Sheet, shared ProductCard/grid, product skeleton, empty/error/end states and fractional stars to Tailwind utilities. The Sheet uses Radix focus containment/restoration and Escape handling; desktop retains the sticky sidebar, while mobile uses a dedicated drawer. Existing theme variables remain shared with the legacy stylesheet; unrelated routes are not migrated. `npm run build:offline` passed; Vite reports a 606.19 kB main JavaScript chunk warning. Rendered phone/tablet/desktop acceptance remains pending.
+
 ## Product card title and surface refinement - 2026-09-26
 
 Restored a subtle border, warm raised surface and restrained shadow. Changed the shared card information area to stack category/title/seller above a full-width price/wishlist row, giving titles the card's full text width and preventing short names from breaking beside large prices. Matched the CTA inset to the framed card. Source-only; browser/mobile rendering and regression checks remain pending.
@@ -22,7 +42,7 @@ Admin product-media and customer review uploads now log an allowlisted Blob exce
 
 ## Shared product and loading card sizing - 2026-09-25
 
-Standardized the ProductCard maximum width and square media across Home, Products and Wishlist. The Products skeleton now reserves the same information, rating, swatch and CTA rows as a loaded card; the virtualized catalog row offset follows the measured card height plus its 32px grid gap instead of a fixed oversized minimum. Source-only: rendered comparison and mobile acceptance remain pending; no tests/build were run under the current owner deferral.
+Standardized the ProductCard maximum width and square media across Home, Products and Wishlist. The Products skeleton reserves the same information, rating, swatch and CTA rows as a loaded card. The former virtualized catalog row offset was later removed on 2026-09-26 after screenshot evidence showed scroll jumps; the catalog now uses natural CSS grid flow. Source-only: rendered comparison and mobile acceptance remain pending.
 
 ## Product card title, price and color pass - 2026-09-25
 
@@ -87,7 +107,7 @@ Product card polish: the shared catalog card now has a light surface shell, cons
 
 Product card hover/layout refinement: cards now keep a raised surface and border in the resting state, use a restrained hover tint instead of appearing suddenly white, and catalog cards no longer stretch their add action to the bottom of an unnecessary full-height flex row.
 
-Catalog density refinement: wide desktop layouts now render five product cards per row at 1440px+, with matching virtualization column calculations; standard desktop remains four and phones two. Source-only; rendered responsive acceptance remains pending.
+Catalog density refinement: wide desktop layouts now render five product cards per row at 1440px+, standard desktop remains four and phones two. Prior virtualization column calculations were removed on 2026-09-26 after scroll-jump reports; responsive rendering still needs browser acceptance.
 
 Loading-grid spacing fix: retained the reserved skeleton viewport height but set the skeleton grid’s row alignment to start with an explicit 32px row gap, preventing the reserved height from stretching the space between rows. Loading and loaded states continue to use the same product-card structure and shared card styles.
 
@@ -107,9 +127,9 @@ Auth snackbar refinement: sign-in-required errors now include a direct “Sign i
 
 Shared page-height fix: `site-shell` is now a full-viewport flex column and `PageContainer` grows to fill remaining space. Short routes keep the footer at the bottom of the viewport, while content-heavy routes continue naturally without a forced fixed height.
 
-Catalog virtualization regression fix: restored a responsive reserved height for the initial skeleton grid (980px desktop, 1180px phone) so the footer does not jump directly beneath loading cards while the virtualized product layout resolves.
+Catalog loading layout fix: restored a responsive reserved height for the initial skeleton grid (980px desktop, 1180px phone) so the footer does not jump directly beneath loading cards before catalog data resolves.
 
-Sparse catalog layout fix: catalogs with six or fewer products now render without virtualization; a single product uses a deliberate 300px desktop card width and full-width phone layout, with a shorter catalog-end gap. Larger catalogs retain the virtualized grid.
+Sparse catalog layout fix: catalogs with six or fewer products render in natural grid flow; the former larger-catalog virtualizer was removed on 2026-09-26 after further scroll-jump reports.
 
 Loaded catalog card pass - 2026-09-25
 Product cards now use a dedicated muted seller-attribution style and tighter mobile information spacing, keeping image, seller, price, rating and add action visually grouped. The shared `ProductCard` is used by both catalog render paths. Source-only; rendered acceptance remains deferred.
