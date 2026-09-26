@@ -21,7 +21,6 @@ import { safeRouteId } from './routePaths'
 import { OrdersPage } from './pages/OrdersPage'
 import { OrderDetailPage } from './pages/OrderDetailPage'
 import { AdminPage } from './pages/AdminPage'
-import { HelpPage } from './pages/HelpPage'
 import { usePageMetadata } from './api/pageMetadata'
 
 type RouteProps = {
@@ -106,8 +105,6 @@ export function StorefrontRoute({
       return isAuthenticated ? <SellerPage key="seller" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/admin/sellers':
       return isAdmin ? <SellerPage key="seller-review" admin /> : <section className="page-section"><h1>Administrator access required</h1><a href="/login" onClick={navigate('/login')}>Sign in</a></section>
-    case '/help':
-      return <HelpPage onNavigate={navigate} />
     case '/profile':
       return isAuthenticated ? (
         <ProfilePage onNavigate={navigate} />
@@ -204,6 +201,7 @@ export function StorefrontRoute({
           key="create-support"
           storefront={storefront}
           isAuthenticated={isAuthenticated}
+          onNavigate={navigate}
         />
       )
     case '/support-requests':

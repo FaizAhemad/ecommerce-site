@@ -381,6 +381,7 @@
   bottom: -9px;
   height: 2px;
   background: var(--green);
+  display: var(--tour-active-underline, block);
 }
 .subscribe-section {
   display: grid;

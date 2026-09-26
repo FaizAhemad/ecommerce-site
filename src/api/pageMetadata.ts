@@ -2,8 +2,7 @@ import { useEffect } from 'react'
 const pages: Record<string, [string, string]> = {
   '/': ['Home', 'Explore Gadgify household products and everyday essentials.'],
   '/products': ['Products', 'Browse products, compare details and find everyday essentials.'],
-  '/help': ['Help', 'Get help with your account, orders, payments and support requests.'],
-  '/support': ['Support', 'Contact the store and track your support requests securely.'],
+  '/support': ['Support & Help', 'Find answers about products, accounts, orders and returns, or contact Gadgify support.'],
   '/privacy': ['Privacy policy', 'Read the published privacy policy.'],
   '/returns': ['Returns policy', 'Read the published returns policy.'],
   '/refund-policy': ['Refund policy', 'Read the published refund policy.'],

@@ -292,7 +292,7 @@ E25 removes the database-only refund shortcut from SEC-03. Admin verification no
 E26 connects admin return history/review and repairs independent admin panel visibility. Automated AdminPage regression covers Settings/Messages/Returns containers; rendered/device acceptance remains pending. Owner now defers format/format:check to their own workflow; continue functional/security verification.
 
 
-E27 adds Help and an inline explicit route tour in SiteLayout/PageContainer, with memory-only state and normal destination authorization. Synthetic navigation tests pass; rendered focus/mobile and localization acceptance are pending.
+E27 adds Help and an explicit route tour in SiteLayout/PageContainer. The current source keeps step state in memory, spotlights the next navigation control with an arrow, and advances only after the user activates that control; it does not change routes on its own. Existing destination authorization remains in force. Owner screenshot identified arrow/header stacking, corrected in source; rendered focus/mobile and localization acceptance remain pending.
 
 
 E28 adds independent private first-purchase feedback state and admin visibility. Synthetic owner/retry/quota checks pass; database migration/device/retention acceptance remains open. No formatting commands were run.

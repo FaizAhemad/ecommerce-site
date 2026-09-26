@@ -1,5 +1,17 @@
 # Project status
 
+## Website tour interaction and arrow layering - 2026-09-26
+
+The owner clarified that every step must point to the active route's header navigation control and that the tour must cover more than Support and Products. The tour now includes Shops, Home and Products for guests; signed-in customers also see Sell with us, Cart, Orders and Profile; administrators additionally see Admin, Support requests and Sellers. Each step outlines and points to the current header control, temporarily hiding its active underline through an inline style that is removed during cleanup. Next/Previous navigate between routes; the final Next completes the tour. The non-interactive dim layer and scroll/resize target tracking remain. A follow-up removes an underline-restoration bug that left stale active classes on previously visited links after the tour. `npm run build:offline` and `git diff --check` passed; Vite's existing large-chunk advisory remains. Rendered/mobile/keyboard checks remain pending.
+
+Spacing follow-up: the owner screenshot showed insufficient separation between the tour heading and its description. Increased this gap to 16px and the eyebrow-to-heading gap to 8px, using the shared spacing scale. `npm run build:offline` and `git diff --check` passed. This improves the tour panel only; the broader cross-page/component spacing consistency review remains in UI-02 and has not been completed or visually verified.
+
+## Support and Help consolidation - 2026-09-26
+
+Moved the public Help guidance into a Tailwind Support center with quick links, accessible topic disclosures, public support contact, guest sign-in guidance and the existing authenticated private ticket form/attachment flow. The explicit website tour now starts and exits from Support and remains memory-only across its route steps. Removed Help from primary navigation, deleted the separate page, and removed `/help` from the router so it falls through to the normal not-found page. Support request list and admin modes are unchanged. `npm run build:offline` passed; rendered/mobile/authenticated interaction checks remain pending.
+
+Follow-up spacing correction: the public Support route now uses the same wide PageContainer and shared page gutters as Products; removed its extra centered reading-width cap, and aligned the tour control to those gutters. `npm run build:offline` passed; screenshot/mobile comparison remains pending.
+
 ## Product card cart quantity controls - 2026-09-26
 
 Shared storefront cards now switch from Add to cart to a cart quantity control: at quantity one the left action removes the item, and from quantity two onward it decrements; the right action increments. The live count comes from the same account-scoped React Query cart cache used by the cart/header, and mutations use `updateCart` with optimistic reconciliation/rollback and per-product pending locks. Added a short Tailwind count roll animation with reduced-motion support. Product cards disable controls while the cart loads or that product updates. Offline build passed; browser/cart synchronization, guest/auth, rollback and mobile acceptance remain pending.
@@ -308,7 +320,7 @@ Evidence: 176 tests pass, including five new eligibility/ownership, retry/draft,
 
 Added public /help in the shared reading-width layout and primary Help navigation. Accessible disclosure sections link to actual product, account/recovery, order, policy and support routes. Help avoids invented delivery/refund promises and explains separately confirmed payments and missing-policy escalation.
 
-The explicit tour starts on Help and visits Products, Cart, Profile, Orders and Support. SiteLayout retains the in-memory step across route changes; existing login/role boundaries still govern destination pages. Previous/next/finish/exit and Escape controls are supplied, with focused step heading. It is an inline panel, not an overlay or focus trap; there is no automatic start, customer storage, analytics or API write. Page reads happen normally on visited routes.
+The explicit tour starts on Help and visits Products, Cart, Profile, Orders and Support. SiteLayout retains the in-memory step across route changes; existing login/role boundaries still govern destination pages. Previous/next/finish/exit and Escape controls are supplied, with focused step heading. It does not auto-start, store customer data, track analytics or write to an API. Page reads happen normally on visited routes. The original inline layout was replaced by a compact fixed panel in the 2026-09-26 follow-up above.
 
 Evidence: 171 tests pass, including help-link/truthful-content checks and synthetic tour navigation/exit without writes. Offline frontend/API build passes. A new export-related lint warning was removed by keeping tour configuration internal; three prior warnings remain. Browser focus, device layout and full localization still need owner acceptance. Formatting was not run after the owner's deferral instruction. No .env, database/provider/live checks or deployment.
 

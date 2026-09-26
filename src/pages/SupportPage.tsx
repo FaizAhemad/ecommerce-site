@@ -1,19 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { privateKey } from '../api/sessionScope'
 import { supportRequest, type SupportTicket } from '../api/support'
 import { SupportTicketCard } from '../components/SupportTicketCard'
 import { SupportAttachments } from '../components/SupportAttachments'
 import { useNotification } from '../components/NotificationProvider'
+import { ChevronDown } from 'lucide-react'
 import type { StorefrontApiResponse } from '../api/storefront'
 export function SupportPage({
   storefront,
   isAuthenticated = false,
   mode = 'create',
+  onNavigate,
 }: {
   storefront: StorefrontApiResponse
   isAuthenticated?: boolean
   mode?: 'create' | 'list' | 'admin'
+  onNavigate?: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void
 }) {
   const admin = mode === 'admin',
     list = mode !== 'create'
@@ -74,6 +77,130 @@ export function SupportPage({
       operation.current = null
       if (!controller.signal.aborted) setPending(false)
     }
+  }
+  const link = (path: string, label: string, className?: string) => (
+    <a className={className} href={path} onClick={onNavigate?.(path)}>
+      {label}
+    </a>
+  )
+
+  if (!list) {
+    return (
+      <section className="w-full" aria-labelledby="support-title">
+        <p className="m-0 font-sans text-xs font-semibold uppercase tracking-[0.14em] text-[var(--green)]">
+          {storefront.identity.businessName} · Customer care
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.65fr)] md:items-end md:gap-8">
+          <h1 id="support-title" className="m-0 max-w-3xl text-4xl font-semibold leading-[1.05] tracking-[-0.04em] text-[var(--ink)] sm:text-5xl">
+            Support, made simple.
+          </h1>
+          <p className="m-0 max-w-xl text-sm leading-6 text-[var(--muted)] md:justify-self-end">
+            Find a quick answer below, check an order, or send our team a private support request.
+          </p>
+        </div>
+
+        <nav aria-label="Helpful links" className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            ['/products', 'Browse products', 'Find items and read product reviews.'],
+            ['/orders', 'Your orders', 'Review order and payment status.'],
+            ['/track-order', 'Track an order', 'See the latest recorded delivery updates.'],
+            [isAuthenticated ? '/support-requests' : '/login', 'Support requests', 'Create a request and follow its status.'],
+          ].map(([path, title, description]) => (
+            <a
+              key={title}
+              href={path}
+              onClick={onNavigate?.(path)}
+              className="group min-h-28 rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-4 transition-colors hover:border-[var(--green)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+            >
+              <span className="block text-sm font-semibold text-[var(--ink)]">{title}</span>
+              <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">{description}</span>
+            </a>
+          ))}
+        </nav>
+
+        <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)] lg:gap-8">
+          <section aria-labelledby="support-faq-title">
+            <p className="m-0 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">Helpful answers</p>
+            <h2 id="support-faq-title" className="mb-4 mt-1 text-2xl font-semibold tracking-tight text-[var(--ink)]">Common questions</h2>
+            <div className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
+              <details className="group py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--ink)] marker:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--green)]">Finding and reviewing products<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
+                <p className="mb-0 mt-3 text-sm leading-6 text-[var(--muted)]">Use {link('/products', 'Products')} to search and filter the catalogue. Open a product to see its details, available media and customer reviews. Sign in to submit or edit your own review.</p>
+              </details>
+              <details className="group py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--green)]">Delivery addresses and account access<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
+                <p className="mb-0 mt-3 text-sm leading-6 text-[var(--muted)]">Visit {link('/profile', 'Profile')} to manage your details and saved addresses. If you cannot sign in, use {link('/forgot-password', 'password recovery')}. Email verification status and links are available in Profile.</p>
+              </details>
+              <details className="group py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--green)]">Checkout and payment status<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
+                <p className="mb-0 mt-3 text-sm leading-6 text-[var(--muted)]">Review your cart and confirmed charges before ordering. Checkout may be unavailable while the shop is configuring it. Payment is confirmed separately; if a request is interrupted, check {link('/orders', 'Orders')} before trying again.</p>
+              </details>
+              <details className="group py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--green)]">Delivery, cancellation, returns and refunds<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
+                <p className="mb-0 mt-3 text-sm leading-6 text-[var(--muted)]">Open your order for recorded tracking details. Read the published {link('/returns', 'returns policy')} and {link('/refund-policy', 'refund policy')}. If policy information is unavailable or you need an order-specific decision, contact support with the order number before proceeding.</p>
+              </details>
+              <details className="group py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--green)]">Following a support request<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
+                <p className="mb-0 mt-3 text-sm leading-6 text-[var(--muted)]">Sign in to create a request, then visit {link('/support-requests', 'Support requests')} for its recorded status and resolution. A saved request remains trackable even if email confirmation is unavailable.</p>
+              </details>
+            </div>
+            <p className="mb-0 mt-4 text-xs leading-5 text-[var(--muted)]">For information about customer data, visit {link('/privacy', 'Privacy')}. Never send passwords or full payment-card details through support.</p>
+          </section>
+
+          <aside className="rounded-2xl border border-[var(--line)] bg-[var(--surface-raised)] p-5 sm:p-6" aria-labelledby="contact-support-title">
+            <p className="m-0 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--green)]">Contact our team</p>
+            <h2 id="contact-support-title" className="mb-2 mt-1 text-xl font-semibold tracking-tight text-[var(--ink)]">Still need a hand?</h2>
+            <p className="m-0 text-sm leading-6 text-[var(--muted)]">Send a private request and keep a record you can return to.</p>
+            <a className="mt-3 inline-block break-all text-sm font-medium text-[var(--green)] underline decoration-[var(--line)] underline-offset-4" href={`mailto:${storefront.contact.supportEmail}`}>
+              {storefront.contact.supportEmail}
+            </a>
+            {!isAuthenticated ? (
+              <div className="mt-5 rounded-xl bg-[var(--paper)] p-4">
+                <p className="m-0 text-sm leading-6 text-[var(--muted)]">Sign in to send a request and follow its status securely.</p>
+                {link('/login', 'Sign in', 'primary-button mt-4 flex min-h-11 w-full items-center justify-center rounded-md bg-[var(--ink)] px-4 text-sm font-semibold text-white hover:bg-[var(--green)]')}
+              </div>
+            ) : saved ? (
+              <div className="mt-5 rounded-xl bg-[var(--paper)] p-4" role="status">
+                <h3 className="m-0 text-base font-semibold text-[var(--ink)]">Request recorded</h3>
+                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Reference: {saved.id}</p>
+                <SupportAttachments ticketId={saved.id} canUpload />
+                <p className="my-3 text-xs leading-5 text-[var(--muted)]">
+                  {saved.emailStatus === 'ACCEPTED' ? 'Confirmation email requested.' : 'Email confirmation is not confirmed. You can still track this request here.'}
+                </p>
+                {link('/support-requests', 'Track your request', 'text-sm font-semibold text-[var(--green)] underline underline-offset-4')}
+                <button className="mt-4 min-h-11 w-full rounded-md border border-[var(--line)] px-4 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)]" onClick={() => { setSaved(null); setSubject(''); setMessage(''); identity.current = null }}>
+                  Start another request
+                </button>
+              </div>
+            ) : (
+              <form
+                className="mt-5 grid gap-4"
+                aria-busy={pending}
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  identity.current ??= crypto.randomUUID()
+                  void write({ id: identity.current, subject, body: message })
+                }}
+              >
+                {error && <p className="m-0 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-900" role="alert">{error}</p>}
+                <label className="grid gap-1.5 text-sm font-medium text-[var(--ink)]">
+                  Subject
+                  <input className="min-h-11 w-full rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 text-base font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]" required maxLength={120} value={subject} disabled={pending} onChange={(event) => setSubject(event.target.value)} />
+                </label>
+                <label className="grid gap-1.5 text-sm font-medium text-[var(--ink)]">
+                  How can we help?
+                  <textarea className="w-full resize-y rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-base font-normal leading-6 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]" required rows={5} maxLength={4000} value={message} disabled={pending} onChange={(event) => setMessage(event.target.value)} />
+                </label>
+                <p className="m-0 text-xs leading-5 text-[var(--muted)]">Do not include passwords, payment-card details or sensitive health information.</p>
+                <button className="min-h-11 rounded-md bg-[var(--ink)] px-4 text-sm font-semibold text-white transition-colors hover:bg-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:cursor-not-allowed disabled:opacity-60" disabled={pending}>
+                  {pending ? 'Recording request…' : 'Send support request'}
+                </button>
+              </form>
+            )}
+          </aside>
+        </div>
+      </section>
+    )
   }
   return (
     <section className="page-section support-section" aria-labelledby="support-title">

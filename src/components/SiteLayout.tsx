@@ -119,7 +119,6 @@ export function SiteLayout({
           >
             {content.navigation.support}
           </a>
-          <a className={currentPath === '/help' ? 'is-active' : ''} href="/help" onClick={navigate('/help')}>Help</a>
           {isAuthenticated && (
             <a
               className={
@@ -222,7 +221,12 @@ export function SiteLayout({
           )}
         </div>
       </header>
-      <PageContainer path={currentPath}><SiteTour path={currentPath} />{children}</PageContainer>
+      <PageContainer path={currentPath}>
+        <div className="px-[var(--page-gutter)]">
+            <SiteTour path={currentPath} isAuthenticated={isAuthenticated} isAdmin={isAdmin} />
+        </div>
+        {children}
+      </PageContainer>
       <SocialLinks storefront={storefront} placement="rail" />
       <footer className="site-footer" id="footer">
         <div>
