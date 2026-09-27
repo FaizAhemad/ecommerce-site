@@ -29,7 +29,6 @@ type SiteLayoutProps = {
   cartCount: number
   wishlistCount: number
   isAuthenticated: boolean
-  isAdmin: boolean
   onLogout: () => Promise<void>
   children: ReactNode
 }
@@ -39,7 +38,6 @@ export function SiteLayout({
   cartCount,
   children,
   isAuthenticated,
-  isAdmin,
   onLogout,
 }: SiteLayoutProps) {
   const notify = useNotification()
@@ -125,9 +123,6 @@ export function SiteLayout({
           <span>{identity.businessName}</span>
         </a>
         <nav aria-label="Primary navigation">
-          <a href="/shops" onClick={navigate('/shops')} className={currentPath.startsWith('/shops') ? 'is-active' : ''}>Shops</a>
-          <a href="/seller" onClick={navigate('/seller')} className={currentPath === '/seller' ? 'is-active' : ''}>Sell with us</a>
-          {isAdmin && <a href="/admin/sellers" onClick={navigate('/admin/sellers')} className={currentPath === '/admin/sellers' ? 'is-active' : ''}>Sellers</a>}
           <a className={currentPath === '/' ? 'is-active' : ''} href="/" onClick={navigate('/')}>
             {content.ui.homeLabel}
           </a>
@@ -141,47 +136,21 @@ export function SiteLayout({
             {content.navigation.products}
           </a>
           <a
+            className={
+              currentPath === '/orders' || currentPath.startsWith('/orders/') ? 'is-active' : ''
+            }
+            href="/orders"
+            onClick={navigate('/orders')}
+          >
+            Orders
+          </a>
+          <a
             className={currentPath === '/support' ? 'is-active' : ''}
             href="/support"
             onClick={navigate('/support')}
           >
             {content.navigation.support}
           </a>
-          {isAuthenticated && (
-            <a
-              className={
-                currentPath === '/orders' || currentPath.startsWith('/orders/') ? 'is-active' : ''
-              }
-              href="/orders"
-              onClick={navigate('/orders')}
-            >
-              Orders
-            </a>
-          )}
-
-          {isAuthenticated && (
-            <a
-              className={currentPath === '/profile' ? 'is-active' : ''}
-              href="/profile"
-              onClick={navigate('/profile')}
-            >
-              Profile
-            </a>
-          )}
-          {isAuthenticated && isAdmin && (
-            <a
-              className={currentPath === '/admin' ? 'is-active' : ''}
-              href="/admin"
-              onClick={navigate('/admin')}
-            >
-              Admin
-            </a>
-          )}
-          {isAuthenticated && isAdmin && (
-            <a href="/admin/support" onClick={navigate('/admin/support')}>
-              Support requests
-            </a>
-          )}
         </nav>
         <div className="header-actions" ref={headerActionsRef}>
           <button
@@ -273,7 +242,7 @@ export function SiteLayout({
       </header>
       <PageContainer path={currentPath}>
         <div className="px-[var(--page-gutter)]">
-            <SiteTour path={currentPath} isAuthenticated={isAuthenticated} isAdmin={isAdmin} />
+            <SiteTour path={currentPath} isAuthenticated={isAuthenticated} />
         </div>
         {children}
       </PageContainer>

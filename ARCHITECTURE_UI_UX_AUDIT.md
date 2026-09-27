@@ -1,5 +1,9 @@
 # Architecture, security and UI/UX audit
 
+2026-09-27 Orders empty-state CTA: Tailwind `text-white` lost to the global, more-specific anchor color rule, leaving a dark link button unreadable. Use shared `.primary-button` for anchors that need the primary foreground/background pair; remaining dark primary actions found in the audit are button elements or already use that primitive. Rendered/device acceptance pending.
+
+2026-09-27 launch scope UI pass: header navigation now presents Home, Products, Orders and Support, with the tour spotlight kept in sync. `/orders` has moved its route-local layout/states to Tailwind while preserving private paginated data and explicit failure recovery. Product Details and catalog use a shared Tailwind primary cart-action style. Responsive rendered acceptance remains pending.
+
 2026-09-27 ratings integrity: do not seed fabricated customer scores or review text. Product cards distinguish genuine review aggregates from the no-review state with a compact `No reviews yet` label; actual average and count remain tied to persisted reviews. Rendered/device acceptance remains pending.
 
 2026-09-27 ProductCard optional data review: the neutral `Default` fallback color was shown as a meaningless gray swatch, and missing seller details reserved blank space. Shared cards now render only actual named color options and present seller attribution only when available; local desktop visual check passed, phone/tablet and automated verification remain pending.

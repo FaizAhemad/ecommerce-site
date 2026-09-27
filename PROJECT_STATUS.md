@@ -1,5 +1,13 @@
 # Project status
 
+## Orders empty-state CTA color and label - 2026-09-27
+
+The owner screenshot showed a dark empty-state anchor without a visible label/icon. The shared global rule `a:not(.primary-button):not(.secondary-button)` sets link color with higher specificity than the Tailwind `text-white` utility; the CTA now uses the shared `primary-button` variant, which owns both background and foreground, and falls back to `Browse products` when the configured label is blank. Checked remaining dark CTA matches: they are actual button controls or already use a shared button variant. `npm run build:offline` and `git diff --check` passed; responsive rendered acceptance remains pending.
+
+## Launch navigation, Orders page, and product CTA consistency - 2026-09-27
+
+Reduced the shared primary navigation to Home, Products, Orders and Support for the initial launch; removed Shops, Sell with us, Sellers, Profile, Admin and Support requests from the header for all roles. The website tour now points only to visible primary-navigation destinations. Rebuilt `/orders` in Tailwind with responsive order cards, recorded payment/order statuses, loading skeletons, retryable errors, a clear no-orders state, pagination feedback, and order-specific details/tracking links while retaining private query keys and the existing purchase-feedback form. Shared a dark Tailwind add-to-cart action style between ProductCard and Product Details, including the plus affordance. Source implementation only; tests/build and phone/tablet/production acceptance remain pending under current owner instructions.
+
 ## Product card rating empty state - 2026-09-27
 
 Did not introduce fabricated ratings or review comments. Shared cards now show the saved average and count only when reviews exist; otherwise they display `No reviews yet` without empty stars or a misleading score. Existing Product Detail zero-rating counts and latest-review empty state remain explicit. Source change; rendered/device and automated checks remain pending under owner verification deferral.

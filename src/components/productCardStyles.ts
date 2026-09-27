@@ -23,5 +23,8 @@ export const productRatingClass =
 export const productSwatchesClass =
   'mx-2 my-0.5 flex min-h-6 items-center gap-2 pb-1'
 
+export const productPrimaryActionClass =
+  'inline-flex min-h-11 cursor-pointer items-center justify-center gap-3 rounded-md bg-[var(--ink)] px-4 font-sans text-xs font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:cursor-not-allowed disabled:opacity-60'
+
 export const productAddButtonClass =
-  'mx-2 mt-auto mb-2 flex min-h-11 w-[calc(100%-1rem)] cursor-pointer items-center justify-center rounded-md bg-[var(--ink)] px-4 font-sans text-xs font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:cursor-not-allowed disabled:opacity-60'
+  `${productPrimaryActionClass} mx-2 mt-auto mb-2 w-[calc(100%-1rem)]`

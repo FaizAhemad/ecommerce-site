@@ -13,6 +13,7 @@ import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 're
 import { getProduct, type StorefrontApiResponse } from '../api/storefront'
 import { queryClient } from '../api/queryClient'
 import { useProductMetadata } from '../api/productMetadata'
+import { productPrimaryActionClass } from '../components/productCardStyles'
 
 type ReviewMedia = { id: string; url: string }
 
@@ -538,7 +539,8 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             productId={product.id}
             onAdd={onAdd}
             label={storefront.content.collection.addToCartLabel}
-            className="primary-button w-full sm:w-auto sm:min-w-64"
+            className={`${productPrimaryActionClass} w-full sm:w-fit sm:min-w-56`}
+            iconClassName="ml-auto text-lg leading-none sm:ml-0"
           />
         </div>
       </section>

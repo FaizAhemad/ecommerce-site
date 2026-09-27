@@ -256,7 +256,6 @@ function App() {
           cartCount={(cart.data ?? []).reduce((sum, item) => sum + item.quantity, 0)}
           wishlistCount={0}
           isAuthenticated={Boolean(user)}
-          isAdmin={user?.role === 'ADMIN'}
           onLogout={logout}
         >
           <StorefrontRoute

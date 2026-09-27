@@ -1,5 +1,9 @@
 # Page and route inventory
 
+2026-09-27 Orders empty-state CTA: its dark Tailwind anchor inherited the global link color and rendered without readable content. It now uses the shared primary-button variant, with a text fallback if the configured continue-shopping label is empty. Other dark CTA matches were checked: they are actual buttons or already use the shared primary variant, so link inheritance does not affect them. Rendered/mobile acceptance remains pending.
+
+2026-09-27 launch navigation and Orders pass: shared header now shows Home, Products, Orders and Support for all roles; admin/seller/profile/shop links are removed from the primary navigation, and the tour targets only visible routes (Orders appears for signed-in users). `/orders` now uses Tailwind for responsive order cards and explicit loading/error/empty/pagination states, with direct order-detail and track links. Product Details uses the same dark Tailwind add-to-cart treatment as catalog cards. Local route and phone review remain pending.
+
 2026-09-27 ProductCard rating empty state: cards with genuine reviews show the persisted average and review count; products without reviews show a compact `No reviews yet` label instead of empty stars and a fabricated-looking `0.0` score. Local desktop check pending after HMR; phone/tablet and automated verification remain pending.
 
 2026-09-27 ProductCard optional data: absent seller attribution now takes no space, and fallback `Default` color metadata no longer appears as a product swatch; only named color variants render. Compare-at details remain conditional on valid saved pricing, while the CTA stays bottom-aligned. Local Products desktop screenshot checked; phone/tablet and automated verification remain pending.
@@ -125,7 +129,7 @@ E31 adds initial server product HTML at `/product/:id` with current metadata/str
 | /cart | CartPage / SiteTour | Authenticated | Shared header/page query with optimistic quantity/removal, per-product locks, affected-row rollback and checkout guard while saving. During the explicit route tour, the active Cart header control is highlighted and pointed to. |
 | /wishlist | WishlistRedirect | Public redirect | Temporarily hidden by request; replaces the URL with /products. Header link removed. WishlistPage is retained but inactive; product hearts and saved-item APIs remain available. |
 | /checkout | PaymentPage | Authenticated | Real cart/address selection, private server quote and idempotent order submission when explicitly configured; navigates to order payment (E23). |
-| /orders | OrdersPage / SiteTour | Authenticated | Private paginated customer history with stored totals/items/status and loading/empty/error/retry states (E20). During the explicit route tour, the active Orders navigation link is highlighted and pointed to; owner mobile/production acceptance pending. |
+| /orders | OrdersPage / SiteTour | Authenticated | Private paginated customer history with stored totals/items/status, Tailwind loading/empty/error/retry states, responsive order cards, and links to owned order details and tracking (E20). During the explicit route tour, the active Orders navigation link is highlighted and pointed to; rendered/device/production acceptance pending. |
 | /orders/:id | OrderDetailPage | Authenticated | Private order/items/totals/address/payment/shipment query, discount summary, payment controls and delivered-order return request/status. E30 source is unverified. |
 | /admin | AdminPage / SiteTour | Administrator for page content | Products/categories CRUD subset and operational reads; see tab map below. Authorized administrators get tour steps for Admin, Support requests and Sellers; unauthorized users get login or access-required content. |
 | /debug-error | DebugErrorPage | Intentional throw only in development | In production renders a development-only notice. |
@@ -133,7 +137,7 @@ E31 adds initial server product HTML at `/product/:id` with current metadata/str
 
 AI flows remain missing; E29 adds shipping/cancellation/cookie policy routes. Reset emails now resolve to /reset-password (E16); /verify-email is registered in E18.
 
-The navbar includes Orders and Profile for authenticated users. Admin visibility now requires verified ADMIN role; the page/API still apply authorization. Final responsive/role-visibility verification is pending.
+The launch navbar exposes Home, Products, Orders and Support across roles; restricted destinations such as Profile/Admin/Seller remain available only through their existing direct/footer/admin workflows and continue to rely on route/API authorization. Rendered responsive/role-visibility verification is pending.
 
 ## Admin tabs
 

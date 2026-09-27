@@ -12,16 +12,10 @@ const supportStep: TourStep = {
   path: '/support',
   selector: 'nav a[href="/support"]',
   title: 'Start with Support',
-  text: 'Browse common answers, track an order or contact our team. The tour will show you the main areas of Gadgify.',
+  text: 'Browse common answers, track an order or contact our team. The tour will show you the main areas of the store.',
 }
 
 const sharedSteps: TourStep[] = [
-  {
-    path: '/shops',
-    selector: 'nav a[href="/shops"]',
-    title: 'Discover shops',
-    text: 'Browse the shops available on Gadgify and explore their collections.',
-  },
   {
     path: '/',
     selector: 'nav a[href="/"]',
@@ -36,66 +30,9 @@ const sharedSteps: TourStep[] = [
   },
 ]
 
-const sellerStep: TourStep = {
-  path: '/seller',
-  selector: 'nav a[href="/seller"]',
-  title: 'Sell with Gadgify',
-  text: 'Learn how to apply to sell on Gadgify and manage your seller workspace.',
-}
-
-const signedInSteps: TourStep[] = [
-  supportStep,
-  sharedSteps[0],
-  sellerStep,
-  sharedSteps[1],
-  {
-    ...sharedSteps[2],
-    nextPath: '/cart',
-  },
-  {
-    path: '/cart',
-    selector: 'button.cart-button',
-    title: 'Review your cart',
-    text: 'Review selected products and quantities before checkout.',
-  },
-  {
-    path: '/orders',
-    selector: 'nav a[href="/orders"]',
-    title: 'Follow your orders',
-    text: 'Review recorded order and payment status, then open an order for details and tracking.',
-  },
-  {
-    path: '/profile',
-    selector: 'nav a[href="/profile"]',
-    title: 'Manage your account',
-    text: 'Review your account, email status and saved delivery addresses.',
-  },
-]
-
-const adminSteps: TourStep[] = [
-  {
-    path: '/admin',
-    selector: 'nav a[href="/admin"]',
-    title: 'Open administration',
-    text: 'Manage the available store and catalog administration tools.',
-  },
-  {
-    path: '/admin/support',
-    selector: 'nav a[href="/admin/support"]',
-    title: 'Manage support requests',
-    text: 'Review and respond to customer support requests.',
-  },
-  {
-    path: '/admin/sellers',
-    selector: 'nav a[href="/admin/sellers"]',
-    title: 'Review sellers',
-    text: 'Review seller applications and marketplace activity available to administrators.',
-  },
-]
-
 type TargetRect = { top: number; left: number; width: number; height: number }
 
-export function SiteTour({ path, isAuthenticated, isAdmin }: { path: string; isAuthenticated: boolean; isAdmin: boolean }) {
+export function SiteTour({ path, isAuthenticated }: { path: string; isAuthenticated: boolean }) {
   const [stepIndex, setStepIndex] = useState<number | null>(null)
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null)
   const heading = useRef<HTMLHeadingElement>(null)
@@ -104,22 +41,22 @@ export function SiteTour({ path, isAuthenticated, isAdmin }: { path: string; isA
     () =>
       [
         supportStep,
-        ...sharedSteps.slice(0, 1),
-        ...(isAuthenticated ? [sellerStep] : []),
-        ...sharedSteps.slice(1),
+        ...sharedSteps,
         ...(isAuthenticated
           ? [
-              signedInSteps[5],
-              signedInSteps[6],
-              signedInSteps[7],
+              {
+                path: '/orders',
+                selector: 'nav a[href="/orders"]',
+                title: 'Follow your orders',
+                text: 'Review recorded order and payment status, then open an order for details and tracking.',
+              },
             ]
           : []),
-        ...(isAuthenticated && isAdmin ? adminSteps : []),
       ].map((step, index, allSteps) => ({
         ...step,
         nextPath: allSteps[index + 1]?.path,
       })),
-    [isAuthenticated, isAdmin],
+    [isAuthenticated],
   )
   const isComplete = stepIndex !== null && stepIndex >= steps.length
   const current = stepIndex === null || isComplete ? null : steps[stepIndex]
@@ -228,17 +165,10 @@ export function SiteTour({ path, isAuthenticated, isAdmin }: { path: string; isA
   const pointerTop = targetRect ? targetRect.top + targetRect.height + 5 : 0
   const stepNumber = Math.min((stepIndex ?? 0) + 1, steps.length)
   const destinationLabels: Record<string, string> = {
-    '/shops': 'Shops',
-    '/seller': 'Sell with us',
     '/': 'Home',
     '/products': 'Products',
-    '/cart': 'Cart',
-    '/profile': 'Profile',
     '/orders': 'Orders',
     '/support': 'Support',
-    '/admin': 'Admin',
-    '/admin/support': 'Support requests',
-    '/admin/sellers': 'Sellers',
   }
   const nextLabel = current?.nextPath ? `Next: ${destinationLabels[current.nextPath]}` : 'Done'
 
