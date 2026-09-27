@@ -1,5 +1,9 @@
 # Page and route inventory
 
+2026-09-27 ProductCard rating empty state: cards with genuine reviews show the persisted average and review count; products without reviews show a compact `No reviews yet` label instead of empty stars and a fabricated-looking `0.0` score. Local desktop check pending after HMR; phone/tablet and automated verification remain pending.
+
+2026-09-27 ProductCard optional data: absent seller attribution now takes no space, and fallback `Default` color metadata no longer appears as a product swatch; only named color variants render. Compare-at details remain conditional on valid saved pricing, while the CTA stays bottom-aligned. Local Products desktop screenshot checked; phone/tablet and automated verification remain pending.
+
 2026-09-27 Home/catalog merchandising: Home uses a product-led generated hero and catalog-facet category links; Products promo slides use separate imagery for Home & Kitchen, practical gadgets and playful accessories/toys. Products category query parameters seed and track the selected facet. Local desktop visual check confirmed the page/campaign artwork loads; full slide-by-slide, phone and tablet acceptance remains pending.
 
 2026-09-26 typography foundation: one shared system sans family now backs the body/display tokens, Tailwind `font-sans`, legacy page styles and native form controls. Font sizes/weights continue to set hierarchy. Route-by-route rendered and device review remains pending.

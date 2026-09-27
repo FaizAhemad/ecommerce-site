@@ -1,5 +1,9 @@
 # Architecture, security and UI/UX audit
 
+2026-09-27 ratings integrity: do not seed fabricated customer scores or review text. Product cards distinguish genuine review aggregates from the no-review state with a compact `No reviews yet` label; actual average and count remain tied to persisted reviews. Rendered/device acceptance remains pending.
+
+2026-09-27 ProductCard optional data review: the neutral `Default` fallback color was shown as a meaningless gray swatch, and missing seller details reserved blank space. Shared cards now render only actual named color options and present seller attribution only when available; local desktop visual check passed, phone/tablet and automated verification remain pending.
+
 2026-09-27 merchandising review: Home now leads with generated photography based on the actual catalog and offers facet-backed category discovery; the Products carousel has three distinct campaign images for different product groups. Local desktop rendering was checked; mobile and complete carousel interaction acceptance remain pending.
 
 2026-09-27 cart action screenshot: deleting the last item from a catalog card optimistically switched to the zero-quantity button while the request remained active, which reused the add-pending label (`Adding…`). Pending cart intent is now retained per product so card feedback matches add/remove/update; the add icon is hidden while busy. Reproduction confirmed the issue; source fix is pending tests and owner browser/device verification.

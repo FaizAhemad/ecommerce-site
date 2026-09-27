@@ -69,6 +69,9 @@ export function ProductCard({
   }
 
   const primaryImage = product.media.images.find((image) => image.isPrimary)
+  const displayColors = product.colors?.filter(
+    (color) => color.trim() && color.trim().toLowerCase() !== 'default',
+  ) ?? []
   const decreaseQuantity = () =>
     updateCart(
       {
@@ -144,15 +147,11 @@ export function ProductCard({
               />
             </button>
           </div>
-          <p
-            className={cn(
-              'mt-1.5 min-h-3.5 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-[11px] leading-[1.4] text-[var(--muted)]',
-              (!product.seller || product.seller.isPlatform) && 'invisible',
-            )}
-            aria-hidden={!product.seller || product.seller.isPlatform}
-          >
-            {product.seller && !product.seller.isPlatform ? `Sold by ${product.seller.name}` : ''}
-          </p>
+          {product.seller && !product.seller.isPlatform && (
+            <p className="mt-1.5 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-[11px] leading-[1.4] text-[var(--muted)]">
+              Sold by {product.seller.name}
+            </p>
+          )}
         </div>
 
         <div className="flex min-h-11 w-full items-center gap-2">
@@ -182,32 +181,38 @@ export function ProductCard({
 
       <div
         className={productRatingClass}
-        aria-label={`${ratingLabel}: ${product.rating}, ${product.reviewCount} ${reviewsLabel}`}
+        aria-label={
+          product.reviewCount > 0
+            ? `${ratingLabel}: ${product.rating}, ${product.reviewCount} ${reviewsLabel}`
+            : 'No reviews yet'
+        }
       >
-        <RatingStars rating={product.rating} />
-        <b className="shrink-0 font-semibold">{product.rating.toFixed(1)}</b>
-        <em className="not-italic text-[var(--muted)]">
-          ({product.reviewCount} {reviewsLabel})
-        </em>
+        {product.reviewCount > 0 ? (
+          <>
+            <RatingStars rating={product.rating} />
+            <b className="shrink-0 font-semibold">{product.rating.toFixed(1)}</b>
+            <em className="not-italic text-[var(--muted)]">
+              ({product.reviewCount} {reviewsLabel})
+            </em>
+          </>
+        ) : (
+          <span className="text-[var(--muted)]">No reviews yet</span>
+        )}
       </div>
 
-      <div
-        className={productSwatchesClass}
-        aria-label={
-          product.colors?.length ? `Available colors: ${product.colors.join(', ')}` : undefined
-        }
-        aria-hidden={!product.colors?.length}
-      >
-        {product.colors?.map((color) => (
-          <span
-            className="size-[18px] shrink-0 rounded-full border border-[rgba(37,40,33,0.2)]"
-            style={{ backgroundColor: product.colorValues?.[color] ?? color.toLowerCase() }}
-            key={color}
-            title={color}
-            aria-label={color}
-          />
-        ))}
-      </div>
+      {displayColors.length > 0 && (
+        <div className={productSwatchesClass} aria-label={`Available colors: ${displayColors.join(', ')}`}>
+          {displayColors.map((color) => (
+            <span
+              className="size-[18px] shrink-0 rounded-full border border-[rgba(37,40,33,0.2)]"
+              style={{ backgroundColor: product.colorValues?.[color] ?? color.toLowerCase() }}
+              key={color}
+              title={color}
+              aria-label={color}
+            />
+          ))}
+        </div>
+      )}
 
       <AddToCartButton
         unavailableReason={

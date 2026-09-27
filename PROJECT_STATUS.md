@@ -1,5 +1,13 @@
 # Project status
 
+## Product card rating empty state - 2026-09-27
+
+Did not introduce fabricated ratings or review comments. Shared cards now show the saved average and count only when reviews exist; otherwise they display `No reviews yet` without empty stars or a misleading score. Existing Product Detail zero-rating counts and latest-review empty state remain explicit. Source change; rendered/device and automated checks remain pending under owner verification deferral.
+
+## Product card optional metadata - 2026-09-27
+
+The reported card showed a gray swatch for `Default`, which is fallback metadata rather than a selectable product color. Shared `ProductCard` now filters blank and `Default` entries, renders swatches only for actual named color variants, and omits the seller row entirely for platform products or missing attribution. Valid compare-at pricing was already conditional; the add action remains aligned at the card bottom. Local Products desktop screenshot showed compact cards without the empty swatch row; phone/tablet and automated checks remain pending under owner verification deferral.
+
 ## Home and Products campaign imagery - 2026-09-27
 
 Generated compressed storefront artwork from the actual Gadgify product mix: a Home hero image plus three distinct Products carousel images covering home/kitchen essentials, practical gadgets and playful accessories/toys. Added a Home category discovery strip using live catalog facets, with links that select the matching Products category query. Local Edge desktop rendering showed the hero and Products page; the carousel exposes three separate slides and uses their corresponding images. Phone/tablet, full slide-by-slide interaction, automated checks and production acceptance remain pending under the owner’s verification instructions. No API, database, provider or production checks were run.
