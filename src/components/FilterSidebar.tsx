@@ -210,10 +210,16 @@ export function FilterSidebar({
         aria-label="Catalog filters"
       >
         <div className="mb-6 flex min-h-11 items-center justify-between border-b border-[var(--line)] pb-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--ink)]">Filter</h2>
+          <div
+            className="text-xs font-semibold uppercase leading-4 tracking-[0.1em] text-[var(--ink)]"
+            role="heading"
+            aria-level={2}
+          >
+            Filter
+          </div>
           {activeFilterCount > 0 && (
             <button
-              className="inline-flex min-h-11 items-center gap-2 rounded px-2 text-xs font-medium uppercase tracking-wide text-[var(--green)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded px-1.5 text-xs font-medium normal-case tracking-normal text-[var(--green)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
               type="button"
               onClick={onClear}
             >

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { validateMediaUpload } from '../server/api/_lib/media.ts'
+import { productUploadPolicy, validateMediaUpload } from '../server/api/_lib/media.ts'
 
 const dataUrl = (type, bytes) => `data:${type};base64,${bytes.toString('base64')}`
 // Header fixtures exercise signature validation, not complete media decoding.
@@ -74,4 +74,22 @@ test('enforces the decoded byte limit, including the exact boundary', () => {
     validateMediaUpload(`data:image/png;base64,${'A'.repeat(10000)}`, 'image/png', 100),
     null,
   )
+})
+
+test('product Blob upload tokens are path-scoped and cap videos at 10 MB', () => {
+  assert.deepEqual(productUploadPolicy('products/123e4567-e89b-12d3-a456-426614174000.mp4'), {
+    contentType: 'video/mp4',
+    maxBytes: 10_000_000,
+  })
+  assert.deepEqual(productUploadPolicy('products/123e4567-e89b-12d3-a456-426614174000.webm'), {
+    contentType: 'video/webm',
+    maxBytes: 10_000_000,
+  })
+  assert.deepEqual(productUploadPolicy('products/123e4567-e89b-12d3-a456-426614174000.jpg'), {
+    contentType: 'image/jpeg',
+    maxBytes: 6_000_000,
+  })
+  assert.equal(productUploadPolicy('../private/123e4567-e89b-12d3-a456-426614174000.mp4'), null)
+  assert.equal(productUploadPolicy('products/not-a-uuid.mp4'), null)
+  assert.equal(productUploadPolicy('products/123e4567-e89b-12d3-a456-426614174000.exe'), null)
 })

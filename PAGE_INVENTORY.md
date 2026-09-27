@@ -18,6 +18,8 @@ UI handoff: [LUNA_ANALYSIS.md](LUNA_ANALYSIS.md) defines the visual language and
 
 2026-09-26 wishlist/card consistency refinement: the wishlist control sits beside the title with a quiet outline treatment, away from the product image. Shared cards and the Products skeleton reserve matching compact slots for title/wishlist, seller attribution, discount, rating and swatches, keeping card and add-action sizes aligned within each row. Keyboard focus and phone tap-target rendering remain pending browser/device verification.
 
+2026-09-27 catalog filters: category and color matching now ignores case, so existing product/category capitalization differences do not hide valid results. The filter heading is insulated from the legacy global `h2` size rule, and the clear action now has compact text while retaining a 44px touch target. Tailwind utilities still style the native search/select/checkbox controls; the phone drawer remains Radix-backed. Runtime/browser and device acceptance remains pending.
+
 2026-09-26 styling migration: Tailwind v4 utilities now own the Products catalog layout, promo banner, shared ProductCard, filter controls, loading/empty states and wishlist placement. Desktop filters remain sticky in an aside; phone filters open in a Radix Dialog Sheet with focus trapping/restoration and a visible close/done action. Existing global theme variables remain the brand source; other routes and Admin remain on the legacy stylesheet pending their migration. Build/source verification is distinct from browser/device visual acceptance.
 
 2026-09-26 pagination feedback fix: `/products` announces “Loading more products” only during an explicit next-page fetch (`isFetchingNextPage`); background refetches no longer show the pagination message, and the unused visible status line was removed. Browser acceptance remains pending.
@@ -43,6 +45,8 @@ UI handoff: [LUNA_ANALYSIS.md](LUNA_ANALYSIS.md) defines the visual language and
 
 2026-09-24: Admin Notifications includes shop shipment/return jobs using existing status and retry controls. Customer/seller fulfillment screens continue to report saved updates independently of email delivery. No email delivery/browser/device verification performed.
 
+
+2026-09-27 Home newsletter duplicate state: the existing address remains editable while already subscribed; editing it clears the duplicate state and re-enables Submit. A confirmed new subscription still locks the completed form. Component fixture coverage added; rendered/mobile acceptance remains pending.
 
 2026-09-23 home newsletter: duplicate active email receives a persistent inline “This email is already subscribed.” error plus existing five-second snackbar, retains the email and disables resubmission. Server rejects repeat provider work across requests. Browser/mobile acceptance pending.
 
@@ -128,7 +132,7 @@ All tabs are component state under /admin, not separate URL routes.
 | Tab | Data/behavior |
 | --- | --- |
 | Overview / Analytics | Reads /api/admin/analytics; renders statistics. |
-| Products | Reads products; create/edit, strict category select/add, image/video upload, primary image, colors, stock, archive and immediate list updates. |
+| Products | Reads products; create/edit, strict category select/add, primary image, colors, stock, archive and immediate list updates. Admin media uploads use a CSRF-protected, admin-authorized Vercel Blob client token to avoid function body limits; video max is 10 MB and image max is 6 MB. Vercel production acceptance remains pending. |
 | Orders | Reads orders; status selector keeps confirmed values on failure and reconciles on success. E13 guards cancellation/restock and closed states; full fulfillment/production verification pending. |
 | Payments | Reads payments and verifies a provider-reported full Razorpay refund (E25); never issues refunds. Legacy manual status action rejected; initiation/partial refunds and live acceptance pending. |
 | Returns | Private latest-100 history and guarded review with mandatory reason. E30 adds delivered-order customer submission/status; refund/stock effects, approved eligibility, collection and live acceptance remain pending. |

@@ -24,6 +24,26 @@ const blobFailureCategories: Record<string, string> = {
   TypeError: 'blob_transport_error',
 }
 
+const productExtensions: Record<string, MediaType> = {
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+}
+
+export function productUploadPolicy(pathname: string) {
+  const match = /^products\/[0-9a-f-]{36}\.(jpg|png|gif|webp|mp4|webm)$/i.exec(pathname)
+  if (!match) return null
+  const contentType = productExtensions[match[1].toLowerCase()]
+  if (!contentType) return null
+  return {
+    contentType,
+    maxBytes: contentType.startsWith('video/') ? 10_000_000 : 6_000_000,
+  }
+}
+
 /** Log a safe, allowlisted Blob failure category without exposing provider error details. */
 export function logMediaStorageFailure(error: unknown, id: string, endpoint: MediaUploadEndpoint) {
   const name = error instanceof Error ? error.constructor.name : ''

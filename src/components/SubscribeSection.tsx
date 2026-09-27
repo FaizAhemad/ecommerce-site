@@ -55,9 +55,10 @@ export function SubscribeSection() {
             onChange={(event) => {
               setEmail(event.target.value)
               setStatus('idle')
+              setAlreadySubscribed(false)
             }}
             placeholder="you@example.com"
-            disabled={status === 'loading' || status === 'success'}
+            disabled={status === 'loading' || (status === 'success' && !alreadySubscribed)}
           />
           <button
             className="primary-button"

@@ -80,8 +80,10 @@ export default async function handler(request: VercelRequest, response: VercelRe
           ],
         }
       : {}),
-    ...(category ? { category } : {}),
-    ...(colors?.length ? { colors: { some: { name: { in: colors } } } } : {}),
+    ...(category ? { category: { equals: category, mode: 'insensitive' } } : {}),
+    ...(colors?.length
+      ? { colors: { some: { name: { in: colors, mode: 'insensitive' } } } }
+      : {}),
     ...(ratings.length
       ? { AND: [{ OR: ratings.map((rating) => ({ rating: { gte: rating, lt: rating + 1 } })) }] }
       : Number.isFinite(minRating) && minRating > 0

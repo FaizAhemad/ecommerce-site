@@ -11,7 +11,9 @@ import { NotificationHistory } from '../components/NotificationHistory'
 import { PaymentRefunds } from '../components/PaymentRefunds'
 import { FormDialog } from '../components/FormDialog'
 import { apiFetch as fetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
+import { csrfToken } from '../api/csrf'
 import { queryClient } from '../api/queryClient'
+import { upload as uploadBlob } from '@vercel/blob/client'
 import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 type Props = {
@@ -204,18 +206,43 @@ export function AdminPage({ storefront, onNavigate }: Props) {
     assertCurrentSession(generation)
     const cached = uploadCache.current.get(file)
     if (cached) return cached
-    const encoded = await fileToDataUrl(file)
-    assertCurrentSession(generation)
-    const response = await fetch('/api/admin/upload', {
-      timeoutMs: LONG_RUNNING_API_TIMEOUT_MS,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: encoded, filename: file.name, contentType: file.type }),
-    })
-    if (!response.ok) throw new Error('upload')
-    const url = ((await response.json()) as { url: string }).url
-    uploadCache.current.set(file, url)
-    return url
+    const extensions: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/gif': 'gif',
+      'image/webp': 'webp',
+      'video/mp4': 'mp4',
+      'video/webm': 'webm',
+    }
+    const extension = extensions[file.type]
+    const isVideo = file.type.startsWith('video/')
+    const maxBytes = isVideo ? 10_000_000 : 6_000_000
+    if (!extension) throw new Error('Choose a JPEG, PNG, GIF, WebP, MP4 or WebM file.')
+    if (file.size > maxBytes)
+      throw new Error(`“${file.name}” is over the ${isVideo ? '10 MB video' : '6 MB image'} limit.`)
+
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), LONG_RUNNING_API_TIMEOUT_MS)
+    try {
+      const token = await csrfToken(controller.signal)
+      assertCurrentSession(generation)
+      const blob = await uploadBlob(`products/${crypto.randomUUID()}.${extension}`, file, {
+        access: 'public',
+        handleUploadUrl: '/api/admin/upload',
+        contentType: file.type,
+        multipart: isVideo && file.size > 5_000_000,
+        abortSignal: controller.signal,
+        headers: { 'X-CSRF-Token': token },
+      })
+      assertCurrentSession(generation)
+      uploadCache.current.set(file, blob.url)
+      return blob.url
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') throw error
+      throw new Error('Media upload failed. Check your connection and try the upload again.')
+    } finally {
+      window.clearTimeout(timeout)
+    }
   }
   const addCategory = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -661,10 +688,10 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                       disabled={busy}
                       name="videoFiles"
                       type="file"
-                      accept="video/*"
+                      accept="video/mp4,video/webm"
                       multiple
                     />
-                    <small>Multiple files supported.</small>
+                    <small>MP4 or WebM, up to 10 MB per video. Images support up to 6 MB each.</small>
                   </label>
                   <button className="primary-button" type="submit" disabled={busy}>
                     {busy ? saveStage : editing ? 'Save changes' : 'Save product'}
@@ -880,14 +907,6 @@ export function AdminPage({ storefront, onNavigate }: Props) {
   )
 }
 
-function fileToDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result))
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
 function lines(value: FormDataEntryValue | null) {
   return String(value ?? '')
     .split('\n')

@@ -465,6 +465,45 @@ test('subscription form shows saved state and an informational notice after emai
   assert.equal(notices[0][1], 'info')
 })
 
+test('already-subscribed email stays editable and editing it re-enables submission', async () => {
+  const states = ['already@example.test', 'idle', false]
+  let hookIndex = 0
+  const submitLock = { current: false }
+  globalThis.subscribeFormFixture = {
+    useRef: () => submitLock,
+    useState: () => {
+      const slot = hookIndex++
+      return [states[slot], (value) => { states[slot] = value }]
+    },
+    useNotification: () => () => {},
+    subscribeToNewsletter: async () => ({ emailSent: false, alreadySubscribed: true }),
+  }
+  const { SubscribeSection } = await load(
+    '../src/components/SubscribeSection.tsx',
+    (binding, path) => {
+      if (path === 'react/jsx-runtime')
+        return `import ${binding} from ${JSON.stringify(import.meta.resolve(path))}`
+      return `const ${binding} = globalThis.subscribeFormFixture`
+    },
+  )
+  const render = () => {
+    hookIndex = 0
+    return SubscribeSection().props.children[1]
+  }
+  await render().props.onSubmit({ preventDefault() {} })
+  let form = render()
+  const input = form.props.children[2].props.children[0]
+  const button = form.props.children[2].props.children[1]
+  assert.equal(input.props.disabled, false)
+  assert.equal(button.props.disabled, true)
+
+  input.props.onChange({ target: { value: 'different@example.test' } })
+  form = render()
+  assert.equal(states[0], 'different@example.test')
+  assert.equal(form.props.children[2].props.children[0].props.disabled, false)
+  assert.equal(form.props.children[2].props.children[1].props.disabled, false)
+})
+
 test('real limiter keeps the dispatcher correlation ID and existing retry metadata', async () => {
   const result = response(),
     request = { method: 'POST' }
