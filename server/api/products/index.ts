@@ -59,6 +59,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
   const search = queryValue(request.query?.search)?.trim()
   const category = queryValue(request.query?.category)?.trim()
+  const categoryTerms = category?.match(/[\p{L}\p{N}]+/gu) ?? []
   const sort = queryValue(request.query?.sort)
   const cursor = queryValue(request.query?.cursor)
   const colors = queryValue(request.query?.colors)
@@ -70,6 +71,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
   if (ratings === null)
     return sendError(response, 400, 'VALIDATION_ERROR', 'Select valid rating bands.', id)
 
+  const filterConditions: Prisma.ProductWhereInput[] = [
+    ...categoryTerms.map((term) => ({ category: { contains: term, mode: 'insensitive' as const } })),
+    ...(ratings.length
+      ? [{ OR: ratings.map((rating) => ({ rating: { gte: rating, lt: rating + 1 } })) }]
+      : []),
+  ]
   const where: Prisma.ProductWhereInput = {
     ...publishedProductWhere,
     ...(search
@@ -80,13 +87,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
           ],
         }
       : {}),
-    ...(category ? { category: { equals: category, mode: 'insensitive' } } : {}),
     ...(colors?.length
       ? { colors: { some: { name: { in: colors, mode: 'insensitive' } } } }
       : {}),
-    ...(ratings.length
-      ? { AND: [{ OR: ratings.map((rating) => ({ rating: { gte: rating, lt: rating + 1 } })) }] }
-      : Number.isFinite(minRating) && minRating > 0
+    ...(filterConditions.length ? { AND: filterConditions } : {}),
+    ...(!ratings.length && Number.isFinite(minRating) && minRating > 0
         ? { rating: { gte: minRating, lt: minRating + 1 } }
         : {}),
   }

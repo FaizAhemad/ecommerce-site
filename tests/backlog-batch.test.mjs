@@ -227,6 +227,38 @@ test('rating filters accept distinct bands and reject invalid or oversized selec
   for (const input of ['0', '6', '1,2,3,4,5,5', '1.5', '4,foo'])
     assert.equal(ratingBands(input), null)
 })
+test('product category query matches all words despite punctuation and capitalization', async () => {
+  let capturedWhere
+  globalThis.productFilterFixture = {
+    product: {
+      findMany: async ({ where }) => {
+        capturedWhere = where
+        return []
+      },
+    },
+  }
+  const route = await load('../server/api/products/index.ts', (binding, path) => {
+    if (path.endsWith('/rating-filter.js'))
+      return `const { ratingBands } = await import(${JSON.stringify(new URL('../server/api/_lib/rating-filter.ts', import.meta.url).href)})`
+    if (path.endsWith('/marketplace-purchases.js'))
+      return `const { publishedProductWhere, purchaseEligibility, publicSeller } = await import(${JSON.stringify(new URL('../server/api/_lib/marketplace-purchases.ts', import.meta.url).href)})`
+    if (path.endsWith('/db.js')) return 'const db = globalThis.productFilterFixture'
+    if (path.endsWith('/http.js'))
+      return `const { queryValue, logApiFailure, requestId, sendError, setCacheControl } = await import(${JSON.stringify(new URL('../server/api/_lib/http.ts', import.meta.url).href)})`
+  })
+  const result = {
+    headers: {},
+    status(code) { this.code = code; return this },
+    json(body) { this.body = body; return this },
+    setHeader(name, value) { this.headers[name] = value },
+  }
+  await route.default({ method: 'GET', query: { category: 'Home & Kitchen' } }, result)
+  assert.deepEqual(capturedWhere.AND, [
+    { category: { contains: 'Home', mode: 'insensitive' } },
+    { category: { contains: 'Kitchen', mode: 'insensitive' } },
+  ])
+  assert.equal(result.code, 200)
+})
 test('malformed route IDs cannot crash decoding or introduce nested paths', () => {
   assert.equal(safeRouteId('order-123'), 'order-123')
   for (const id of ['%', 'a%2Fb', 'a%5Cb', '%00', '']) assert.equal(safeRouteId(id), null)
