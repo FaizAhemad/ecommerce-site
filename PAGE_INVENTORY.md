@@ -1,5 +1,7 @@
 # Page and route inventory
 
+2026-09-27 Home/catalog merchandising: Home uses a product-led generated hero and catalog-facet category links; Products promo slides use separate imagery for Home & Kitchen, practical gadgets and playful accessories/toys. Products category query parameters seed and track the selected facet. Local desktop visual check confirmed the page/campaign artwork loads; full slide-by-slide, phone and tablet acceptance remains pending.
+
 2026-09-26 typography foundation: one shared system sans family now backs the body/display tokens, Tailwind `font-sans`, legacy page styles and native form controls. Font sizes/weights continue to set hierarchy. Route-by-route rendered and device review remains pending.
 
 2026-09-27 shared header: navigation spacing is responsive, Home uses consistent title case, Log out is compact and sentence case, and Search opens a focused popover with labeled submit/close actions, Escape dismissal and focus return for both close paths. Global keyboard focus is a thinner two-pixel outline; search input uses a restrained border/glow. Desktop browser interaction checked locally; full route and phone/tablet review remains pending.

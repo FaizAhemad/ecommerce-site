@@ -32,7 +32,9 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
     return () => window.clearTimeout(timer)
   }, [search])
   const hasSearch = search.trim().length > 0
-  const [category, setCategory] = useState('')
+  const [category, setCategory] = useState(
+    () => new URLSearchParams(window.location.search).get('category') ?? '',
+  )
   const [sort, setSort] = useState<ProductSort>('newest')
   const [selectedColors, setSelectedColors] = useState<readonly string[]>([])
   const [selectedRatings, setSelectedRatings] = useState<readonly number[]>([])
@@ -106,7 +108,14 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
     requestNextPage,
   ])
   const updateSearch = (value: string) => setSearch(value)
-  const updateCategory = (value: string) => setCategory(value)
+  const updateCategory = (value: string) => {
+    setCategory(value)
+    const params = new URLSearchParams(window.location.search)
+    if (value) params.set('category', value)
+    else params.delete('category')
+    const query = params.toString()
+    window.history.replaceState(window.history.state, '', `/products${query ? `?${query}` : ''}`)
+  }
   const toggleColor = (color: string) =>
     setSelectedColors((current) =>
       current.includes(color) ? current.filter((item) => item !== color) : [...current, color],
@@ -114,6 +123,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
   const clear = () => {
     setSearch('')
     setCategory('')
+    window.history.replaceState(window.history.state, '', '/products')
     setSort('newest')
     setSelectedColors([])
     setSelectedRatings([])

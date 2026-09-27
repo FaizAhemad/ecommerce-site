@@ -1,5 +1,7 @@
 # Architecture, security and UI/UX audit
 
+2026-09-27 merchandising review: Home now leads with generated photography based on the actual catalog and offers facet-backed category discovery; the Products carousel has three distinct campaign images for different product groups. Local desktop rendering was checked; mobile and complete carousel interaction acceptance remain pending.
+
 2026-09-27 cart action screenshot: deleting the last item from a catalog card optimistically switched to the zero-quantity button while the request remained active, which reused the add-pending label (`Adding…`). Pending cart intent is now retained per product so card feedback matches add/remove/update; the add icon is hidden while busy. Reproduction confirmed the issue; source fix is pending tests and owner browser/device verification.
 
 2026-09-27 header review: the owner screenshot exposed an oversized Log out label, a broken search glyph/weak search flow, crowded navigation and a heavy input focus frame. Source now uses a proper icon, compact sentence-case action label, responsive nav gaps, labeled Search/Close controls, Escape dismissal/focus return and a restrained keyboard focus indicator. Local desktop interaction was checked; test/device and other viewport acceptance remain pending.

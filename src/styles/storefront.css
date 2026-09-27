@@ -140,78 +140,19 @@ h1 {
 .hero-art {
   position: relative;
   min-height: 405px;
+  aspect-ratio: 3 / 2;
   overflow: hidden;
+  border-radius: 4px;
   background: #d7e1d0;
   box-shadow: var(--shadow);
 }
-.sun-disc {
+.hero-art-image {
   position: absolute;
-  top: 35px;
-  right: 14%;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: #ebbe76;
-}
-.hero-vase {
-  position: absolute;
-  right: 18%;
-  bottom: 38px;
-  width: 145px;
-  height: 220px;
-  border-radius: 46% 46% 20% 20% / 22% 22% 11% 11%;
-  background: #b27f67;
-  transform: rotate(4deg);
-}
-.hero-vase::before {
-  content: '';
-  position: absolute;
-  top: -22px;
-  left: 42px;
-  width: 62px;
-  height: 42px;
-  border-radius: 50%;
-  background: #966951;
-}
-.hero-cup {
-  position: absolute;
-  left: 21%;
-  bottom: 66px;
-  width: 132px;
-  height: 108px;
-  border-radius: 14px 14px 44px 44px;
-  background: #f4eee2;
-  transform: rotate(-9deg);
-}
-.hero-cup::after {
-  content: '';
-  position: absolute;
-  top: 15px;
-  right: -37px;
-  width: 50px;
-  height: 55px;
-  border: 15px solid #f4eee2;
-  border-left: 0;
-  border-radius: 0 50% 50% 0;
-}
-.hero-book {
-  position: absolute;
-  left: 7%;
-  bottom: 39px;
-  width: 76%;
-  height: 31px;
-  background: #3d604f;
-  transform: rotate(-5deg);
-  box-shadow: 0 15px 0 #bf8766;
-}
-.art-label {
-  position: absolute;
-  top: 22px;
-  left: 22px;
-  color: #30463b;
-  font-family: var(--font-body);
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 .collection-section {
   max-width: 1240px;
@@ -713,13 +654,8 @@ a:focus-visible {
     line-height: 1.55;
   }
   .hero-art {
-    min-height: 270px;
-  }
-  .hero-vase {
-    right: 13%;
-  }
-  .hero-cup {
-    left: 16%;
+    min-height: 0;
+    aspect-ratio: 3 / 2;
   }
   .collection-section {
     padding: 60px 20px 78px;
@@ -769,21 +705,7 @@ a:focus-visible {
     padding: 8px 10px;
   }
   .hero-art {
-    min-height: 270px;
-  }
-  .hero-vase {
-    width: 105px;
-    height: 164px;
-  }
-  .hero-cup {
-    width: 105px;
-    height: 86px;
-  }
-  .hero-cup::after {
-    right: -30px;
-    width: 38px;
-    height: 42px;
-    border-width: 11px;
+    min-height: 0;
   }
   .product-grid {
     gap: 25px 10px;
@@ -867,16 +789,6 @@ a:focus-visible {
   position: relative;
   min-height: 250px;
   overflow: hidden;
-}
-.promo-art::after {
-  content: '';
-  position: absolute;
-  width: 170px;
-  height: 170px;
-  right: 18%;
-  bottom: -35px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.45);
 }
 .promo-art span {
   position: absolute;

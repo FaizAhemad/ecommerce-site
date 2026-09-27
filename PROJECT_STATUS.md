@@ -1,5 +1,9 @@
 # Project status
 
+## Home and Products campaign imagery - 2026-09-27
+
+Generated compressed storefront artwork from the actual Gadgify product mix: a Home hero image plus three distinct Products carousel images covering home/kitchen essentials, practical gadgets and playful accessories/toys. Added a Home category discovery strip using live catalog facets, with links that select the matching Products category query. Local Edge desktop rendering showed the hero and Products page; the carousel exposes three separate slides and uses their corresponding images. Phone/tablet, full slide-by-slide interaction, automated checks and production acceptance remain pending under the owner’s verification instructions. No API, database, provider or production checks were run.
+
 ## Product card cart pending labels - 2026-09-27
 
 Reproduced the first card's last-item delete action: optimistic removal changed the card to the zero-quantity control while its per-product request was pending, but the add button labeled that state `Adding…` and retained the plus icon. Cart coordination now records pending action type per product; shared catalog/wishlist cards render `Removing…`, `Adding…` or `Updating…` as appropriate, and omit the add icon during any pending operation. The requested browser click removed the first product from the local cart; no additional mutation was issued to recreate the prior quantity. Source-level implementation only after reproduction; tests/build and mobile acceptance remain deferred under owner instructions.

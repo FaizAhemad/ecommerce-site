@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 type Promo = { eyebrow: string; title: string; description: string; artwork: string }
-
-const artworkColors: Record<string, string> = {
-  sage: 'bg-[#d9ded0]',
-  clay: 'bg-[#e5d2c0]',
-  oak: 'bg-[#d7c19b]',
+const artworkImages: Record<string, string> = {
+  homeKitchen: '/images/gadgify-home-kitchen.jpg',
+  practicalGadgets: '/images/gadgify-practical-gadgets.jpg',
+  playfulAccessories: '/images/gadgify-playful-accessories.jpg',
 }
 export function PromoCarousel({
   promos,
@@ -37,13 +36,18 @@ export function PromoCarousel({
       onBlur={() => setPaused(false)}
     >
       <div
-        className={`relative min-h-[180px] overflow-hidden md:min-h-[250px] ${artworkColors[promo.artwork] ?? 'bg-[var(--skeleton-base)]'}`}
+        className="promo-art relative min-h-[180px] overflow-hidden bg-[var(--skeleton-base)] md:min-h-[250px]"
         aria-hidden="true"
       >
+        <img
+          className="absolute inset-0 size-full object-cover"
+          src={artworkImages[promo.artwork] ?? '/images/gadgify-curated-finds.jpg'}
+          alt=""
+          loading="eager"
+        />
         <span className="absolute left-[22px] top-5 z-10 font-sans text-[10px] tracking-[0.12em] text-[var(--ink)]">
-          FEATURED / {String(active + 1).padStart(2, '0')}
+          GADGIFY / {String(active + 1).padStart(2, '0')}
         </span>
-        <span className="absolute -bottom-[35px] right-[18%] size-[170px] rounded-full bg-white/45" />
       </div>
       <div className="flex flex-col justify-center px-[22px] py-[26px] md:px-[42px] md:py-7">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--green)]">
