@@ -227,7 +227,7 @@ export async function getStorefront(): Promise<StorefrontApiResponse> {
         unavailableLabel: 'Storefront unavailable',
         cartLabel: 'Cart',
         cartItemLabel: 'items',
-        homeLabel: 'home',
+        homeLabel: 'Home',
         copyrightPrefix: '©',
         signInLabel: 'Sign in',
         logOutLabel: 'Log out',

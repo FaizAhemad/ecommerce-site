@@ -9,6 +9,18 @@
     <meta name="description" content="Gadgify household products and everyday essentials." />
     <style>
       html, body, #root { min-height: 100%; margin: 0; background: #f7f4ed; }
+      .seo-product-fallback { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(24px, 5vw, 64px); width: min(100% - 64px, 1440px); min-height: 70vh; margin: 0 auto; padding: 48px 0; color: #252923; font-family: Arial, sans-serif; }
+      .seo-product-fallback__image { display: grid; aspect-ratio: 1; place-items: center; overflow: hidden; border-radius: 18px; background: #e4e9df; }
+      .seo-product-fallback__image img { width: 100%; height: 100%; object-fit: contain; }
+      .seo-product-fallback__image--empty { color: #687168; font-size: 14px; }
+      .seo-product-fallback__details { max-width: 600px; }
+      .seo-product-fallback__eyebrow { margin: 0 0 12px; color: #687168; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+      .seo-product-fallback h1 { margin: 0 0 16px; font-size: clamp(32px, 4vw, 56px); font-weight: 500; line-height: 1.05; letter-spacing: -.04em; }
+      .seo-product-fallback__description { margin: 0 0 24px; color: #687168; font-size: 16px; line-height: 1.6; }
+      .seo-product-fallback__price { margin: 0 0 16px; font-size: 28px; font-weight: 700; }
+      .seo-product-fallback__stock { margin: 0; padding-top: 18px; border-top: 1px solid #d8d4ca; color: #687168; font-size: 14px; }
+      .seo-product-fallback__link { display: inline-flex; margin-top: 24px; padding: 12px 18px; border-radius: 8px; background: #252923; color: #fff; font-size: 14px; text-decoration: none; }
+      @media (max-width: 640px) { .seo-product-fallback { grid-template-columns: 1fr; gap: 24px; width: calc(100% - 32px); min-height: 0; padding: 24px 0; } .seo-product-fallback__image { max-height: 62vh; } }
     </style>
   </head>
   <body>

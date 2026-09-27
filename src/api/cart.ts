@@ -10,6 +10,7 @@ export type CartItem = {
   product: { id: string; name: string; category: string; priceMinor: number }
 }
 const pending = new Set<string>()
+const pendingActions = new Map<string, 'adding' | 'removing' | 'updating'>()
 const listeners = new Set<() => void>()
 let revision = 0
 const publish = () => {
@@ -18,7 +19,11 @@ const publish = () => {
 }
 export function resetCart() {
   pending.clear()
+  pendingActions.clear()
   publish()
+}
+export function getCartPendingAction(productId: string) {
+  return pendingActions.get(productId)
 }
 export function useCart() {
   useSyncExternalStore(
@@ -52,6 +57,10 @@ export async function updateCart(
   const generation = sessionGeneration()
   const key = privateKey('cart')
   pending.add(product.id)
+  pendingActions.set(
+    product.id,
+    mode === 'add' ? 'adding' : quantity < 1 ? 'removing' : 'updating',
+  )
   publish()
   await queryClient.cancelQueries({ queryKey: key })
   const previous = queryClient
@@ -87,6 +96,7 @@ export async function updateCart(
   } finally {
     if (generation === sessionGeneration()) {
       pending.delete(product.id)
+      pendingActions.delete(product.id)
       publish()
       if (!pending.size) void queryClient.invalidateQueries({ queryKey: key })
     }

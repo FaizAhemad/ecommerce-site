@@ -30,6 +30,7 @@ type ProductCardProps = {
   quantity?: number
   isCartLoading?: boolean
   isCartUpdating?: boolean
+  cartPendingAction?: 'adding' | 'removing' | 'updating'
 }
 
 export function ProductCard({
@@ -43,6 +44,7 @@ export function ProductCard({
   quantity = 0,
   isCartLoading = false,
   isCartUpdating = false,
+  cartPendingAction,
 }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(() => readWishlist().includes(product.id))
   const [actionLocked, setActionLocked] = useState(() => wishlistPending(product.id))
@@ -221,6 +223,7 @@ export function ProductCard({
         quantity={quantity}
         isCartLoading={isCartLoading}
         isUpdating={isCartUpdating}
+        pendingAction={cartPendingAction}
         onDecrease={decreaseQuantity}
       />
     </article>

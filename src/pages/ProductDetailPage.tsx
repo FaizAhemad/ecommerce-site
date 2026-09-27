@@ -18,7 +18,11 @@ type ReviewMedia = { id: string; url: string }
 
 function PencilIcon() {
   return (
-    <svg className="review-edit-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      className="size-4 shrink-0 fill-none stroke-current [stroke-width:1.7] [stroke-linecap:round] [stroke-linejoin:round]"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path d="m4 16.5-.8 3.8 3.8-.8L18.3 8.2l-3.5-3.5L4 16.5Z" />
       <path d="m13.5 6 3.5 3.5M4 20.3h16" />
     </svg>
@@ -28,12 +32,13 @@ function PencilIcon() {
 function ReviewAttachments({ media }: { media: ReviewMedia[] }) {
   if (!media.length) return null
   return (
-    <div className="review-attachments" aria-label="Review photos and videos">
+    <div className="review-attachments mt-4 flex flex-wrap items-start gap-3" aria-label="Review photos and videos">
       {media.map((item, index) =>
         /\.(mp4|webm)(?:[?#]|$)/i.test(item.url) ? (
           <video
             key={item.id}
             src={item.url}
+            className="h-40 w-60 max-w-full rounded-md bg-[var(--ink)] object-contain"
             controls
             playsInline
             preload="metadata"
@@ -42,12 +47,13 @@ function ReviewAttachments({ media }: { media: ReviewMedia[] }) {
         ) : (
           <a
             key={item.id}
+            className="block size-[120px] overflow-hidden rounded-md border border-[var(--line)]"
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Open review photo ${index + 1}`}
           >
-            <img src={item.url} alt={`Review photo ${index + 1}`} loading="lazy" />
+            <img className="block size-full object-cover" src={item.url} alt={`Review photo ${index + 1}`} loading="lazy" />
           </a>
         ),
       )}
@@ -124,7 +130,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
     },
     staleTime: 30_000,
   })
-  const [selected, setSelected] = useState<{ type: 'image' | 'video'; id: string } | null>(null)
+  const [selected, setSelected] = useState<{ type: 'image'; id: string } | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set())
 
@@ -231,17 +237,10 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
   const initialVideo = product.media.videos[0]
 
   const selectedImage =
-    selected?.type === 'image'
+    selected
       ? product.media.images.find((item) => item.id === selected.id)
-      : selected
-        ? undefined
-        : initialImage
-  const selectedVideo =
-    selected?.type === 'video'
-      ? product.media.videos.find((item) => item.id === selected.id)
-      : !selected && !initialImage
-        ? initialVideo
-        : undefined
+      : initialImage
+  const selectedVideo = !selected && !initialImage ? initialVideo : undefined
   const total = reviews.length || 1
   const distribution = [5, 4, 3, 2, 1].map((rating) => ({
     rating,
@@ -358,7 +357,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
     <>
       <section className="mx-auto grid w-full max-w-[90rem] grid-cols-1 items-start gap-8 px-4 py-8 md:grid-cols-2 md:gap-12 md:px-8 md:py-12 lg:gap-16">
         <div className="detail-gallery min-w-0 w-full">
-          <div className={`detail-art product-art ${product.tone}`}>
+          <div className="detail-art relative aspect-square overflow-hidden rounded-2xl bg-[var(--surface)] shadow-sm">
             <div className="detail-media-viewport relative h-full w-full overflow-hidden">
               {selectedVideo ? (
                 <video
@@ -378,7 +377,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               ) : selectedImage && !failedImageIds.has(selectedImage.id) ? (
                 <button
                   type="button"
-                  className="h-full w-full overflow-hidden border-0 bg-transparent p-0"
+                  className="h-full w-full cursor-zoom-in overflow-hidden border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--ink)]"
                   aria-label={`View larger image: ${selectedImage.alt}`}
                   onClick={() =>
                     setLightboxIndex(
@@ -389,7 +388,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                   }
                 >
                   <img
-                    className="product-primary-image h-full w-full cursor-zoom-in object-contain p-3 transition-transform duration-100 ease-out md:p-4"
+                    className="product-primary-image h-full w-full cursor-zoom-in object-contain transition-transform duration-100 ease-out"
                     src={selectedImage.url}
                     alt={selectedImage.alt}
                     draggable={false}
@@ -426,16 +425,22 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                   )}
                 </>
               )}
+              {selectedImage && !failedImageIds.has(selectedImage.id) && (
+                <span className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-[var(--surface)]/90 px-3 py-1.5 text-xs font-medium text-[var(--ink)] shadow-sm">
+                  <span className="hidden md:inline">Hover to zoom · Click to view</span>
+                  <span className="md:hidden">Tap to enlarge</span>
+                </span>
+              )}
             </div>
           </div>
           {(product.media.images.length > 0 || product.media.videos.length > 0) && (
             <div
-              className="media-rail"
+              className="mt-3 flex gap-2 overflow-x-auto pb-1"
               aria-label={`${storefront.content.detail.imagesLabel} and ${storefront.content.detail.videosLabel}`}
             >
               {product.media.images.map((item) => (
                 <button
-                  className={`media-thumb${selectedImage?.id === item.id ? ' selected' : ''}`}
+                  className={`grid size-16 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-lg border bg-[var(--surface)] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50 ${selectedImage?.id === item.id ? 'border-[var(--ink)] ring-2 ring-[var(--ink)]' : 'border-[var(--line)] hover:border-[var(--ink)]'}`}
                   type="button"
                   disabled={failedImageIds.has(item.id)}
                   key={item.id}
@@ -449,17 +454,16 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                       Unavailable
                     </span>
                   ) : (
-                    <img src={item.url} alt={item.alt} onError={() => markImageFailed(item.id)} />
+                    <img className="h-full w-full object-cover" src={item.url} alt={item.alt} onError={() => markImageFailed(item.id)} />
                   )}
                 </button>
               ))}
               {product.media.videos.map((item) => (
                 <button
-                  className={`media-thumb media-video${selectedVideo?.id === item.id ? ' selected' : ''}`}
+                  className={`media-video relative grid size-16 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-lg border bg-[var(--surface)] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${selectedVideo?.id === item.id ? 'border-[var(--ink)] ring-2 ring-[var(--ink)]' : 'border-[var(--line)] hover:border-[var(--ink)]'}`}
                   type="button"
                   key={item.id}
                   onClick={() => {
-                    setSelected({ type: 'video', id: item.id })
                     setLightboxIndex(
                       availableMediaItems.findIndex((media) => media.type === 'video' && media.id === item.id),
                     )
@@ -467,6 +471,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                   aria-label={item.alt || storefront.content.detail.videosLabel}
                 >
                   <video
+                    className="h-full w-full object-cover"
                     src={item.url}
                     poster={item.posterUrl}
                     muted
@@ -478,37 +483,47 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             </div>
           )}
           {product.media.images.length === 0 && product.media.videos.length === 0 && (
-            <p className="detail-muted">{storefront.content.detail.noMediaLabel}</p>
+            <p className="mt-3 text-sm text-[var(--muted)]">{storefront.content.detail.noMediaLabel}</p>
           )}
         </div>
-        <div className="detail-copy w-full max-w-2xl self-center">
-          <p className="eyebrow">{product.category}</p>
-          <h1 className="mb-4 text-4xl leading-tight md:text-5xl">{product.name}</h1>
+        <div className="detail-copy flex w-full max-w-2xl flex-col items-start gap-5 self-center">
+          <p className="eyebrow mb-0">{product.category}</p>
+          <h1 className="mb-0 text-4xl leading-tight text-[var(--ink)] md:text-5xl">{product.name}</h1>
           {product.seller && !product.seller.isPlatform && (
-            <p>
+            <p className="m-0 text-sm text-[var(--muted)]">
               Sold by{' '}
               <a href={`/shops/${encodeURIComponent(product.seller.slug)}`}>{product.seller.name}</a>
             </p>
           )}
           <div
-            className="detail-rating"
-            aria-label={`${product.rating.toFixed(1)} out of 5 from ${product.reviewCount} reviews`}
+            className="flex items-center gap-2 text-sm text-[var(--muted)]"
+            aria-label={
+              product.reviewCount > 0
+                ? `${product.rating.toFixed(1)} out of 5 from ${product.reviewCount} reviews`
+                : '0 reviews'
+            }
           >
-            <RatingStars rating={product.rating} size="medium" />
-            <strong>{product.rating.toFixed(1)}</strong>
-            <span>({product.reviewCount} reviews)</span>
+            {product.reviewCount > 0 ? (
+              <>
+                <RatingStars rating={product.rating} size="medium" />
+                <strong className="font-semibold text-[var(--ink)]">{(product.rating || 0).toFixed(1)}</strong>
+                <span>({product.reviewCount} reviews)</span>
+              </>
+            ) : (
+              <span>0 reviews</span>
+            )}
           </div>
-          <p className="detail-price mb-4 text-3xl font-bold text-[var(--ink)]">{currency.format(product.price)}</p>
-          <p className="detail-description">
+          <p className="detail-price mb-0 text-3xl font-bold text-[var(--ink)]">{currency.format(product.price)}</p>
+          <p className="detail-description mb-0 max-w-xl text-base leading-relaxed text-[var(--muted)]">
             {product.description || storefront.identity.tagline}
           </p>
           {product.colors && product.colors.length > 0 && (
-            <div className="detail-colors">
-              <p className="detail-label">Available colors</p>
-              <div className="detail-color-list">
+            <div className="flex flex-col gap-3">
+              <p className="mb-0 text-sm font-semibold text-[var(--ink)]">Available colors</p>
+              <div className="detail-color-list flex flex-wrap items-center gap-3">
                 {product.colors.map((color) => (
                   <span
-                    className={`color-swatch color-${color.toLowerCase()}`}
+                    className="size-6 shrink-0 rounded-full border-2 border-[var(--surface)] outline outline-1 outline-[var(--line)]"
                     style={{ backgroundColor: product.colorValues?.[color] ?? color.toLowerCase() }}
                     title={color}
                     aria-label={color}
@@ -518,66 +533,80 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               </div>
             </div>
           )}
-          <div className="detail-benefits">
-            <p>✓ Carefully checked before dispatch</p>
-            <p>✓ Secure checkout and delivery support</p>
-            <p>✓ Easy help from our customer care team</p>
-          </div>
           <AddToCartButton
             unavailableReason={product.purchase?.available === false ? product.purchase.reason ?? 'Currently unavailable' : undefined}
             productId={product.id}
             onAdd={onAdd}
             label={storefront.content.collection.addToCartLabel}
-            className="primary-button"
+            className="primary-button w-full sm:w-auto sm:min-w-64"
           />
         </div>
       </section>
-      <section className="ratings-panel mx-auto w-full max-w-[90rem] border-t border-[var(--line)] px-4 py-8 md:px-8 md:py-12">
-        <h2>Product ratings &amp; reviews</h2>
-        <div className="ratings-summary">
-          <div className="average-rating">
-            <strong>{product.rating.toFixed(1)}</strong>
-            <span>★</span>
-            <p>
+      <section className="mx-auto w-full max-w-[90rem] border-t border-[var(--line)] px-4 py-10 md:px-8 md:py-14">
+        <div className="mb-8 flex flex-col gap-2">
+          <p className="eyebrow mb-0">Customer feedback</p>
+          <h2 className="mb-0 text-3xl text-[var(--ink)] md:text-4xl">Product ratings &amp; reviews</h2>
+          <p className="mb-0 text-sm text-[var(--muted)]">Ratings and reviews shared by shoppers.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-6 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 md:grid-cols-[minmax(12rem,0.7fr)_2fr] md:gap-10 md:p-8">
+          <div className="flex flex-col items-start justify-center gap-2">
+            <strong className="text-5xl font-semibold leading-none text-[var(--ink)]">
+              {product.reviewCount > 0 ? product.rating.toFixed(1) : '0.0'}
+            </strong>
+            <RatingStars rating={product.rating} size="medium" />
+            <p className="m-0 text-sm text-[var(--muted)]">
               {product.reviewCount} ratings
               <br />
               {reviews.length} reviews
             </p>
           </div>
-          <div className="rating-bars">
-            {distribution.map(({ rating, count }) => (
-              <div className="rating-bar" key={rating}>
+          <div className="grid content-center gap-3" aria-label="Review rating distribution">
+            {reviewsQuery.isLoading ? (
+              <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading rating breakdown…</p>
+            ) : reviewsQuery.isError ? (
+              <p className="m-0 text-sm text-[var(--muted)]">Rating breakdown unavailable.</p>
+            ) : distribution.map(({ rating, count }) => (
+              <div className="grid grid-cols-[4.5rem_1fr_2rem] items-center gap-3 text-sm text-[var(--muted)]" key={rating}>
                 <span>{rating} ★</span>
-                <div>
-                  <i style={{ width: `${count ? Math.max((count / total) * 100, 8) : 0}%` }} />
+                <div className="h-2 overflow-hidden rounded-full bg-[var(--line)]" aria-hidden="true">
+                  <i className="block h-full rounded-full bg-[var(--yellow)]" style={{ width: `${count ? Math.max((count / total) * 100, 8) : 0}%` }} />
                 </div>
-                <b>{count}</b>
+                <b className="text-right font-medium text-[var(--ink)]">{count}</b>
               </div>
             ))}
           </div>
         </div>
-        <div className="latest-reviews">
-          <div className="reviews-heading">
-            <h3>Latest reviews</h3>
-            <button className="secondary-button" type="button" onClick={() => setShowAll(true)}>
-              View all reviews
-            </button>
+        <div className="mt-8 flex flex-col gap-5 border-t border-[var(--line)] pt-8">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-1">
+            <h3 className="m-0 text-2xl text-[var(--ink)]">Latest reviews</h3>
+            {reviews.length > 3 && (
+              <button className="secondary-button" type="button" onClick={() => setShowAll(true)}>
+                View all reviews
+              </button>
+            )}
           </div>
-          {reviews.slice(0, 3).map((review) => (
-            <article className="review-item" key={review.id}>
-              <div>
+          {reviewsQuery.isLoading && <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading reviews…</p>}
+          {reviewsQuery.isError && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4" role="alert">
+              <p className="m-0 text-sm text-[var(--muted)]">Reviews could not be loaded.</p>
+              <button className="secondary-button" type="button" onClick={() => void reviewsQuery.refetch()}>
+                Try again
+              </button>
+            </div>
+          )}
+          {!reviewsQuery.isLoading && !reviewsQuery.isError && reviews.slice(0, 3).map((review) => (
+            <article className="border-b border-[var(--line)] py-5 last:border-0" key={review.id}>
+              <div className="flex flex-wrap items-center gap-3">
                 <RatingStars rating={review.rating} label={`${review.rating} out of 5 stars`} />
-                <span>
+                <span className="text-sm text-[var(--muted)]">
                   {review.author} · {review.date}
                 </span>
               </div>
-              <p>{review.text}</p>
+              <p className="mb-0 mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed text-[var(--ink)]">{review.text}</p>
               {myReviewQuery.data?.id === review.id && (
                 <button
-                  className="secondary-button review-edit-button"
+                  className="secondary-button mt-4 inline-flex min-h-11 w-fit items-center gap-2 px-4 text-sm"
                   type="button"
-                  aria-label="Edit review"
-                  title="Edit review"
                   onClick={() => {
                     setEditingReviewId(review.id)
                     setReviewRating(review.rating)
@@ -588,50 +617,54 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                   }}
                 >
                   <PencilIcon />
+                  <span>Edit review</span>
                 </button>
               )}
               <ReviewAttachments media={review.media} />
             </article>
           ))}
+          {!reviewsQuery.isLoading && !reviewsQuery.isError && reviews.length === 0 && (
+            <p className="m-0 rounded-xl bg-[var(--surface)] px-4 py-5 text-sm text-[var(--muted)]">
+              No reviews yet. Be the first to share your experience.
+            </p>
+          )}
         </div>
       </section>
       {showAll && (
         <div
-          className="review-overlay"
+          className="fixed inset-0 z-50 flex justify-end bg-black/40"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setShowAll(false)
           }}
         >
           <aside
-            className="review-drawer"
+            className="relative h-dvh w-full max-w-lg overflow-y-auto bg-[var(--paper)] px-5 pb-8 pt-16 shadow-2xl sm:px-8"
             role="dialog"
             aria-modal="true"
             aria-labelledby="all-reviews-title"
           >
             <button
-              className="drawer-close"
+              className="absolute right-4 top-4 grid size-11 place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-2xl text-[var(--ink)] transition hover:bg-[var(--line)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
               type="button"
               onClick={() => setShowAll(false)}
               aria-label="Close reviews"
             >
               ×
             </button>
-            <h2 id="all-reviews-title">All reviews</h2>
+            <h2 className="mb-5 text-3xl text-[var(--ink)]" id="all-reviews-title">All reviews</h2>
             {reviews.slice(0, limit).map((review) => (
-              <article className="review-item" key={review.id}>
-                <div>
+              <article className="border-b border-[var(--line)] py-5 last:border-0" key={review.id}>
+                <div className="flex flex-wrap items-center gap-3">
                   <RatingStars rating={review.rating} label={`${review.rating} out of 5 stars`} />
-                  <span>
+                  <span className="text-sm text-[var(--muted)]">
                     {review.author} · {review.date}
                   </span>
                 </div>
-                <p>{review.text}</p>
+                <p className="mb-0 mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed text-[var(--ink)]">{review.text}</p>
                 {myReviewQuery.data?.id === review.id && (
                   <button
-                    className="secondary-button review-edit-button"
+                    className="secondary-button mt-4 inline-flex min-h-11 w-fit items-center gap-2 px-4 text-sm"
                     type="button"
-                    aria-label="Edit review"
-                    title="Edit review"
                     onClick={() => {
                       setEditingReviewId(review.id)
                       setReviewRating(review.rating)
@@ -642,6 +675,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                     }}
                   >
                     <PencilIcon />
+                    <span>Edit review</span>
                   </button>
                 )}
                 <ReviewAttachments media={review.media} />
@@ -659,13 +693,16 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
           </aside>
         </div>
       )}
-      <section className="review-section mx-auto w-full max-w-[90rem] border-t border-[var(--line)] px-4 py-8 md:px-8 md:py-12" id="review-form">
-        <p className="eyebrow">{storefront.content.collection.reviewsLabel}</p>
-        <h2>{storefront.content.reviews.title}</h2>
-        <form className="review-form" onSubmit={submitReview}>
-          <label>
+      <section className="mx-auto w-full max-w-[90rem] scroll-mt-28 border-t border-[var(--line)] px-4 py-10 md:px-8 md:py-14" id="review-form">
+        <div className="mx-auto max-w-3xl">
+        <p className="eyebrow mb-2">{storefront.content.collection.reviewsLabel}</p>
+        <h2 className="mb-3 text-3xl text-[var(--ink)] md:text-4xl">{storefront.content.reviews.title}</h2>
+        <p className="mb-6 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">Tell other shoppers what stood out. Your review helps people choose with confidence.</p>
+        <form className="flex flex-col gap-5 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 shadow-sm md:p-8" onSubmit={submitReview}>
+          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
             {storefront.content.reviews.ratingLabel}
             <select
+              className="h-12 w-full max-w-xs rounded-lg border border-[var(--line)] bg-white px-3 text-base text-[var(--ink)] outline-none transition focus-visible:ring-2 focus-visible:ring-[var(--ink)]"
               disabled={reviewSaving}
               value={reviewRating}
               onChange={(event) => setReviewRating(Number(event.target.value))}
@@ -677,9 +714,10 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               <option value="1">1 / 5</option>
             </select>
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
             {storefront.content.reviews.commentLabel}
             <textarea
+              className="min-h-36 w-full resize-y rounded-lg border border-[var(--line)] bg-white px-3 py-3 text-base leading-relaxed text-[var(--ink)] outline-none transition placeholder:text-[var(--muted)] focus-visible:ring-2 focus-visible:ring-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={reviewSaving}
               value={reviewComment}
               onChange={(event) => setReviewComment(event.target.value)}
@@ -688,9 +726,10 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               placeholder={storefront.content.reviews.commentPlaceholder}
             />
           </label>
-          <label className="review-upload-label">
-            Photos or video{' '}
+          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
+            Photos or video <span className="font-normal text-[var(--muted)]">Up to 4 files, 1 MB each.</span>
             <input
+              className="w-full rounded-lg border border-[var(--line)] bg-white p-2 text-sm text-[var(--muted)] file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-[var(--ink)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-[var(--green)] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={reviewSaving}
               type="file"
               accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
@@ -709,10 +748,12 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             />
           </label>
           {reviewFiles.length > 0 && (
-            <p className="review-file-list">{reviewFiles.map((file) => file.name).join(', ')}</p>
+            <ul className="m-0 flex list-none flex-wrap gap-2 p-0" aria-label="Selected review files">
+              {reviewFiles.map((file) => <li className="rounded-full bg-[var(--paper)] px-3 py-1.5 text-xs text-[var(--muted)]" key={`${file.name}-${file.size}`}>{file.name}</li>)}
+            </ul>
           )}
           <button
-            className="primary-button"
+            className="primary-button w-full sm:w-auto sm:min-w-56"
             type="submit"
             disabled={reviewSaving || !reviewComment.trim()}
           >
@@ -725,6 +766,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                 : storefront.content.reviews.submitLabel}
           </button>
         </form>
+        </div>
       </section>
       {lightboxIndex !== null && availableMediaItems[lightboxIndex] && (
         <div

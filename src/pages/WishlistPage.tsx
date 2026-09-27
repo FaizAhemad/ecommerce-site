@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next'
 import type { StorefrontApiResponse } from '../api/storefront'
 import { ProductCard } from '../components/ProductCard'
 import { queryClient } from '../api/queryClient'
-import { useCart } from '../api/cart'
+import { getCartPendingAction, useCart } from '../api/cart'
 import { sessionUser } from '../api/sessionScope'
 
 type Props = {
@@ -79,6 +79,7 @@ export function WishlistPage({ storefront, onAdd, onOpenProduct }: Props) {
               quantity={quantities.get(product.id) ?? 0}
               isCartLoading={isCartLoading}
               isCartUpdating={cart.pending.has(product.id)}
+              cartPendingAction={getCartPendingAction(product.id)}
             />
           ))}
         </div>

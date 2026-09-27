@@ -7,6 +7,23 @@ import { PageContainer } from './PageContainer'
 import { SiteTour } from './SiteTour'
 import { useTranslation } from 'react-i18next'
 
+function SearchIcon() {
+  return (
+    <svg className="size-5 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="10.8" cy="10.8" r="6.3" stroke="currentColor" strokeWidth="1.7" />
+      <path d="m15.5 15.5 4.2 4.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 type SiteLayoutProps = {
   storefront: StorefrontApiResponse
   cartCount: number
@@ -36,6 +53,7 @@ export function SiteLayout({
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const headerActionsRef = useRef<HTMLDivElement>(null)
+  const searchButtonRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     const onScroll = () => {
       setShowHeaderShadow(window.scrollY > 8)
@@ -57,6 +75,16 @@ export function SiteLayout({
     }
     document.addEventListener('pointerdown', closeOnOutside)
     return () => document.removeEventListener('pointerdown', closeOnOutside)
+  }, [searchOpen])
+  useEffect(() => {
+    if (!searchOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setSearchOpen(false)
+      searchButtonRef.current?.focus()
+    }
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
   }, [searchOpen])
   const navigate = (path: string) => (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault()
@@ -157,17 +185,22 @@ export function SiteLayout({
         </nav>
         <div className="header-actions" ref={headerActionsRef}>
           <button
-            className="search-button"
+            className="search-button inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] p-0 text-[var(--ink)] transition-colors hover:border-[var(--ink)] hover:bg-white"
+            ref={searchButtonRef}
             type="button"
             onClick={() => setSearchOpen((open) => !open)}
             aria-label={searchOpen ? 'Close search' : 'Search products'}
+            aria-expanded={searchOpen}
+            aria-controls="site-header-search"
           >
-            {searchOpen ? 'Ã—' : 'âŒ•'}
+            {searchOpen ? <CloseIcon /> : <SearchIcon />}
           </button>
           {searchOpen && (
-            <form className="header-search" onSubmit={submitSearch}>
+            <form className="header-search" id="site-header-search" role="search" onSubmit={submitSearch}>
               <input
+                className="min-h-11 flex-1"
                 autoFocus
+                type="search"
                 autoComplete="off"
                 spellCheck={false}
                 value={searchQuery}
@@ -175,6 +208,23 @@ export function SiteLayout({
                 placeholder={t('common:searchProducts')}
                 aria-label={t('common:searchProducts')}
               />
+              <button
+                className="inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-md bg-[var(--ink)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+                type="submit"
+              >
+                {t('common:search')}
+              </button>
+              <button
+                className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-md border border-transparent bg-transparent text-[var(--muted)] transition-colors hover:border-[var(--line)] hover:bg-[var(--paper)] hover:text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+                type="button"
+                onClick={() => {
+                  setSearchOpen(false)
+                  searchButtonRef.current?.focus()
+                }}
+                aria-label="Close search"
+              >
+                <CloseIcon />
+              </button>
             </form>
           )}
 
@@ -212,7 +262,7 @@ export function SiteLayout({
                 }
               }}
             >
-              {loggingOut ? 'Logging out?' : t('common:logOut')}
+              {loggingOut ? 'Logging out...' : t('common:logOut')}
             </button>
           ) : (
             <a className="header-auth-link" href="/login" onClick={navigate('/login')}>

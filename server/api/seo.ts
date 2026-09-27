@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { db } from './_lib/db.js'
 import { publishedProductWhere, purchaseEligibility } from './_lib/marketplace-purchases.js'
-import { canonicalOrigin, productHead, xmlEscape } from './_lib/seo.js'
+import { canonicalOrigin, imageUrl, productHead, xmlEscape } from './_lib/seo.js'
 import type { VercelRequest, VercelResponse } from './_lib/http.js'
 type TextResponse = VercelResponse & { end?: (body?: string) => unknown }
 const publicPaths = ['/', '/products', '/help', '/support']
@@ -61,7 +61,9 @@ export default async function handler(request: VercelRequest, response: TextResp
     html = html.replace(/<title>[\s\S]*?<\/title>/i, '').replace(/<meta\b[^>]*name=["'](?:description|robots)["'][^>]*>/gi, '')
     const purchasable = purchaseEligibility(product.shopOwnership).available
     html = html.replace('</head>', productHead({ ...product, purchasable }, origin, indexable) + '</head>')
-    html = html.replace('<div id="root"></div>', `<div id="root"><main><h1>${xmlEscape(product.name)}</h1><p>${xmlEscape(product.description ?? '')}</p><p>INR ${(product.priceMinor / 100).toFixed(2)}</p><p>${!purchasable ? 'Ordering from this shop is not available yet' : product.stock > 0 ? 'In stock' : 'Out of stock'}</p><a href="/products">Browse products</a></main></div>`)
+    const leadImage = imageUrl(product.images[0]?.url ?? '')
+    const productFallback = `<main class="seo-product-fallback"><div class="seo-product-fallback__image${leadImage ? '' : ' seo-product-fallback__image--empty'}">${leadImage ? `<img src="${xmlEscape(leadImage)}" alt="${xmlEscape(product.name)}" fetchpriority="high">` : '<span>Product image unavailable</span>'}</div><div class="seo-product-fallback__details"><p class="seo-product-fallback__eyebrow">Gadgify | Product details</p><h1>${xmlEscape(product.name)}</h1>${product.description ? `<p class="seo-product-fallback__description">${xmlEscape(product.description)}</p>` : ''}<p class="seo-product-fallback__price">INR ${(product.priceMinor / 100).toFixed(2)}</p><p class="seo-product-fallback__stock">${!purchasable ? 'Ordering from this shop is not available yet' : product.stock > 0 ? 'In stock' : 'Out of stock'}</p><a class="seo-product-fallback__link" href="/products">Browse products</a></div></main>`
+    html = html.replace('<div id="root"></div>', `<div id="root">${productFallback}</div>`)
     if (development) html = html.replace('</head>', '<script type="module">import RefreshRuntime from "/@react-refresh"; RefreshRuntime.injectIntoGlobalHook(window); window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => (type) => type; window.__vite_plugin_react_preamble_installed__ = true;</script><script type="module" src="/@vite/client"></script></head>')
     return send(response, 200, 'text/html', html, head)
   } catch { response.setHeader?.('X-Robots-Tag', 'noindex'); response.setHeader?.('Retry-After', '30'); return send(response, 503, 'text/plain', 'This page is temporarily unavailable. Please try again.', head) }

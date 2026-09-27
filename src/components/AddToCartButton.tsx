@@ -12,6 +12,7 @@ export function AddToCartButton({
   quantity,
   isCartLoading = false,
   isUpdating = false,
+  pendingAction,
   onDecrease,
 }: {
   productId: string
@@ -23,11 +24,18 @@ export function AddToCartButton({
   quantity?: number
   isCartLoading?: boolean
   isUpdating?: boolean
+  pendingAction?: 'adding' | 'removing' | 'updating'
   onDecrease?: () => Promise<void>
 }) {
   const locked = useRef(false)
   const [pending, setPending] = useState(false)
   const notify = useNotification()
+  const pendingLabel =
+    pendingAction === 'removing'
+      ? 'Removing…'
+      : pendingAction === 'updating'
+        ? 'Updating…'
+        : 'Adding…'
   const runAction = async (event: MouseEvent<HTMLButtonElement>, action: () => Promise<void>) => {
     event.stopPropagation()
     if (locked.current || pending || isUpdating) return
@@ -94,8 +102,9 @@ export function AddToCartButton({
       aria-busy={pending || isUpdating || isCartLoading}
       onClick={(event) => void runAction(event, () => onAdd(productId))}
     >
-      {unavailableReason ?? (isCartLoading ? 'Checking cart…' : pending ? 'Adding…' : label)}{' '}
-      {!unavailableReason && !isCartLoading && (
+      {unavailableReason ??
+        (isCartLoading ? 'Checking cart…' : pending || isUpdating ? pendingLabel : label)}{' '}
+      {!unavailableReason && !isCartLoading && !pending && !isUpdating && (
         <span className={iconClassName} aria-hidden="true">
           +
         </span>

@@ -1,6 +1,14 @@
 # Architecture, security and UI/UX audit
 
+2026-09-27 cart action screenshot: deleting the last item from a catalog card optimistically switched to the zero-quantity button while the request remained active, which reused the add-pending label (`Adding…`). Pending cart intent is now retained per product so card feedback matches add/remove/update; the add icon is hidden while busy. Reproduction confirmed the issue; source fix is pending tests and owner browser/device verification.
+
+2026-09-27 header review: the owner screenshot exposed an oversized Log out label, a broken search glyph/weak search flow, crowded navigation and a heavy input focus frame. Source now uses a proper icon, compact sentence-case action label, responsive nav gaps, labeled Search/Close controls, Escape dismissal/focus return and a restrained keyboard focus indicator. Local desktop interaction was checked; test/device and other viewport acceptance remain pending.
+
 2026-09-25 scope clarification: every UI component/state, including notifications and overlays, requires review. Shared color/spacing/type/layout/control foundations come before isolated loader styling. UI_UX_REVIEW_GUIDE.md defines component and route coverage; verification remains pending.
+
+2026-09-27 product reload screenshot: `/product/:id` serves SEO-visible product text before the SPA starts; the source had no early-loaded styles, causing a browser-default serif flash. The fallback now has a responsive inline storefront presentation and safe lead image, then hands off to the interactive page. Empty product rating summaries show `0.0`, `0 ratings` and `0 reviews`. Source-only; rendered reload/mobile verification remains pending.
+
+2026-09-27 product reviews screenshot: the rating distribution and Latest reviews lacked a section separator, and own-review editing used a tiny pencil-only control. Added a shared-width divider and a labeled 44px secondary action using Tailwind utilities; rendered/keyboard/mobile review remains pending.
 
 2026-09-25 process update: UI_UX_REVIEW_GUIDE.md defines application-wide route/state/device review and shared-component regression coverage. Owner screenshot reports bare full-screen session loading; source confirms the standalone bootstrap screen. Prioritize shared startup/loading/error treatment under UI-09 without weakening identity gates. Redesign and rendered acceptance remain pending.
 

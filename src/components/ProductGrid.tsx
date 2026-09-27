@@ -1,7 +1,7 @@
 import type { StorefrontProduct } from '../api/storefront'
 import { ProductCard } from './ProductCard'
 import { productGridClass } from './productCardStyles'
-import { useCart } from '../api/cart'
+import { getCartPendingAction, useCart } from '../api/cart'
 import { sessionUser } from '../api/sessionScope'
 
 type ProductGridProps = {
@@ -42,6 +42,7 @@ export function ProductGrid({
           quantity={quantities.get(product.id) ?? 0}
           isCartLoading={isCartLoading}
           isCartUpdating={cart.pending.has(product.id)}
+          cartPendingAction={getCartPendingAction(product.id)}
         />
       ))}
     </div>
