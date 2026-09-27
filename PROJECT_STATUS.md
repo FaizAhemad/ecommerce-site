@@ -581,6 +581,10 @@ Migration 20260914000000_support_tickets is prepared but NOT applied. Support us
 
 Checkpoint: 145 tests pass, formatting/check and offline build/types pass; only three prior lint warnings. Twelve new synthetic E21/E22 tests cover rating/routes, truthful detail/checkout displays, offline events, support input escaping, saved-mail failure, duplicate ownership, customer/admin read/cancel guards. Actual database concurrency/delivery, mobile device behavior, attachments and payments remain open. Existing tests remain enabled. This checkpoint does not mean the full backlog is complete.
 
+## Product detail gallery and spacing - 2026-09-27
+
+Replaced the product image’s small competing CSS hover scales with pointer-positioned 2.2× magnification. Pointer departure restores the image; click/touch/keyboard opens the existing media lightbox. Failed image URLs now show an unavailable placeholder and are excluded from zoom and lightbox navigation; a product with no image remains non-interactive. Aligned the gallery, rating summary and review form containers to the catalog’s 90rem width and phone/tablet/desktop gutters; adjusted the detail title and price hierarchy. Source reviewed; no browser/device checks run, so magnifier tracking, touch, keyboard, zoomed text and long product content remain unverified. Tests/lint/build were not run for this UI edit under the current deferral.
+
 
 ## Versioned policies - E29 - 2026-09-15
 

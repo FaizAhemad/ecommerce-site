@@ -83,6 +83,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
   const reviewSavingRef = useRef(false)
   const notify = useNotification()
   const [reviewFiles, setReviewFiles] = useState<File[]>([])
+  const zoomImageRef = useRef<HTMLImageElement>(null)
   const reviewsQuery = useQuery({
     queryKey: ['product-reviews', productId],
     queryFn: async () => {
@@ -125,6 +126,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
   })
   const [selected, setSelected] = useState<{ type: 'image' | 'video'; id: string } | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set())
 
   useEffect(() => {
     document.body.style.overflow = showAll ? 'hidden' : ''
@@ -148,16 +150,33 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
       alt: item.alt,
     })),
   ]
+  const availableMediaItems = mediaItems.filter(
+    (item) => item.type !== 'image' || !failedImageIds.has(item.id),
+  )
+  const markImageFailed = (id: string) => {
+    if (failedImageIds.has(id)) return
+    const activeLightboxItem = lightboxIndex === null ? null : availableMediaItems[lightboxIndex]
+    const nextFailedIds = new Set(failedImageIds).add(id)
+    const nextMediaItems = mediaItems.filter(
+      (item) => item.type !== 'image' || !nextFailedIds.has(item.id),
+    )
+    setFailedImageIds(nextFailedIds)
+    if (activeLightboxItem?.id === id) setLightboxIndex(null)
+    else if (activeLightboxItem) {
+      const nextIndex = nextMediaItems.findIndex((item) => item.id === activeLightboxItem.id)
+      setLightboxIndex(nextIndex >= 0 ? nextIndex : null)
+    }
+  }
   useEffect(() => {
     if (lightboxIndex === null) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setLightboxIndex(null)
       if (event.key === 'ArrowLeft')
         setLightboxIndex((current) =>
-          current === null ? null : (current - 1 + mediaItems.length) % mediaItems.length,
+          current === null ? null : (current - 1 + availableMediaItems.length) % availableMediaItems.length,
         )
       if (event.key === 'ArrowRight')
-        setLightboxIndex((current) => (current === null ? null : (current + 1) % mediaItems.length))
+        setLightboxIndex((current) => (current === null ? null : (current + 1) % availableMediaItems.length))
     }
     document.addEventListener('keydown', onKeyDown)
     const previousOverflow = document.body.style.overflow
@@ -166,7 +185,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = previousOverflow
     }
-  }, [lightboxIndex, mediaItems.length])
+  }, [lightboxIndex, availableMediaItems.length])
 
   const reviews = reviewsQuery.data ?? []
 
@@ -337,10 +356,10 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
 
   return (
     <>
-      <section className="detail-section page-section">
-        <div className="detail-gallery">
+      <section className="mx-auto grid w-full max-w-[90rem] grid-cols-1 items-start gap-8 px-4 py-8 md:grid-cols-2 md:gap-12 md:px-8 md:py-12 lg:gap-16">
+        <div className="detail-gallery min-w-0 w-full">
           <div className={`detail-art product-art ${product.tone}`}>
-            <div className="detail-media-viewport">
+            <div className="detail-media-viewport relative h-full w-full overflow-hidden">
               {selectedVideo ? (
                 <video
                   className="product-primary-video"
@@ -350,27 +369,62 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                   playsInline
                   onClick={() =>
                     setLightboxIndex(
-                      mediaItems.findIndex(
+                      availableMediaItems.findIndex(
                         (item) => item.type === 'video' && item.id === selectedVideo.id,
                       ),
                     )
                   }
                 />
-              ) : selectedImage ? (
-                <img
-                  className="product-primary-image"
-                  src={selectedImage.url}
-                  alt={selectedImage.alt}
+              ) : selectedImage && !failedImageIds.has(selectedImage.id) ? (
+                <button
+                  type="button"
+                  className="h-full w-full overflow-hidden border-0 bg-transparent p-0"
+                  aria-label={`View larger image: ${selectedImage.alt}`}
                   onClick={() =>
                     setLightboxIndex(
-                      mediaItems.findIndex(
+                      availableMediaItems.findIndex(
                         (item) => item.type === 'image' && item.id === selectedImage.id,
                       ),
                     )
                   }
-                />
+                >
+                  <img
+                    className="product-primary-image h-full w-full cursor-zoom-in object-contain p-3 transition-transform duration-100 ease-out md:p-4"
+                    src={selectedImage.url}
+                    alt={selectedImage.alt}
+                    draggable={false}
+                    ref={zoomImageRef}
+                    onError={() => markImageFailed(selectedImage.id)}
+                    onPointerMove={(event) => {
+                      if (event.pointerType !== 'mouse') return
+                      const bounds = event.currentTarget.parentElement?.getBoundingClientRect()
+                      if (!bounds) return
+                      const x = Math.max(0, Math.min(100, ((event.clientX - bounds.left) / bounds.width) * 100))
+                      const y = Math.max(0, Math.min(100, ((event.clientY - bounds.top) / bounds.height) * 100))
+                      event.currentTarget.style.transform = 'scale(2.2)'
+                      event.currentTarget.style.transformOrigin = `${x}% ${y}%`
+                      event.currentTarget.style.cursor = 'zoom-out'
+                    }}
+                    onPointerLeave={() => {
+                      if (!zoomImageRef.current) return
+                      zoomImageRef.current.style.transform = ''
+                      zoomImageRef.current.style.transformOrigin = ''
+                      zoomImageRef.current.style.cursor = ''
+                    }}
+                  />
+                </button>
               ) : (
-                <div className="product-shape" />
+                <>
+                  <div className="product-shape" aria-hidden="true" />
+                  {selectedImage && failedImageIds.has(selectedImage.id) && (
+                    <span
+                      className="absolute inset-x-4 bottom-4 rounded-md bg-[var(--surface)]/90 px-3 py-2 text-center text-sm text-[var(--muted)]"
+                      role="status"
+                    >
+                      Product image unavailable
+                    </span>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -379,27 +433,36 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               className="media-rail"
               aria-label={`${storefront.content.detail.imagesLabel} and ${storefront.content.detail.videosLabel}`}
             >
-              {product.media.images.map((item, index) => (
+              {product.media.images.map((item) => (
                 <button
                   className={`media-thumb${selectedImage?.id === item.id ? ' selected' : ''}`}
                   type="button"
+                  disabled={failedImageIds.has(item.id)}
                   key={item.id}
                   onClick={() => {
                     setSelected({ type: 'image', id: item.id })
-                    setLightboxIndex(index)
+                    setLightboxIndex(availableMediaItems.findIndex((media) => media.id === item.id))
                   }}
                 >
-                  <img src={item.url} alt={item.alt} />
+                  {failedImageIds.has(item.id) ? (
+                    <span className="grid h-full w-full place-items-center text-xs text-[var(--muted)]">
+                      Unavailable
+                    </span>
+                  ) : (
+                    <img src={item.url} alt={item.alt} onError={() => markImageFailed(item.id)} />
+                  )}
                 </button>
               ))}
-              {product.media.videos.map((item, index) => (
+              {product.media.videos.map((item) => (
                 <button
                   className={`media-thumb media-video${selectedVideo?.id === item.id ? ' selected' : ''}`}
                   type="button"
                   key={item.id}
                   onClick={() => {
                     setSelected({ type: 'video', id: item.id })
-                    setLightboxIndex(product.media.images.length + index)
+                    setLightboxIndex(
+                      availableMediaItems.findIndex((media) => media.type === 'video' && media.id === item.id),
+                    )
                   }}
                   aria-label={item.alt || storefront.content.detail.videosLabel}
                 >
@@ -418,9 +481,9 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             <p className="detail-muted">{storefront.content.detail.noMediaLabel}</p>
           )}
         </div>
-        <div className="detail-copy">
+        <div className="detail-copy w-full max-w-2xl self-center">
           <p className="eyebrow">{product.category}</p>
-          <h1>{product.name}</h1>
+          <h1 className="mb-4 text-4xl leading-tight md:text-5xl">{product.name}</h1>
           {product.seller && !product.seller.isPlatform && (
             <p>
               Sold by{' '}
@@ -435,7 +498,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             <strong>{product.rating.toFixed(1)}</strong>
             <span>({product.reviewCount} reviews)</span>
           </div>
-          <p className="detail-price">{currency.format(product.price)}</p>
+          <p className="detail-price mb-4 text-3xl font-bold text-[var(--ink)]">{currency.format(product.price)}</p>
           <p className="detail-description">
             {product.description || storefront.identity.tagline}
           </p>
@@ -469,7 +532,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
           />
         </div>
       </section>
-      <section className="ratings-panel">
+      <section className="ratings-panel mx-auto w-full max-w-[90rem] border-t border-[var(--line)] px-4 py-8 md:px-8 md:py-12">
         <h2>Product ratings &amp; reviews</h2>
         <div className="ratings-summary">
           <div className="average-rating">
@@ -596,7 +659,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
           </aside>
         </div>
       )}
-      <section className="review-section" id="review-form">
+      <section className="review-section mx-auto w-full max-w-[90rem] border-t border-[var(--line)] px-4 py-8 md:px-8 md:py-12" id="review-form">
         <p className="eyebrow">{storefront.content.collection.reviewsLabel}</p>
         <h2>{storefront.content.reviews.title}</h2>
         <form className="review-form" onSubmit={submitReview}>
@@ -663,7 +726,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
           </button>
         </form>
       </section>
-      {lightboxIndex !== null && mediaItems[lightboxIndex] && (
+      {lightboxIndex !== null && availableMediaItems[lightboxIndex] && (
         <div
           className="media-lightbox"
           role="dialog"
@@ -685,32 +748,36 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             className="media-lightbox-arrow media-lightbox-prev"
             type="button"
             onClick={() =>
-              setLightboxIndex((lightboxIndex - 1 + mediaItems.length) % mediaItems.length)
+              setLightboxIndex((lightboxIndex - 1 + availableMediaItems.length) % availableMediaItems.length)
             }
             aria-label="Previous media"
           >
             ‹
           </button>
           <div className="media-lightbox-content">
-            {mediaItems[lightboxIndex].type === 'video' ? (
+            {availableMediaItems[lightboxIndex].type === 'video' ? (
               <video
-                src={mediaItems[lightboxIndex].url}
-                poster={mediaItems[lightboxIndex].posterUrl}
+                src={availableMediaItems[lightboxIndex].url}
+                poster={availableMediaItems[lightboxIndex].posterUrl}
                 controls
                 autoPlay
                 playsInline
               />
             ) : (
-              <img src={mediaItems[lightboxIndex].url} alt={mediaItems[lightboxIndex].alt} />
+              <img
+                src={availableMediaItems[lightboxIndex].url}
+                alt={availableMediaItems[lightboxIndex].alt}
+                onError={() => markImageFailed(availableMediaItems[lightboxIndex].id)}
+              />
             )}
             <p>
-              {lightboxIndex + 1} / {mediaItems.length}
+              {lightboxIndex + 1} / {availableMediaItems.length}
             </p>
           </div>
           <button
             className="media-lightbox-arrow media-lightbox-next"
             type="button"
-            onClick={() => setLightboxIndex((lightboxIndex + 1) % mediaItems.length)}
+            onClick={() => setLightboxIndex((lightboxIndex + 1) % availableMediaItems.length)}
             aria-label="Next media"
           >
             ›

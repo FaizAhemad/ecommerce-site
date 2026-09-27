@@ -208,12 +208,8 @@
 }
 /* Product detail media: keep the full asset visible. */
 .detail-media-viewport .product-primary-image {
-  padding: 28px;
   box-sizing: border-box;
   object-fit: contain;
-}
-.detail-media-viewport:hover .product-primary-image {
-  transform: scale(1.03);
 }
 .detail-media-viewport .product-primary-video {
   object-fit: contain;
@@ -314,25 +310,9 @@
 }
 
 /* Keep the detail gallery compact so the product information uses the available space. */
-.detail-section {
-  grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
-  gap: 64px;
-  padding-top: 52px;
-  padding-bottom: 64px;
-}
-.detail-gallery {
-  width: min(100%, 460px);
-}
-.detail-art {
-  max-width: 460px;
-}
 .detail-copy {
   align-self: center;
   max-width: 520px;
-}
-.detail-copy h1 {
-  margin-bottom: 16px;
-  line-height: 0.98;
 }
 .detail-rating {
   display: flex;
@@ -412,19 +392,6 @@
 .review-notice {
   color: #a34b38;
 }
-@media (max-width: 760px) {
-  .detail-section {
-    grid-template-columns: 1fr;
-    gap: 32px;
-    padding-top: 42px;
-  }
-  .detail-gallery,
-  .detail-art {
-    max-width: none;
-    width: 100%;
-  }
-}
-
 /* One outer gutter for every page, including all product detail sections. */
 .review-item .review-attachments {
   display: flex;

@@ -78,16 +78,6 @@
   }
 }
 
-.detail-section {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-
-@media (max-width: 760px) {
-  .detail-section {
-    grid-template-columns: 1fr;
-  }
-}
-
 .auth-card {
   max-width: 556px;
   margin-inline: auto;

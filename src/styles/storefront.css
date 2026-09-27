@@ -836,14 +836,6 @@ a:focus-visible {
   .filter-field:first-child {
     grid-column: 1 / -1;
   }
-  .detail-section {
-    grid-template-columns: 1fr;
-    gap: 38px;
-    padding: 60px 20px 78px;
-  }
-  .detail-copy h1 {
-    font-size: clamp(32px, 4vw, 48px);
-  }
   .carousel-section {
     padding: 58px 20px 78px;
   }
@@ -973,10 +965,6 @@ a:focus-visible {
   }
 }
 .ratings-panel {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 60px 32px;
-  border-top: 1px solid var(--line);
 }
 .ratings-panel h2 {
   margin-bottom: 30px;
@@ -1087,9 +1075,6 @@ a:focus-visible {
   margin-bottom: 25px;
 }
 @media (max-width: 760px) {
-  .ratings-panel {
-    padding: 48px 20px 70px;
-  }
   .ratings-summary {
     grid-template-columns: 1fr;
     gap: 30px;
