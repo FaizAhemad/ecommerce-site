@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { LoaderCircle } from 'lucide-react'
 import { getProducts, type ProductSort, type StorefrontApiResponse } from '../api/storefront'
 import { FilterSidebar } from '../components/FilterSidebar'
 import { PromoCarousel } from '../components/PromoCarousel'
@@ -70,6 +71,40 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
   const nextCursor = productQuery.hasNextPage
   const loading = productQuery.isFetching
   const loadingMore = productQuery.isFetchingNextPage
+  const paginationSentinel = useRef<HTMLDivElement>(null)
+  const paginationLock = useRef(false)
+  const { fetchNextPage, hasNextPage, isFetching } = productQuery
+  const requestNextPage = useCallback(() => {
+    if (!hasNextPage || isFetching || paginationLock.current) return
+    paginationLock.current = true
+    void fetchNextPage().finally(() => {
+      paginationLock.current = false
+    })
+  }, [fetchNextPage, hasNextPage, isFetching])
+  useEffect(() => {
+    const sentinel = paginationSentinel.current
+    if (
+      !sentinel ||
+      !productQuery.hasNextPage ||
+      productQuery.isFetching ||
+      productQuery.isFetchNextPageError ||
+      !('IntersectionObserver' in window)
+    )
+      return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) requestNextPage()
+      },
+      { rootMargin: '480px 0px' },
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [
+    productQuery.hasNextPage,
+    productQuery.isFetching,
+    productQuery.isFetchNextPageError,
+    requestNextPage,
+  ])
   const updateSearch = (value: string) => setSearch(value)
   const updateCategory = (value: string) => setCategory(value)
   const toggleColor = (color: string) =>
@@ -150,7 +185,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
           onClear={clear}
         />
         <div className="min-w-0">
-          {productQuery.isError ? (
+          {productQuery.isError && catalog.length === 0 ? (
             <div className="grid min-h-64 place-content-center justify-items-center gap-4 rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-8 text-center" role="alert">
               <p className="m-0 text-sm text-[var(--muted)]">Unable to load products.</p>
               <button className="min-h-11 rounded-md bg-[var(--ink)] px-5 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]" onClick={() => void productQuery.refetch()}>
@@ -192,17 +227,44 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
           )}
         </div>
       </div>
-      {nextCursor && (
+      {nextCursor && <div ref={paginationSentinel} className="h-1" aria-hidden="true" />}
+      {nextCursor && typeof IntersectionObserver === 'undefined' && (
         <button
-          className="mx-auto mt-6 flex min-h-11 items-center rounded-md border border-[var(--line)] px-5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:opacity-60"
+          className="mx-auto mt-6 flex min-h-11 items-center rounded-md border border-[var(--line)] px-5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+          type="button"
           disabled={loading}
-          aria-busy={loadingMore}
-          onClick={() => {
-            if (!productQuery.isFetching) void productQuery.fetchNextPage()
-          }}
+          onClick={requestNextPage}
         >
-          {loadingMore ? collection.loadingMoreLabel : 'Load more products'}
+          Load more products
         </button>
+      )}
+      {loadingMore && catalog.length > 0 && (
+        <div
+          className="mx-auto mt-7 flex w-fit max-w-full items-center gap-3 rounded-full border border-[var(--line)] bg-[var(--surface-raised)] px-5 py-3 shadow-sm"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--green)]/10 text-[var(--green)]">
+            <LoaderCircle aria-hidden="true" className="size-5 motion-safe:animate-spin motion-reduce:animate-none" />
+          </span>
+          <span className="grid min-w-0 gap-0.5">
+            <span className="text-sm font-semibold text-[var(--ink)]">Finding a few more good finds…</span>
+            <span className="text-xs text-[var(--muted)]">More useful pieces are loading into the collection.</span>
+          </span>
+        </div>
+      )}
+      {productQuery.isFetchNextPageError && catalog.length > 0 && (
+        <div className="mx-auto mt-4 flex max-w-lg flex-wrap items-center justify-center gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface-raised)] p-4 text-center" role="alert">
+          <p className="m-0 text-sm text-[var(--muted)]">More products could not be loaded.</p>
+          <button
+            className="min-h-11 rounded-md bg-[var(--ink)] px-4 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+            type="button"
+            onClick={requestNextPage}
+          >
+            Try again
+          </button>
+        </div>
       )}
       {!loading && catalog.length > 0 && !nextCursor && (
         <div className="mt-12 flex flex-wrap items-center justify-center gap-4 border-y border-[var(--line)] py-7 text-center text-sm text-[var(--muted)]" role="status">
@@ -211,11 +273,6 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
             {collection.catalogEndActionLabel} ↑
           </button>
         </div>
-      )}
-      {loadingMore && catalog.length > 0 && (
-        <p className="sr-only" role="status" aria-live="polite">
-          {collection.loadingMoreLabel}
-        </p>
       )}
     </section>
   )

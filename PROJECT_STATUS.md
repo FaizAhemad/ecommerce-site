@@ -1,5 +1,11 @@
 # Project status
 
+## Automatic Products pagination - 2026-09-27
+
+Replaced the always-visible “Load more products” button with an IntersectionObserver sentinel that fetches the next cursor page as the customer scrolls, using a 480px prefetch margin. The current filter/search/sort query remains part of the React Query key, so changing filters starts its own cursor sequence and scrolling automatically loads matching pages. A synchronous lock prevents duplicate fetches; failed next-page requests keep prior cards visible and offer Retry. A visible manual fallback is limited to browsers without IntersectionObserver. The natural CSS grid stays in place; prior virtualization was removed after card rows jumped during scroll. Offline build and lint pass with existing warnings; diff check passes. Rendered, filtered-scroll and device acceptance remain pending.
+
+Follow-up loading feedback: replaced the plain pagination text with a compact brand-colored status panel, clear explanatory copy and a spinner that respects reduced-motion preferences. It remains visible only while a next-page request is active. Rendered/mobile acceptance remains pending.
+
 ## Home newsletter duplicate editing - 2026-09-27
 
 When the server reports that an address is already subscribed, the email field stays enabled and Submit remains disabled until the customer edits the address. Editing clears the duplicate message/state and enables a new submission; a confirmed signup remains locked against duplicate submits. Added a component fixture test for the duplicate-to-edited flow, which passes when run by name. `npm run build:offline` passed, lint exited successfully with existing warnings, and `git diff --check` passed. The full `tests/api-errors.test.mjs` suite still has an existing duplicate-subscription client assertion failure; this component test passes. Rendered/mobile and live provider acceptance remain pending; no live provider or production check was performed.
@@ -58,7 +64,7 @@ Extended `prisma/seed.mjs` with the 18 requested platform product names and star
 
 ## Products pagination loading feedback - 2026-09-26
 
-The “Loading more products” label had one render site in `ShopPage`, where it followed the broad `isFetching` state and therefore appeared on initial/background catalog refreshes. Changed it to `isFetchingNextPage`, removed the unused visible sentinel line, and announce the message accessibly while an explicit next-page request is in progress. `npm run build:offline` passed (existing large-chunk warning); tests and rendered acceptance remain deferred under owner instructions.
+The “Loading more products” message follows `isFetchingNextPage`, so it appears only during an automatic or fallback next-page request, not initial/background catalog refreshes. The page now uses an IntersectionObserver sentinel; see the 2026-09-27 status entry for current behavior and retry handling. Tests and rendered acceptance remain pending.
 
 ## Products route Tailwind migration - 2026-09-26
 
