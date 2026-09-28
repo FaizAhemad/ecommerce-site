@@ -9,6 +9,7 @@ import { useNotification } from './NotificationProvider'
 import { updateCart } from '../api/cart'
 import {
   productAddButtonClass,
+  productAddButtonLayoutClass,
   productCardClass,
   productInfoClass,
   productMediaClass,
@@ -230,6 +231,7 @@ export function ProductCard({
         isUpdating={isCartUpdating}
         pendingAction={cartPendingAction}
         onDecrease={decreaseQuantity}
+        quantityControlClassName={productAddButtonLayoutClass}
       />
     </article>
   )

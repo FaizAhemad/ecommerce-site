@@ -24,7 +24,9 @@ export const productSwatchesClass =
   'mx-2 my-0.5 flex min-h-6 items-center gap-2 pb-1'
 
 export const productPrimaryActionClass =
-  'inline-flex min-h-11 cursor-pointer items-center justify-center gap-3 rounded-md bg-[var(--ink)] px-4 font-sans text-xs font-semibold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:cursor-not-allowed disabled:opacity-60'
+  'inline-flex min-h-12 cursor-pointer items-center justify-center gap-3 rounded-xl border border-[var(--line)] bg-[rgba(215,225,208,0.58)] px-4 font-sans text-sm font-semibold normal-case tracking-[0.01em] text-[var(--ink)] shadow-[0_2px_0_rgba(37,40,33,0.08)] transition-all duration-200 hover:-translate-y-px hover:bg-[rgba(215,225,208,0.78)] hover:shadow-[0_4px_10px_rgba(37,40,33,0.1)] active:translate-y-0 active:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none'
+
+export const productAddButtonLayoutClass = 'mx-2 mt-auto mb-2 w-[calc(100%-1rem)]'
 
 export const productAddButtonClass =
-  `${productPrimaryActionClass} mx-2 mt-auto mb-2 w-[calc(100%-1rem)]`
+  `${productPrimaryActionClass} ${productAddButtonLayoutClass}`

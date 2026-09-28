@@ -321,3 +321,13 @@ E29 replaces policy placeholders with published-only reads and versioned private
 2026-09-28 startup loader: source replaced the stray animated line and spinner with a viewport-fixed, overflow-contained branded scene and three softly floating catalog-art tiles; reduced-motion disables tile motion. This preserves the session gate and live status announcement. Rendered/viewport/device verification remains pending.
 
 2026-09-28 loader screenshot refinement: larger, wider art arrangement now uses four existing campaign images, with a concise brand tagline and non-technical live status copy. Responsive rules trim the fourth tile on narrow screens; screenshot/device acceptance is still pending.
+
+2026-09-28 Cart screenshot/source review: API already returned product image relations but the client DTO omitted them and CartPage rendered a decorative placeholder. Cart now requests only ordered image fields and shows a clickable thumbnail with native modal preview/fallback; its quantity controls reuse AddToCartButton. Cart phone, keyboard, image-error and authenticated acceptance remain pending.
+
+2026-09-28 shared cart control review: owner screenshot showed high-contrast black segmented counters and all-caps primary actions. The shared cart action now uses restrained citron/ink tokens; plus is the primary quantity affordance and removing the last item uses danger color. ProductCard, Product Details and Cart share it. Responsive rendered review remains pending.
+
+2026-09-28 cart control refinement from owner screenshot: bright citron surfaces and UA button bevels looked mismatched, and the cart count read like another action. The shared action now uses muted sage; quantity buttons explicitly reset native borders while the count gets a neutral center segment and stronger type. CTA/group height is 48px and icon targets are 44px. Rendered comparison remains pending.
+
+2026-09-28 sizing refinement: shared quantity controls use a 48px height and 44px action targets. Cart uses a compact 136px stepper; catalog-card controls expand to match the full-width add CTA. A flexible quantity segment and connected dividers prevent large blank gaps. Product Details primary CTA height remains 48px. Rendered/device verification is pending.
+
+2026-09-28 Cart screenshot follow-up: excess space before the item list came from the shared direct-child section padding, while global display `h2` sizing overrode normal Tailwind utilities for the item-list and summary headings. Cart now uses a neutral layout wrapper with compact internal section spacing and explicitly sized local headings; offline build passes. Rendered/phone review remains pending.

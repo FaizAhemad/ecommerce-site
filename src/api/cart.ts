@@ -7,7 +7,13 @@ import { privateKey, sessionGeneration, sessionUser, assertCurrentSession } from
 export type CartItem = {
   id: string
   quantity: number
-  product: { id: string; name: string; category: string; priceMinor: number }
+  product: {
+    id: string
+    name: string
+    category: string
+    priceMinor: number
+    images?: { id: string; url: string; alt: string | null; sortOrder: number }[]
+  }
 }
 const pending = new Set<string>()
 const pendingActions = new Map<string, 'adding' | 'removing' | 'updating'>()

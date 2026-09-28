@@ -138,6 +138,8 @@ POST /api/orders requires a nonempty owned addressId. Missing, malformed, unknow
 
 Client private keys are ['private', userId-or-guest, sessionGeneration, ...resource]. Private HTTP requests abort/discard stale-session responses and JSON bodies. Header/cart share src/api/cart.ts; mutations merge only their affected row and reconcile after all current mutations settle. No optimistic payment/order/refund success is introduced. Account changes clear private queries and copied route state; wishlist IDs are memory-only. Public category/product bootstrap reads are parallel and fail explicitly; catalog consumes cursor pages and cancellation.
 
+Cart media (2026-09-28): `/api/cart` includes the selected product images ordered by `sortOrder`, with only `id`, `url`, `alt` and `sortOrder` fields needed for private cart thumbnails and image preview. The client accepts HTTP(S) URLs, handles failed images with a fallback and only enables the preview after the thumbnail loads.
+
 Rate-limit SQL initialization now loads .env before dynamically importing Prisma. The configured database passes temporary-table SQL checks and migrate deploy reports no pending migrations. Other deployment databases, production host/browser acceptance and scheduled cleanup remain separate. Vercel routing uses one function throughout; implementation files remain under server/api.
 
 ## E13 order transaction contract

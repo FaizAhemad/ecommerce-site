@@ -314,6 +314,12 @@
   font:
     12px var(--font-body);
 }
+.image-preview-dialog:not([open]) {
+  display: none;
+}
+.image-preview-dialog::backdrop {
+  background: rgba(20, 24, 28, 0.88);
+}
 .media-lightbox-close,
 .media-lightbox-arrow {
   position: absolute;

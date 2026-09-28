@@ -12,7 +12,17 @@ import {
 
 const include = {
   items: {
-    include: { product: { include: { images: true, colors: true } } },
+    include: {
+      product: {
+        include: {
+          images: {
+            orderBy: { sortOrder: 'asc' as const },
+            select: { id: true, url: true, alt: true, sortOrder: true },
+          },
+          colors: true,
+        },
+      },
+    },
     orderBy: { productId: 'asc' as const },
   },
 }
