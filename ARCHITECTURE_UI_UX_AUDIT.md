@@ -317,3 +317,7 @@ E28 adds independent private first-purchase feedback state and admin visibility.
 
 
 E29 replaces policy placeholders with published-only reads and versioned private draft/publication controls. Plain text remains React-escaped. Publication audit exists; general audit, legal approval and rendered/mobile acceptance remain pending. Owner now defers formatting, lint and tests to final verification.
+
+2026-09-28 startup loader: source replaced the stray animated line and spinner with a viewport-fixed, overflow-contained branded scene and three softly floating catalog-art tiles; reduced-motion disables tile motion. This preserves the session gate and live status announcement. Rendered/viewport/device verification remains pending.
+
+2026-09-28 loader screenshot refinement: larger, wider art arrangement now uses four existing campaign images, with a concise brand tagline and non-technical live status copy. Responsive rules trim the fourth tile on narrow screens; screenshot/device acceptance is still pending.

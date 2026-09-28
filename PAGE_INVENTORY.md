@@ -98,7 +98,7 @@ E32: Admin Notifications adds queue states, attempt counts, retry eligibility an
 
 Reviewed against [src/router.tsx](src/router.tsx) on 2026-09-12. Routing uses browser History API and a component switch, not the react-router package. This lists actual behavior; desired behavior belongs in [REQUIREMENTS.md](REQUIREMENTS.md), and completion is tracked only in [APPLICATION_BACKLOG.md](APPLICATION_BACKLOG.md).
 
-The app waits for storefront/session checks before rendering navigation and route content. The new session loader prevents a temporary guest form while /api/auth/me is pending. Login/logout invalidate older probes. The loader has build evidence; live refresh verification remains pending.
+The app waits for storefront/session checks before rendering navigation and route content. The new session loader prevents a temporary guest form while /api/auth/me is pending. Login/logout invalidate older probes. The fixed startup scene keeps Gadgify branding visible with four decorative, reduced-motion-aware product-art tiles and customer-facing loading copy; it does not change session checks. Build evidence is available; rendered/mobile and live refresh verification remain pending.
 
 ## Registered pages
 

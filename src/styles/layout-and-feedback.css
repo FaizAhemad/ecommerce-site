@@ -49,29 +49,6 @@
   border-radius: 50%;
   animation: loading-spin 0.8s linear infinite;
 }
-.app-loading-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: clamp(20px, 2.4vw, 28px);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-}
-.app-loading-brand .app-loading-mark {
-  display: grid;
-  place-items: center;
-  width: 68px;
-  height: 68px;
-  border: 1px solid rgba(255, 254, 250, 0.28);
-  border-radius: 50%;
-  background: var(--green);
-  color: var(--surface);
-  font-family: var(--font-display);
-  font-size: 32px;
-  letter-spacing: 0;
-}
 @keyframes loading-spin {
   to {
     transform: rotate(360deg);

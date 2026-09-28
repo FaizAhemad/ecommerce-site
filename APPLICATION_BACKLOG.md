@@ -52,6 +52,10 @@ UI remains in scope but follows the newly prioritized marketplace work above. Pr
 
 UI-09 source update: removed header geometry changes at the scroll threshold to address reported Support-page flicker. Stable sticky positioning and shadow-only scroll styling are implemented; rendered acceptance remains pending.
 
+UI-09 loader update (2026-09-28): replaced the startup spinner and moving progress line with a fixed, overflow-contained Gadgify scene and three gently floating catalog-art cards; reduced-motion users see still artwork. Build evidence is separate from rendered/mobile acceptance, which remains pending.
+
+UI-09 loader copy/layout refinement (2026-09-28): broadened the art arrangement, added a short brand line, and replaced technical account-check copy with “Getting your Gadgify ready…”. Reduced-motion and rendered/mobile acceptance remain pending.
+
 Owner requests continuous implementation without per-item permission pauses; visual polish review follows functionality. Confirmed business: Gadgify household products, India/INR, primarily Maharashtra. Rewards/policies/AI provider/medicines still need decisions.
 
 ## Coded, awaiting verification - E30/E31/E32

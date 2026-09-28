@@ -220,12 +220,28 @@ function App() {
       <NotificationProvider>
         <ConnectionStatus />
         <main className="app-loading" aria-busy="true">
-          <div className="app-loading-brand" aria-label="Gadgify">
-            <span className="app-loading-mark" aria-hidden="true">G</span>
-            <span>GADGIFY</span>
+          <div className="app-loading-scene">
+            <div className="app-loading-products" aria-hidden="true">
+              <div className="app-loading-product app-loading-product-one">
+                <img src="/images/gadgify-home-kitchen.jpg" alt="" />
+              </div>
+              <div className="app-loading-product app-loading-product-two">
+                <img src="/images/gadgify-practical-gadgets.jpg" alt="" />
+              </div>
+              <div className="app-loading-product app-loading-product-three">
+                <img src="/images/gadgify-playful-accessories.jpg" alt="" />
+              </div>
+              <div className="app-loading-product app-loading-product-four">
+                <img src="/images/gadgify-curated-finds.jpg" alt="" />
+              </div>
+            </div>
+            <div className="app-loading-brand" aria-label="Gadgify">
+              <span className="app-loading-mark" aria-hidden="true">G</span>
+              <span>GADGIFY</span>
+            </div>
           </div>
-          <span className="loading-spinner" aria-hidden="true" />
-          <p role="status">{loading ? 'Checking your account…' : 'Getting things ready…'}</p>
+          <p className="app-loading-tagline">Little finds for better everyday moments.</p>
+          <p className="app-loading-status" role="status">Getting your Gadgify ready…</p>
         </main>
       </NotificationProvider>
     )
