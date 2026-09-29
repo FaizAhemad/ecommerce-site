@@ -9,16 +9,16 @@ globalThis.fetch = async () => {
 
 // Exercise real handlers with synthetic signed messages and an injected store. No .env/providers.
 let revision = 0
-async function invoke(kind, status, invalidSignature = false) {
-  const fixture = { status, writes: 0 }
+async function invoke(kind, status, invalidSignature = false, event = 'payment.captured', paymentStatus = 'PENDING', providerStatus, entityChanges = {}) {
+  const fixture = { status, paymentStatus, writes: 0 }
   globalThis.captureFixture = {
-    fetchPayment: async () => ({
+    providerPayment: {
       id: 'provider-payment',
       order_id: 'provider-order',
       amount: 100,
       currency: 'INR',
-      status: 'captured',
-    }),
+      status: providerStatus ?? 'captured',
+    },
   }
   globalThis.paymentStateFixture = {
     order: {
@@ -41,8 +41,11 @@ async function invoke(kind, status, invalidSignature = false) {
         fixture.writes++
         return { status: 'CAPTURED' }
       },
-      updateMany: async () => {
+      updateMany: async ({ where, data }) => {
         fixture.writes++
+        if (where.order?.status && fixture.status !== where.order.status) return { count: 0 }
+        if (where.status?.in && !where.status.in.includes(fixture.paymentStatus)) return { count: 0 }
+        fixture.paymentStatus = data.status
         return { count: 1 }
       },
     },
@@ -57,12 +60,12 @@ async function invoke(kind, status, invalidSignature = false) {
       "const requireUser = async () => ({ id: 'synthetic-customer' })",
     )
     .replace(
-      /import\s*\{\s*fetchPayment,\s*matchesCapturedPayment,\s*recordCapturedPayment,?\s*\}\s*from ['"]\.\.\/_lib\/payment-confirmation\.js['"]/,
-      'import { matchesCapturedPayment, recordCapturedPayment } from ' +
+      /import\s*\{[^}]*\}\s*from ['"]\.\.\/_lib\/payment-confirmation\.js['"]/,
+      'import { matchesAuthorizedPayment, matchesCapturedPayment, matchesFailedPayment, recordAuthorizedPayment, recordCapturedPayment, recordFailedPayment } from ' +
         JSON.stringify(
           new URL('../server/api/_lib/payment-confirmation.ts', import.meta.url).href,
         ) +
-        '; const {fetchPayment}=globalThis.captureFixture',
+        '; const fetchPayment=async()=>globalThis.captureFixture.providerPayment',
     )
     .replaceAll(
       "'../_lib/payment-confirmation.js'",
@@ -87,7 +90,7 @@ async function invoke(kind, status, invalidSignature = false) {
   const signature = (text) =>
     createHmac('sha256', 'synthetic-signing-key').update(text).digest('hex')
   const payload = JSON.stringify({
-    event: 'payment.captured',
+    event,
     payload: {
       payment: {
         entity: {
@@ -95,7 +98,8 @@ async function invoke(kind, status, invalidSignature = false) {
           id: 'provider-payment',
           amount: 100,
           currency: 'INR',
-          status: 'captured',
+          status: event === 'payment.failed' ? 'failed' : event === 'payment.authorized' ? 'authorized' : 'captured',
+          ...entityChanges,
         },
       },
     },
@@ -141,3 +145,53 @@ for (const kind of ['verify', 'webhook']) {
     })
   }
 }
+
+test('signed payment.failed webhook marks payment failed without cancelling the order', async () => {
+  const result = await invoke('webhook', 'PENDING', false, 'payment.failed')
+  assert.equal(result.httpStatus, 200)
+  assert.equal(result.paymentStatus, 'FAILED')
+  assert.equal(result.status, 'PENDING')
+})
+
+test('late failed webhook cannot downgrade captured payments or change terminal order states', async () => {
+  const captured = await invoke('webhook', 'PENDING', false, 'payment.failed', 'CAPTURED')
+  assert.equal(captured.httpStatus, 200)
+  assert.equal(captured.paymentStatus, 'CAPTURED')
+  assert.equal(captured.status, 'PENDING')
+  for (const orderStatus of ['CANCELLED', 'REFUNDED']) {
+    const terminal = await invoke('webhook', orderStatus, false, 'payment.failed')
+    assert.equal(terminal.httpStatus, 200)
+    assert.equal(terminal.paymentStatus, 'FAILED')
+    assert.equal(terminal.status, orderStatus)
+  }
+})
+
+test('late failed webhook cannot downgrade an authorized payment', async () => {
+  const result = await invoke('webhook', 'PENDING', false, 'payment.failed', 'AUTHORIZED')
+  assert.equal(result.httpStatus, 200)
+  assert.equal(result.paymentStatus, 'AUTHORIZED')
+  assert.equal(result.status, 'PENDING')
+})
+
+test('authorized provider outcomes remain unpaid until a later captured event', async () => {
+  const verified = await invoke('verify', 'PENDING', false, 'payment.captured', 'PENDING', 'authorized')
+  assert.equal(verified.httpStatus, 200)
+  assert.equal(verified.paymentStatus, 'AUTHORIZED')
+  assert.equal(verified.status, 'PENDING')
+  const webhook = await invoke('webhook', 'PENDING', false, 'payment.authorized')
+  assert.equal(webhook.httpStatus, 200)
+  assert.equal(webhook.paymentStatus, 'AUTHORIZED')
+  assert.equal(webhook.status, 'PENDING')
+  const captured = await invoke('webhook', 'PENDING', false, 'payment.captured', 'FAILED')
+  assert.equal(captured.httpStatus, 200)
+  assert.equal(captured.paymentStatus, 'CAPTURED')
+  assert.equal(captured.status, 'CONFIRMED')
+})
+
+test('failed webhook with an amount mismatch is rejected without changing state', async () => {
+  const result = await invoke('webhook', 'PENDING', false, 'payment.failed', 'PENDING', undefined, { amount: 101 })
+  assert.equal(result.httpStatus, 400)
+  assert.equal(result.paymentStatus, 'PENDING')
+  assert.equal(result.status, 'PENDING')
+  assert.equal(result.writes, 0)
+})

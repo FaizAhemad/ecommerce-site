@@ -36,6 +36,18 @@ function assertError(result, status, code) {
   assert.doesNotMatch(JSON.stringify(result.body), /private-secret|postgres:\/\/|provider-debug/)
 }
 let version = 0
+function findElement(node, predicate) {
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const match = findElement(child, predicate)
+      if (match) return match
+    }
+    return undefined
+  }
+  if (!node || typeof node !== 'object') return undefined
+  if (node.props && predicate(node.props)) return node
+  return findElement(node.props?.children, predicate)
+}
 async function load(relative, resolveImport, transform = (source) => source) {
   const source = transform(readFileSync(new URL(relative, import.meta.url), 'utf8'))
   const js = ts
@@ -458,11 +470,23 @@ test('subscription form shows saved state and an informational notice after emai
       return `const ${binding} = globalThis.subscribeFormFixture`
     },
   )
-  await SubscribeSection().props.children[1].props.onSubmit({ preventDefault() {} })
+  const render = () => {
+    index = 0
+    return findElement(SubscribeSection(), (props) => props.component === 'form')
+  }
+  await render().props.onSubmit({ preventDefault() {} })
   assert.equal(states[1], 'success')
   assert.equal(states[0], '')
   assert.match(notices[0][0], /No need to subscribe again/)
   assert.equal(notices[0][1], 'info')
+  const form = render()
+  const input = findElement(form, (props) => props.id === 'subscribe-email')
+  const button = findElement(form, (props) => props.type === 'button')
+  assert.equal(input.props.disabled, false)
+  assert.equal(button.props.disabled, false)
+  assert.equal(button.props.children, 'Try another email')
+  button.props.onClick()
+  assert.equal(states[1], 'idle')
 })
 
 test('already-subscribed email stays editable and editing it re-enables submission', async () => {
@@ -488,20 +512,27 @@ test('already-subscribed email stays editable and editing it re-enables submissi
   )
   const render = () => {
     hookIndex = 0
-    return SubscribeSection().props.children[1]
+    return findElement(SubscribeSection(), (props) => props.component === 'form')
   }
   await render().props.onSubmit({ preventDefault() {} })
   let form = render()
-  const input = form.props.children[2].props.children[0]
-  const button = form.props.children[2].props.children[1]
+  const input = findElement(form, (props) => props.id === 'subscribe-email')
+  const button = findElement(form, (props) => props.type === 'button')
   assert.equal(input.props.disabled, false)
-  assert.equal(button.props.disabled, true)
+  assert.equal(button.props.disabled, false)
+  assert.equal(button.props.type, 'button')
 
-  input.props.onChange({ target: { value: 'different@example.test' } })
+  button.props.onClick()
+  assert.equal(states[0], '')
+  assert.equal(states[1], 'idle')
+
+  form = render()
+  const editableInput = findElement(form, (props) => props.id === 'subscribe-email')
+  editableInput.props.onChange({ target: { value: 'different@example.test' } })
   form = render()
   assert.equal(states[0], 'different@example.test')
-  assert.equal(form.props.children[2].props.children[0].props.disabled, false)
-  assert.equal(form.props.children[2].props.children[1].props.disabled, false)
+  assert.equal(findElement(form, (props) => props.id === 'subscribe-email').props.disabled, false)
+  assert.equal(findElement(form, (props) => props.type === 'submit').props.disabled, false)
 })
 
 test('real limiter keeps the dispatcher correlation ID and existing retry metadata', async () => {
@@ -596,7 +627,7 @@ test('subscription form blocks duplicate submissions and keeps a failed draft', 
       return `const ${binding} = globalThis.subscribeFormFixture`
     },
   )
-  const form = SubscribeSection().props.children[1]
+  const form = findElement(SubscribeSection(), (props) => props.component === 'form')
   const first = form.props.onSubmit({ preventDefault() {} })
   await form.props.onSubmit({ preventDefault() {} })
   assert.equal(calls, 1)

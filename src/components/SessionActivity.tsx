@@ -1,25 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiFetch } from '../api/http'
 import { sessionGeneration, sessionSignal } from '../api/sessionScope'
+import { createSessionRefreshCoordinator } from '../api/sessionRefresh'
 import './SessionActivity.css'
 import { createPortal } from 'react-dom'
 
 export function SessionActivity() {
   const [remaining, setRemaining] = useState<number | null>(null)
   const [unavailable, setUnavailable] = useState(false)
+  const [continuing, setContinuing] = useState(false)
   const [host, setHost] = useState<Element | null>(null)
-  const continueSession = useRef<() => void>(() => {})
+  const continueSession = useRef<() => Promise<void>>(async () => {})
+  const continuingRef = useRef(false)
   useEffect(() => {
     const controller = new AbortController()
     const updateHost = () => setHost(document.querySelector('dialog.form-dialog[open]'))
     updateHost()
     document.addEventListener('gadgify-dialog-change', updateHost)
     const generation = sessionGeneration()
-    let deadline = 0, lastActivity = 0, pending = false
+    let deadline = 0, lastActivity = 0
     const current = () => !controller.signal.aborted && generation === sessionGeneration()
-    async function refresh(activity: boolean) {
-      if (pending || !current()) return
-      pending = true
+    async function performRefresh(activity: boolean) {
+      if (!current()) return
       if (activity) lastActivity = Date.now()
       try {
         const response = await apiFetch(activity ? '/api/auth/session-activity' : '/api/auth/me', {
@@ -41,13 +43,24 @@ export function SessionActivity() {
           // Do not retain private UI beyond a known expired deadline when offline.
           if (deadline && Date.now() >= deadline) window.dispatchEvent(new Event('sessionexpired'))
         }
-      } finally { pending = false }
+      }
     }
+    const refresh = createSessionRefreshCoordinator(performRefresh, current)
     const activity = (event: Event) => {
       if (!event.isTrusted || document.visibilityState !== 'visible') return
       if (Date.now() - lastActivity >= 60_000) void refresh(true)
     }
-    continueSession.current = () => void refresh(true)
+    continueSession.current = async () => {
+      if (continuingRef.current || !current()) return
+      continuingRef.current = true
+      setContinuing(true)
+      try {
+        await refresh(true)
+      } finally {
+        continuingRef.current = false
+        if (current()) setContinuing(false)
+      }
+    }
     const timer = window.setInterval(() => {
       if (!deadline || !current()) return
       const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000))
@@ -67,6 +80,9 @@ export function SessionActivity() {
   if (!unavailable && (remaining === null || remaining > 60)) return null
   return createPortal(<aside className="session-warning" aria-label="Session expiry warning">
     <p role="status">{unavailable ? 'Unable to verify your session. Your login has not been extended.' : 'Your session expires within one minute. Continue to stay signed in, unless the maximum login time has been reached.'}</p>
-    <button type="button" className="secondary-button" onClick={() => continueSession.current()}>Continue session</button>
+    <button type="button" className="secondary-button session-continue" aria-busy={continuing} disabled={continuing} onClick={() => void continueSession.current()}>
+      {continuing && <span className="session-continue-spinner" aria-hidden="true" />}
+      {continuing ? 'Extending session…' : 'Continue session'}
+    </button>
   </aside>, host ?? document.body)
 }

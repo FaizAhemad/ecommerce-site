@@ -135,15 +135,17 @@ export function SiteLayout({
           >
             {content.navigation.products}
           </a>
-          <a
-            className={
-              currentPath === '/orders' || currentPath.startsWith('/orders/') ? 'is-active' : ''
-            }
-            href="/orders"
-            onClick={navigate('/orders')}
-          >
-            Orders
-          </a>
+          {isAuthenticated && (
+            <a
+              className={
+                currentPath === '/orders' || currentPath.startsWith('/orders/') ? 'is-active' : ''
+              }
+              href="/orders"
+              onClick={navigate('/orders')}
+            >
+              Orders
+            </a>
+          )}
           <a
             className={currentPath === '/support' ? 'is-active' : ''}
             href="/support"
@@ -293,9 +295,7 @@ export function SiteLayout({
           <a href="/support" onClick={navigate('/support')}>
             {content.navigation.support}
           </a>
-          <a href="/orders" onClick={navigate('/orders')}>
-            Orders
-          </a>
+          {isAuthenticated && <a href="/orders" onClick={navigate('/orders')}>Orders</a>}
           <a href="/track-order" onClick={navigate('/track-order')}>
             Track order
           </a>

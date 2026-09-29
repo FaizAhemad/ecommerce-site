@@ -33,7 +33,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (!order || !order.payment)
       return sendError(response, 404, 'NOT_FOUND', 'Order not found.', id)
     if (
-      !['PENDING', 'CONFIRMED'].includes(order.status) ||
+      order.status !== 'PENDING' ||
       !['PENDING', 'FAILED'].includes(order.payment.status)
     )
       return sendError(response, 409, 'PAYMENT_CONFLICT', 'This order is not awaiting payment.', id)

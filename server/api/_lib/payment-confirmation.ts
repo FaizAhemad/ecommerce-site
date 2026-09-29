@@ -61,6 +61,89 @@ export function matchesCapturedPayment(
     payment.status === 'captured'
   )
 }
+
+export function matchesFailedPayment(
+  value: unknown,
+  expected: { id: string; orderId: string; amount: number; currency: string },
+) {
+  if (!value || typeof value !== 'object') return false
+  const payment = value as Record<string, unknown>
+  return (
+    payment.id === expected.id &&
+    payment.order_id === expected.orderId &&
+    payment.amount === expected.amount &&
+    payment.currency === expected.currency &&
+    payment.status === 'failed'
+  )
+}
+
+export function matchesAuthorizedPayment(
+  value: unknown,
+  expected: { id: string; orderId: string; amount: number; currency: string },
+) {
+  if (!value || typeof value !== 'object') return false
+  const payment = value as Record<string, unknown>
+  return (
+    payment.id === expected.id &&
+    payment.order_id === expected.orderId &&
+    payment.amount === expected.amount &&
+    payment.currency === expected.currency &&
+    payment.status === 'authorized'
+  )
+}
+
+/** Authorization is not capture: update payment state only; order remains unconfirmed. */
+export async function recordAuthorizedPayment(
+  store: Pick<PrismaClient, '$transaction'>,
+  orderId: string,
+  providerOrderId: string,
+  amount: number,
+) {
+  return store.$transaction(
+    async (tx) => {
+      const result = await tx.payment.updateMany({
+        where: {
+          orderId,
+          provider: 'RAZORPAY',
+          providerOrderId,
+          amountMinor: amount,
+          status: { in: ['PENDING', 'AUTHORIZED', 'FAILED'] },
+        },
+        data: { status: 'AUTHORIZED' },
+      })
+      return result.count === 1
+    },
+    { isolationLevel: 'Serializable', maxWait: 5000, timeout: 10000 },
+  )
+}
+
+/** Record a provider-verified failed attempt without failing/cancelling the unpaid order. */
+export async function recordFailedPayment(
+  store: Pick<PrismaClient, '$transaction'>,
+  orderId: string,
+  providerOrderId: string,
+  amount: number,
+) {
+  return store.$transaction(
+    async (tx) => {
+      const result = await tx.payment.updateMany({
+        where: {
+          orderId,
+          provider: 'RAZORPAY',
+          providerOrderId,
+          amountMinor: amount,
+          // An authorization is a confirmed provider state. A delayed failure
+          // event (possibly for another retry) must not erase that hold.
+          status: { in: ['PENDING', 'FAILED'] },
+        },
+        data: { status: 'FAILED' },
+      })
+      return result.count === 1
+    },
+    { isolationLevel: 'Serializable', maxWait: 5000, timeout: 10000 },
+  )
+}
+
 export async function fetchPayment(
   id: string,
   key: string,
@@ -86,7 +169,11 @@ export async function recordCapturedPayment(
           orderId,
           providerOrderId,
           status: { not: 'REFUNDED' },
-          OR: [{ providerPaymentId: null }, { providerPaymentId: paymentId }],
+          OR: [
+            { providerPaymentId: null },
+            { providerPaymentId: paymentId },
+            { status: { in: ['PENDING', 'AUTHORIZED', 'FAILED'] } },
+          ],
         },
         data: { providerPaymentId: paymentId, status: 'CAPTURED' },
       })

@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
   type ErrorInfo,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
 import { getStorefront, getProduct } from './api/storefront'
@@ -26,6 +27,32 @@ import { SiteLayout } from './components/SiteLayout'
 import { StorefrontRoute } from './router'
 import './App.css'
 import { SessionActivity } from './components/SessionActivity'
+
+function updateStartupParallax(event: ReactPointerEvent<HTMLElement>) {
+  if (
+    event.pointerType !== 'mouse' ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) return
+  const scene = event.currentTarget.querySelector<HTMLElement>('.app-loading-scene')
+  if (!scene) return
+  const bounds = scene.getBoundingClientRect()
+  if (!bounds.width || !bounds.height) return
+  const x = Math.max(-1, Math.min(1, ((event.clientX - bounds.left) / bounds.width - 0.5) * 2))
+  const y = Math.max(-1, Math.min(1, ((event.clientY - bounds.top) / bounds.height - 0.5) * 2))
+  scene.querySelectorAll<HTMLElement>('.app-loading-product').forEach((product, index) => {
+    const depth = [0.55, -0.7, 0.45, -0.5][index] ?? 0.5
+    product.style.setProperty('--loading-x', `${-x * depth * 10}px`)
+    product.style.setProperty('--loading-y', `${-y * depth * 8}px`)
+  })
+}
+
+function resetStartupParallax(event: ReactPointerEvent<HTMLElement>) {
+  event.currentTarget.querySelectorAll<HTMLElement>('.app-loading-product').forEach((product) => {
+    product.style.removeProperty('--loading-x')
+    product.style.removeProperty('--loading-y')
+  })
+}
+
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false }
   static getDerivedStateFromError() {
@@ -189,7 +216,10 @@ function App() {
   const handleLogin = (next: SessionUser) => {
     applySession(next, true)
     channel.current?.postMessage('changed')
-    const destination = next.role === 'ADMIN' ? '/admin' : '/'
+    const requestedPrivatePath =
+      path === '/orders' || path.startsWith('/orders/') ||
+      ['/cart', '/checkout', '/profile', '/support-requests', '/orders/shipments', '/seller', '/seller/products', '/seller/orders'].includes(path)
+    const destination = next.role === 'ADMIN' ? '/admin' : requestedPrivatePath ? path : '/'
     window.history.pushState({}, '', destination)
     window.dispatchEvent(new PopStateEvent('popstate'))
   }
@@ -219,7 +249,7 @@ function App() {
     return (
       <NotificationProvider>
         <ConnectionStatus />
-        <main className="app-loading" aria-busy="true">
+        <main className="app-loading" aria-busy="true" onPointerMove={updateStartupParallax} onPointerLeave={resetStartupParallax}>
           <div className="app-loading-scene">
             <div className="app-loading-products" aria-hidden="true">
               <div className="app-loading-product app-loading-product-one">
@@ -241,7 +271,10 @@ function App() {
             </div>
           </div>
           <p className="app-loading-tagline">Little finds for better everyday moments.</p>
-          <p className="app-loading-status" role="status">Getting your Gadgify ready…</p>
+          <p className="app-loading-status" role="status">
+            Getting your Gadgify ready
+            <span className="app-loading-dots" aria-hidden="true"><span>·</span><span>·</span><span>·</span></span>
+          </p>
         </main>
       </NotificationProvider>
     )

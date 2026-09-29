@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { db } from '../_lib/db.js'
-import { matchesCapturedPayment, recordCapturedPayment } from '../_lib/payment-confirmation.js'
+import { matchesAuthorizedPayment, matchesCapturedPayment, matchesFailedPayment, recordAuthorizedPayment, recordCapturedPayment, recordFailedPayment } from '../_lib/payment-confirmation.js'
 import { requestId, sendError, type VercelRequest, type VercelResponse } from '../_lib/http.js'
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
@@ -36,22 +36,46 @@ export default async function handler(request: VercelRequest, response: VercelRe
       }
     }
     const entity = payload.payload?.payment?.entity
-    if (entity?.order_id) {
-      const status =
-        payload.event === 'payment.captured'
-          ? 'CAPTURED'
-          : payload.event === 'payment.failed'
-            ? 'FAILED'
-            : undefined
-      if (status === 'FAILED')
-        await db.payment.updateMany({
-          where: {
-            providerOrderId: entity.order_id,
-            status: { in: ['PENDING', 'AUTHORIZED', 'FAILED'] },
-          },
-          data: { status },
+    if (entity?.order_id && ['payment.authorized', 'payment.captured', 'payment.failed'].includes(payload.event ?? '')) {
+      if (payload.event === 'payment.failed') {
+        const order = await db.order.findFirst({
+          where: { payment: { providerOrderId: entity.order_id } },
+          select: { id: true, status: true, totalMinor: true, currency: true },
         })
-      if (status === 'CAPTURED') {
+        if (!order)
+          return sendError(response, 503, 'PAYMENT_UNAVAILABLE', 'Payment order is not available yet.', id)
+        if (
+          !entity.id ||
+          !matchesFailedPayment(entity, {
+            id: entity.id,
+            orderId: entity.order_id,
+            amount: order.totalMinor,
+            currency: order.currency,
+          })
+        )
+          return sendError(response, 400, 'INVALID_WEBHOOK', 'Payment details do not match the order.', id)
+        await recordFailedPayment(db, order.id, entity.order_id, order.totalMinor)
+      }
+      if (payload.event === 'payment.authorized') {
+        const order = await db.order.findFirst({
+          where: { payment: { providerOrderId: entity.order_id } },
+          select: { id: true, status: true, totalMinor: true, currency: true },
+        })
+        if (!order)
+          return sendError(response, 503, 'PAYMENT_UNAVAILABLE', 'Payment order is not available yet.', id)
+        if (
+          !entity.id ||
+          !matchesAuthorizedPayment(entity, {
+            id: entity.id,
+            orderId: entity.order_id,
+            amount: order.totalMinor,
+            currency: order.currency,
+          })
+        )
+          return sendError(response, 400, 'INVALID_WEBHOOK', 'Payment details do not match the order.', id)
+        await recordAuthorizedPayment(db, order.id, entity.order_id, order.totalMinor)
+      }
+      if (payload.event === 'payment.captured') {
         const order = await db.order.findFirst({
           where: { payment: { providerOrderId: entity.order_id } },
         })

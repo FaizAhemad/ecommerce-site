@@ -9,6 +9,7 @@ import { OrderTimeline } from '../components/OrderTimeline'
 
 type Props = {
   storefront: StorefrontApiResponse
+  isAuthenticated: boolean
   onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
@@ -30,7 +31,7 @@ type Tracking = {
   } | null
 }
 
-export function TrackOrderPage({ storefront, onNavigate }: Props) {
+export function TrackOrderPage({ storefront, isAuthenticated, onNavigate }: Props) {
   const [orderId, setOrderId] = useState(new URLSearchParams(window.location.search).get('order') ?? '')
   const [tracking, setTracking] = useState<Tracking | null>(null)
   const notify = useNotification()
@@ -89,7 +90,12 @@ export function TrackOrderPage({ storefront, onNavigate }: Props) {
         <p className="mb-0 mt-3 max-w-xl text-sm leading-6 text-[var(--muted)] sm:text-base">Enter the order number to see its current status and recorded delivery updates.</p>
       </header>
 
-      <form className="grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-4 sm:p-6" onSubmit={(event) => void submit(event)} noValidate>
+      {!isAuthenticated ? (
+        <div className="grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6">
+          <p className="m-0 text-sm leading-6 text-[var(--muted)]">Sign in to securely view tracking updates for your orders.</p>
+          <a className="primary-button w-fit" href="/login" onClick={onNavigate('/login')}>Sign in to track an order <ArrowRight aria-hidden="true" className="size-4" /></a>
+        </div>
+      ) : <form className="grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-4 sm:p-6" onSubmit={(event) => void submit(event)} noValidate>
         <label className="grid gap-2 text-sm font-medium text-[var(--ink)]" htmlFor="order-id">
           Order number
           <input
@@ -108,7 +114,7 @@ export function TrackOrderPage({ storefront, onNavigate }: Props) {
           {pending ? 'Checking order…' : 'Track order'} <ArrowRight aria-hidden="true" className="size-4" />
         </button>
         {error && <p id="track-error" className="m-0 text-sm text-rose-800 sm:col-span-2" role="alert">{error}</p>}
-      </form>
+      </form>}
 
       {pending && <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-sm text-[var(--muted)]" role="status">Checking the latest recorded status…</div>}
 

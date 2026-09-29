@@ -13,7 +13,7 @@ import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 're
 import { getProduct, type StorefrontApiResponse } from '../api/storefront'
 import { queryClient } from '../api/queryClient'
 import { useProductMetadata } from '../api/productMetadata'
-import { productPrimaryActionClass } from '../components/productCardStyles'
+import { getCartPendingAction, updateCart, useCart } from '../api/cart'
 
 type ReviewMedia = { id: string; url: string }
 
@@ -70,6 +70,7 @@ type Props = {
 }
 
 export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: Props) {
+  const cartQuery = useCart()
   const catalogProduct = storefront.products.find((item) => item.id === productId)
   const productQuery = useQuery({
     queryKey: ['product', productId],
@@ -236,6 +237,9 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
   const initialImage =
     product.media.images.find((image) => image.isPrimary) ?? product.media.images[0]
   const initialVideo = product.media.videos[0]
+  const cartItem = cartQuery.data?.find((item) => item.product.id === product.id)
+  const cartQuantity = cartItem?.quantity ?? 0
+  const isCartLoading = Boolean(sessionUser() && cartQuery.isPending)
 
   const selectedImage =
     selected
@@ -535,12 +539,26 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             </div>
           )}
           <AddToCartButton
-            unavailableReason={product.purchase?.available === false ? product.purchase.reason ?? 'Currently unavailable' : undefined}
+            unavailableReason={typeof product.stock === 'number' && product.stock <= 0 ? 'Out of stock' : product.purchase?.available === false ? product.purchase.reason ?? 'Currently unavailable' : undefined}
             productId={product.id}
             onAdd={onAdd}
+            onDecrease={() => updateCart(
+              cartItem?.product ?? {
+                id: product.id,
+                name: product.name,
+                category: product.category,
+                priceMinor: product.priceMinor ?? Math.round(product.price * 100),
+              },
+              Math.max(0, cartQuantity - 1),
+              'set',
+            )}
             label={storefront.content.collection.addToCartLabel}
-            className={`${productPrimaryActionClass} w-full sm:w-fit sm:min-w-56`}
-            iconClassName="ml-auto text-lg leading-none sm:ml-0"
+            quantity={cartQuantity}
+            isCartLoading={isCartLoading}
+            isUpdating={cartQuery.pending.has(product.id)}
+            pendingAction={getCartPendingAction(product.id)}
+            sx={{ width: 'fit-content', minWidth: 196, maxWidth: '100%' }}
+            quantityControlSx={{ width: 220, maxWidth: '100%' }}
           />
         </div>
       </section>

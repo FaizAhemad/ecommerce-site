@@ -73,3 +73,14 @@ export function orderStatusLabel(status: string) {
   }
   return Object.hasOwn(labels, status) ? labels[status] : 'Status unavailable'
 }
+
+export function paymentStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    PENDING: 'Awaiting payment',
+    AUTHORIZED: 'Authorized; waiting for capture',
+    CAPTURED: 'Paid',
+    FAILED: 'Payment not completed',
+    REFUNDED: 'Refunded',
+  }
+  return Object.hasOwn(labels, status) ? labels[status] : 'Payment status unavailable'
+}

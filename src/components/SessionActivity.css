@@ -14,3 +14,7 @@
   font: 15px/1.5 var(--font-body);
 }
 .session-warning p { margin: 0 0 12px; }
+.session-continue { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.session-continue-spinner { width: 16px; height: 16px; flex: 0 0 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: session-continue-spin 700ms linear infinite; }
+@keyframes session-continue-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .session-continue-spinner { animation: none; border-right-color: currentColor; } }

@@ -3,6 +3,13 @@ export type PaymentResult = {
   razorpay_order_id: string
   razorpay_signature: string
 }
+export type PaymentFailure = {
+  error?: {
+    code?: string
+    description?: string
+    metadata?: { order_id?: string; payment_id?: string }
+  }
+}
 type Options = {
   key: string
   amount: number
@@ -15,7 +22,7 @@ type Options = {
 export type PaymentWidget = {
   open: () => void
   close: () => void
-  on: (event: string, callback: () => void) => void
+  on: (event: 'payment.failed', callback: (response: PaymentFailure) => void) => void
 }
 type Constructor = new (options: Options) => PaymentWidget
 declare global {

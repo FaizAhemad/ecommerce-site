@@ -2,7 +2,7 @@ import type { MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { ArrowRight, CalendarDays, PackageSearch, Truck } from 'lucide-react'
-import { getOrders, orderStatusLabel } from '../api/orders'
+import { getOrders, orderStatusLabel, paymentStatusLabel } from '../api/orders'
 import { privateKey } from '../api/sessionScope'
 import { PurchaseFeedback } from '../components/PurchaseFeedback'
 
@@ -178,7 +178,7 @@ export function OrdersPage({ storefront, onNavigate }: Props) {
                   <div className="flex flex-col gap-4 pt-5 sm:flex-row sm:items-end sm:justify-between">
                     <div className="grid gap-1.5 text-sm">
                       <span className="text-[var(--muted)]">
-                        Payment: {order.payment ? orderStatusLabel(order.payment.status) : 'No payment recorded'}
+                        Payment: {order.payment ? paymentStatusLabel(order.payment.status) : 'No payment recorded'}
                       </span>
                       <span className="text-xs text-[var(--muted)]">
                         {order.items.length} {order.items.length === 1 ? 'item' : 'items'}

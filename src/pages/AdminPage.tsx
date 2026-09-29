@@ -18,6 +18,13 @@ import { queryClient } from '../api/queryClient'
 import { upload as uploadBlob } from '@vercel/blob/client'
 import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
+import { Box } from '../components/mui/Box'
+import { Button } from '../components/mui/Button'
+import { Card } from '../components/mui/Card'
+import { Stack } from '../components/mui/Stack'
+import { TextField } from '../components/mui/TextField'
+import { Typography } from '../components/mui/Typography'
+import { Chip } from '../components/mui/Chip'
 type Props = {
   storefront: StorefrontApiResponse
   onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void
@@ -441,24 +448,27 @@ export function AdminPage({ storefront, onNavigate }: Props) {
   const productCategoryOptions = [...new Set<string>(categories)]
     .sort((left, right) => left.localeCompare(right))
     .map((category) => ({ value: category, label: category }))
-  const customerRoleOptions = ['CUSTOMER', 'ADMIN'].map((role) => ({ value: role, label: role }))
+  const customerRoleOptions = [
+    { value: 'CUSTOMER', label: 'Customer' },
+    { value: 'ADMIN', label: 'Administrator' },
+  ]
   const activeKey = section === 'overview' ? 'analytics' : section
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-      <header className="flex flex-col gap-5 border-b border-[var(--line)] pb-6 sm:flex-row sm:items-end sm:justify-between sm:pb-8">
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Administration</p>
-          <h1 className="m-0 text-3xl font-semibold tracking-tight text-[var(--ink)] sm:text-4xl">Gadgify control center</h1>
-          <p className="mb-0 mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)] sm:text-base">Manage products, orders, customer care, and store operations.</p>
-        </div>
-        <a className="secondary-button min-h-11 shrink-0" href="/" onClick={onNavigate('/')}>View storefront</a>
-      </header>
-      <div className="space-y-3">
-        <nav aria-label="Admin sections" className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+    <Stack spacing={{ xs: 3, md: 4 }} sx={{ width: '100%', maxWidth: 1440, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 3, sm: 5, lg: 6 } }}>
+      <Stack component="header" direction={{ xs: 'column', sm: 'row' }} spacing={2.5} sx={{ alignItems: { sm: 'flex-end' }, justifyContent: 'space-between', pb: 3, borderBottom: 1, borderColor: 'divider' }}>
+        <Box>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>Administration</Typography>
+          <Typography component="h1" variant="h3" sx={{ fontWeight: 600, letterSpacing: '-.03em' }}>Gadgify control center</Typography>
+          <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 640 }}>Manage products, orders, customer care, and store operations.</Typography>
+        </Box>
+        <Button component="a" variant="outlined" href="/" onClick={onNavigate('/')}>View storefront</Button>
+      </Stack>
+      <Stack spacing={2}>
+        <Box component="nav" aria-label="Admin sections" sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2,minmax(0,1fr))', sm: 'repeat(4,minmax(0,1fr))', lg: 'repeat(7,minmax(0,1fr))' }, gap: 1 }}>
           {tabs.map((tab) => (
-            <button
+            <Button
               key={tab.id}
-              className={`min-h-11 rounded-xl border px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50 ${section === tab.id ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--surface)]' : 'border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--surface-raised)]'}`}
+              variant={section === tab.id ? 'contained' : 'outlined'}
               type="button"
               aria-pressed={section === tab.id}
               disabled={busy}
@@ -468,17 +478,14 @@ export function AdminPage({ storefront, onNavigate }: Props) {
               }}
             >
               {tab.label}
-            </button>
+            </Button>
           ))}
-        </nav>
-        <nav aria-label="Additional admin tools" className="flex flex-wrap gap-x-5 gap-y-2 border-b border-[var(--line)] pb-4 text-sm">
-          <a className="text-[var(--muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline" href="/admin/fulfillment" onClick={onNavigate('/admin/fulfillment')}>Shop fulfillment</a>
-          <a className="text-[var(--muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline" href="/admin/sellers" onClick={onNavigate('/admin/sellers')}>Seller applications</a>
-          <a className="text-[var(--muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline" href="/admin/seller-products" onClick={onNavigate('/admin/seller-products')}>Seller products</a>
-          <a className="text-[var(--muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline" href="/admin/support" onClick={onNavigate('/admin/support')}>Support inbox</a>
-        </nav>
-      </div>
-      <div className="min-w-0" aria-busy={loadStates[activeKey] === 'loading'}>
+        </Box>
+        <Stack component="nav" aria-label="Additional admin tools" direction="row" spacing={1} sx={{ flexWrap: 'wrap', pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+          {([['/admin/fulfillment', 'Shop fulfillment'], ['/admin/sellers', 'Seller applications'], ['/admin/seller-products', 'Seller products'], ['/admin/support', 'Support inbox']] as const).map(([path, label]) => <Button key={path} component="a" variant="text" href={path} onClick={onNavigate(path)}>{label}</Button>)}
+        </Stack>
+      </Stack>
+      <Box sx={{ minWidth: 0 }} aria-busy={loadStates[activeKey] === 'loading'}>
           {loadStates[activeKey] === 'loading' && !['products', 'orders', 'customers'].includes(activeKey) && (
             <div className="flex min-h-32 items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-5 py-6 text-sm text-[var(--muted)]" role="status" aria-live="polite">
               <span className="size-5 animate-spin rounded-full border-2 border-[var(--line)] border-t-[var(--ink)] motion-reduce:animate-none" aria-hidden="true" />
@@ -531,28 +538,14 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                       : 'Create products with stock, colors, images, and videos. Delivery is free at launch.'
                   }
                 />
-                <button className="primary-button" disabled={busy} onClick={() => { beginEdit(null); setProductOpen(true) }}>Add product</button>
+                <Button variant="contained" disabled={busy} onClick={() => { beginEdit(null); setProductOpen(true) }}>Add product</Button>
                 <FormDialog open={productOpen} title={editing ? 'Edit product' : 'Add product'} busy={busy || categoryBusy} onClose={() => setProductOpen(false)}>
-                <form className="category-manager" onSubmit={addCategory}>
-                  <label htmlFor="new-category">Add category</label>
-                  <div>
-                    <input
-                      id="new-category"
-                      value={newCategory}
-                      onChange={(event) => setNewCategory(event.target.value)}
-                      placeholder="Category name"
-                      maxLength={80}
-                      disabled={categoryBusy || busy}
-                    />
-                    <button
-                      className="secondary-button"
-                      type="submit"
-                      disabled={categoryBusy || busy || !newCategory.trim()}
-                    >
+                <Stack component="form" direction={{ xs: 'column', sm: 'row' }} spacing={1.5} onSubmit={addCategory} sx={{ mb: 2.5, alignItems: { sm: 'flex-end' } }}>
+                    <TextField id="new-category" label="Add category" value={newCategory} onChange={(event) => setNewCategory(event.target.value)} placeholder="Category name" slotProps={{ htmlInput: { maxLength: 80 } }} disabled={categoryBusy || busy} />
+                    <Button variant="outlined" type="submit" disabled={categoryBusy || busy || !newCategory.trim()}>
                       {categoryBusy ? 'Adding…' : 'Add category'}
-                    </button>
-                  </div>
-                </form>
+                    </Button>
+                </Stack>
                 <form
                   key={editing?.id ?? 'new'}
                   ref={productFormRef}
@@ -853,7 +846,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
             )}
             {section === 'customers' && (
               <>
-                <Title title="Customers" text="Review customer accounts and order history." />
+                <Title title="Customer and administrator accounts" text="Review account access roles and customer order history. Roles are assigned by the server and are not inferred from names or email addresses." />
                 <DataGrid
                   rows={customers}
                   totalRows={data.customers?.pagination?.total ?? 0}
@@ -865,7 +858,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                   columns={[
                     { id: 'name', header: 'Name', getFilterValue: (customer: any) => customer.name, getSortValue: (customer: any) => customer.name, cell: (customer: any) => customer.name ?? '—' },
                     { id: 'email', header: 'Email', getFilterValue: (customer: any) => customer.email, getSortValue: (customer: any) => customer.email, cell: (customer: any) => customer.email ?? '—' },
-                    { id: 'role', header: 'Role', getFilterValue: (customer: any) => customer.role, getSortValue: (customer: any) => customer.role, filterOptions: customerRoleOptions, cell: (customer: any) => customer.role },
+                    { id: 'role', header: 'Account role', getFilterValue: (customer: any) => customer.role, getSortValue: (customer: any) => customer.role, filterOptions: customerRoleOptions, cell: (customer: any) => <Chip size="small" color={customer.role === 'ADMIN' ? 'success' : 'default'} variant={customer.role === 'ADMIN' ? 'filled' : 'outlined'} label={customer.role === 'ADMIN' ? 'Administrator' : 'Customer'} /> },
                     { id: 'orders', header: 'Orders', getFilterValue: (customer: any) => customer._count.orders, getSortValue: (customer: any) => customer._count.orders, cell: (customer: any) => customer._count.orders },
                   ]}
                 />
@@ -919,8 +912,8 @@ export function AdminPage({ storefront, onNavigate }: Props) {
             {section === 'shipments' && <><Title title="Shipments" text="Record dispatch, tracking and delivery updates." /><ShipmentManager /></>}
             {section === 'notifications' && <><Title title="Notifications" text="Review order and delivery email attempts." /><NotificationHistory /></>}
           </div>
-      </div>
-    </div>
+      </Box>
+    </Stack>
   )
 }
 
@@ -931,8 +924,7 @@ function lines(value: FormDataEntryValue | null) {
     .filter(Boolean)
 }
 function Stats({ data }: { data: any }) {
-  return (
-    <div className="admin-stat-grid">
+  return <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2,minmax(0,1fr))', md: 'repeat(4,minmax(0,1fr))' }, gap: 2, mb: 3 }}>
       <Stat
         label="Revenue"
         value={`₹${((data.revenueMinor ?? 0) / 100).toLocaleString('en-IN')}`}
@@ -940,32 +932,14 @@ function Stats({ data }: { data: any }) {
       <Stat label="Orders" value={data.orders ?? 0} />
       <Stat label="Customers" value={data.customers ?? 0} />
       <Stat label="Products" value={data.products ?? 0} />
-    </div>
-  )
+    </Box>
 }
 function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  )
+  return <Card variant="outlined" sx={{ p: { xs: 2, sm: 2.5 }, display: 'grid', gap: 0.75 }}><Typography variant="body2" color="text.secondary">{label}</Typography><Typography variant="h5" component="strong" sx={{ fontWeight: 700 }}>{value}</Typography></Card>
 }
 function Title({ title, text }: { title: string; text: string }) {
-  return (
-    <div className="admin-section-title">
-      <div>
-        <p className="eyebrow">ADMIN</p>
-        <h2>{title}</h2>
-        <p>{text}</p>
-      </div>
-    </div>
-  )
+  return <Stack spacing={0.5} sx={{ mb: 2 }}><Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>ADMIN</Typography><Typography component="h2" variant="h4" sx={{ fontWeight: 600, letterSpacing: '-.03em' }}>{title}</Typography><Typography color="text.secondary">{text}</Typography></Stack>
 }
 function Panel({ text }: { text: string }) {
-  return (
-    <div className="admin-panel">
-      <p>{text}</p>
-    </div>
-  )
+  return <Card variant="outlined" sx={{ mt: 2, p: { xs: 2, sm: 3 } }}><Typography color="text.secondary">{text}</Typography></Card>
 }

@@ -21,6 +21,7 @@ export function AddToCartButton({
   quantityControlClassName,
   sx,
   quantityControlSx,
+  quantityDisplay = 'inCart',
   fullWidth = false,
 }: {
   productId: string
@@ -37,6 +38,7 @@ export function AddToCartButton({
   quantityControlClassName?: string
   sx?: SxProps<Theme>
   quantityControlSx?: SxProps<Theme>
+  quantityDisplay?: 'quantity' | 'inCart'
   fullWidth?: boolean
 }) {
   const locked = useRef(false)
@@ -69,13 +71,14 @@ export function AddToCartButton({
       <Box
         className={quantityControlClassName}
         role="group"
-        aria-label="Cart quantity controls"
+        aria-label={`${quantity} ${quantity === 1 ? 'item' : 'items'} in cart`}
         aria-busy={actionBusy}
         sx={[
           {
             display: 'flex',
             minHeight: 48,
-            width: 136,
+            width: fullWidth ? '100%' : 136,
+            minWidth: fullWidth ? 0 : 136,
             alignItems: 'stretch',
             overflow: 'hidden',
             border: '1px solid',
@@ -110,10 +113,10 @@ export function AddToCartButton({
           component="span"
           key={quantity}
           aria-live="polite"
-          aria-label={`Quantity ${quantity}`}
-          sx={{ display: 'grid', minWidth: 44, flex: 1, placeItems: 'center', backgroundColor: 'rgba(215,225,208,.42)', color: 'text.primary', fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
+          aria-label={`${quantity} ${quantity === 1 ? 'item' : 'items'} in cart`}
+          sx={{ display: 'grid', minWidth: 44, flex: 1, placeItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap', backgroundColor: 'rgba(215,225,208,.42)', color: 'text.primary', fontSize: quantityDisplay === 'inCart' ? 11 : 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
         >
-          {quantity}
+          {quantityDisplay === 'inCart' ? `${quantity} in cart` : quantity}
         </Box>
         <IconButton
           type="button"

@@ -95,6 +95,7 @@ export function CartPage({ storefront, onNavigate }: Props) {
                       label="Add to cart"
                       className={productPrimaryActionClass}
                       quantity={item.quantity}
+                      quantityDisplay="quantity"
                       isUpdating={cartQuery.pending.has(item.product.id)}
                       quantityControlClassName="mx-0 my-0 w-[136px] shrink-0"
                     />

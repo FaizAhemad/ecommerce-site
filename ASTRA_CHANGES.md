@@ -36,6 +36,8 @@ Single-card scale refinement (2026-09-25): reduced the deliberate desktop width 
 
 ## Current source changes
 
+- Startup loader: existing Gadgify artwork now enters in sequence, tracks mouse movement with subtle parallax and pairs a low-key brand pulse with animated waiting dots. Reduced-motion settings disable the animation and pointer response; no timed completion or fabricated progress is shown. Source/build evidence remains separate from rendered/device acceptance.
+
 - `controls.css` owns shared primary and secondary button variants.
 - `index.css` owns shared font, spacing and control tokens.
 - `PageContainer`/layout styles own central gutters.

@@ -1,6 +1,14 @@
 # Architecture, security and UI/UX audit
 
+2026-09-29 Admin MUI migration batch 1: `/admin` shell, shared server-side DataGrid and FormDialog are now MUI-based. Preserve its query/server semantics and editor pending/focus protections. Admin tab internals and standalone admin routes remain to migrate; browser/device acceptance is pending.
+
+2026-09-29 DataGrid pagination/loading refinement: keep loaded rows in place during refresh, reserve a simple empty body row for initial loading, and show only the centered progress indicator instead of skeleton placeholders. Keep column filters visible, align global search right, and omit match-count/filter-toggle chips. The responsive footer groups page size left and result range before direct page navigation right; direct jumps remain available for large server result sets. Component tests cover loading, no skeletons and a 1,000-page jump; visual/device acceptance remains pending.
+
 2026-09-29 Home MUI migration: the Home route now uses the Gadgify MUI wrappers for its hero, category discovery, story, product sections and newsletter. Shared ProductGrid/ProductCard/cart controls/rating stars also use MUI on other consumers. Home-specific legacy hero/section/newsletter rules were removed. Source/build/test evidence is in PROJECT_STATUS.md; rendered and device acceptance remains pending.
+
+2026-09-29 Products MUI migration: the `/products` route shell, carousel, desktop/mobile filters, filter inputs, loading skeletons and empty/error/pagination states now use the customized MUI wrapper system. Search, filter, URL update, cursor pagination and retry behavior are preserved. Component test evidence and offline build status are recorded in PROJECT_STATUS.md; rendered phone/tablet/browser acceptance remains pending.
+
+2026-09-29 sizing follow-up: carousel slides now share a fixed responsive image/copy frame, filter fields match the 44px control height, dot buttons use a compact hit target without inheriting the global action-button size, and Home hero artwork has a smaller max height. Build/component tests pass; visual browser/device acceptance remains pending.
 
 2026-09-29 MUI CTA screenshot follow-up: legacy anchor color inheritance had enough selector specificity to override MUI contrast text on primary anchor buttons. The global reset now excludes MUI buttons; blank product badges are omitted. Browser visual acceptance is pending.
 
@@ -306,6 +314,8 @@ E21/E22 implement truthful detail/checkout reads, explicit not-found/connectivit
 
 E23 partially remediates SEC-03: explicit server checkout charges, UUID recovery, provider capture matching and conditional payment state changes. Checkout/settings/payment controls use private queries, duplicate guards, cancellation and non-optimistic financial feedback. Original-byte webhook handling is implemented but Vercel acceptance remains unverified. Full refunds/reconciliation, device/layout and other release gates remain open; see CHECKOUT_PAYMENTS.md and PROJECT_STATUS.
 
+2026-09-29 payment failure UX: customer wording now separates an uncompleted attempt, awaiting capture, paid and still-unconfirmed provider results. Failures advise refresh before retrying when provider status is unclear, and mention bank confirmation if a debit appears. Browser callback details remain untrusted until server fetch verification. Synthetic coverage is added; rendered accessibility/mobile and provider acceptance remain pending.
+
 
 E24 replaces the disconnected admin Messages form with a focused component/private query and idempotent saved-before-send handler. Pending guards, preserved drafts and accepted/unconfirmed semantics are implemented; mobile/browser/provider behavior is still unverified.
 
@@ -331,6 +341,10 @@ E29 replaces policy placeholders with published-only reads and versioned private
 2026-09-28 Cart screenshot/source review: API already returned product image relations but the client DTO omitted them and CartPage rendered a decorative placeholder. Cart now requests only ordered image fields and shows a clickable thumbnail with native modal preview/fallback; its quantity controls reuse AddToCartButton. Cart phone, keyboard, image-error and authenticated acceptance remain pending.
 
 2026-09-28 shared cart control review: owner screenshot showed high-contrast black segmented counters and all-caps primary actions. The shared cart action now uses restrained citron/ink tokens; plus is the primary quantity affordance and removing the last item uses danger color. ProductCard, Product Details and Cart share it. Responsive rendered review remains pending.
+2026-09-29 ProductCard cart control review: quantity steppers used a hard-coded compact width while the idle Add to cart button filled the card. The shared control now applies its full-width variant to both states, preserving compact sizing where Product Details/Cart do not request full width. Build passes; screenshot/browser/device confirmation remains pending.
+2026-09-29 Products loading spacing: incremental loading status now reserves 40px below on phones and 56px at desktop breakpoints before the footer/divider. Build/component and rendered acceptance are tracked in PROJECT_STATUS.
+2026-09-29 Home newsletter partial-success: saved-but-undelivered and already-subscribed states keep the email field usable and expose a clear “Try another email” action. This action resets the form for a different address and does not replay the prior write; welcome-email retry is not implemented. Three focused offline form tests and the offline build pass; rendered acceptance remains pending.
+2026-09-29 Startup loader interaction: added restrained pointer parallax and staggered entrance to existing catalog art, plus a soft brand pulse and honest animated waiting dots. Motion is disabled when requested; pointer interaction is mouse-only, decorative imagery remains aria-hidden, and the status remains polite and static. Rendered/device acceptance remains pending.
 
 2026-09-28 cart control refinement from owner screenshot: bright citron surfaces and UA button bevels looked mismatched, and the cart count read like another action. The shared action now uses muted sage; quantity buttons explicitly reset native borders while the count gets a neutral center segment and stronger type. CTA/group height is 48px and icon targets are 44px. Rendered comparison remains pending.
 

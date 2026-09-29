@@ -25,6 +25,7 @@ function toProduct(
     category: product.category,
     priceMinor: product.priceMinor,
     compareAtPriceMinor: product.compareAtPriceMinor,
+    stock: product.stock,
     price: product.priceMinor / 100,
     rating: product.rating,
     reviewCount: product.reviewCount,

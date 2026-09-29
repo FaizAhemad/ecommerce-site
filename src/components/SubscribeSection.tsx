@@ -16,6 +16,7 @@ export function SubscribeSection() {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [alreadySubscribed, setAlreadySubscribed] = useState(false)
+  const [confirmationFailed, setConfirmationFailed] = useState(false)
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (submitting.current || status === 'success') return
@@ -25,6 +26,7 @@ export function SubscribeSection() {
       const result = await subscribeToNewsletter(email)
       setStatus('success')
       setAlreadySubscribed(result.alreadySubscribed === true)
+      setConfirmationFailed(result.confirmationFailed === true)
       if (!result.alreadySubscribed) setEmail('')
       notify(
         result.alreadySubscribed
@@ -59,7 +61,7 @@ export function SubscribeSection() {
           </Typography>
         </Box>
         <Stack component="form" spacing={1.5} onSubmit={submit}>
-          {alreadySubscribed && <Alert severity="info">This email is already subscribed. You can edit the address to try another.</Alert>}
+          {(alreadySubscribed || confirmationFailed) && <Alert severity="info">{confirmationFailed ? 'Your subscription was saved, but we could not confirm that the welcome email was sent. You do not need to sign up again. You can enter a different email below.' : 'This email is already subscribed. You can edit the address to try another.'}</Alert>}
           {status === 'error' && <Alert severity="error">We couldn’t subscribe you right now. Please try again.</Alert>}
           <TextField
             id="subscribe-email"
@@ -71,20 +73,27 @@ export function SubscribeSection() {
               setEmail(event.target.value)
               setStatus('idle')
               setAlreadySubscribed(false)
+              setConfirmationFailed(false)
             }}
             placeholder="you@example.com"
-            disabled={status === 'loading' || (status === 'success' && !alreadySubscribed)}
+            disabled={status === 'loading' || (status === 'success' && !alreadySubscribed && !confirmationFailed)}
             autoComplete="email"
           />
           <Button
-            type="submit"
+            type={alreadySubscribed || confirmationFailed ? 'button' : 'submit'}
             variant="contained"
-            disabled={status === 'loading' || status === 'success'}
+            disabled={status === 'loading' || (status === 'success' && !alreadySubscribed && !confirmationFailed)}
             aria-busy={status === 'loading'}
+            onClick={alreadySubscribed || confirmationFailed ? () => {
+              setEmail('')
+              setStatus('idle')
+              setAlreadySubscribed(false)
+              setConfirmationFailed(false)
+            } : undefined}
             endIcon={<Box component="span" aria-hidden="true" sx={{ fontSize: 18 }}>→</Box>}
             sx={{ minHeight: 48, alignSelf: { sm: 'flex-end' }, px: 2.5 }}
           >
-            {status === 'loading' ? 'Joining…' : alreadySubscribed ? 'Already subscribed' : status === 'success' ? 'Subscribed' : 'Subscribe'}
+            {status === 'loading' ? 'Joining…' : alreadySubscribed || confirmationFailed ? 'Try another email' : status === 'success' ? 'Subscribed' : 'Subscribe'}
           </Button>
         </Stack>
       </CardContent>

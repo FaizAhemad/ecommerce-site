@@ -1,14 +1,46 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Alert, Backdrop, Button, Checkbox, FormControlLabel, MUIProvider, Radio, RadioGroup, Skeleton, TextField } from './index'
+import { DataGrid, type DataGridQuery } from '../DataGrid'
+import { AddToCartButton } from '../AddToCartButton'
+import { createSessionRefreshCoordinator } from '../../api/sessionRefresh'
 
 function renderMUI(ui: ReactNode) {
   return render(<MUIProvider>{ui}</MUIProvider>)
 }
 
+afterEach(cleanup)
+
 describe('Gadgify MUI components', () => {
+  it('keeps loaded grid rows visible during refresh without rendering skeleton rows', () => {
+    renderMUI(<DataGrid rows={[{ id: 'p1', name: 'Matchstick gas lighter' }]} totalRows={100} columns={[{ id: 'name', header: 'Product', cell: (row) => row.name }]} getRowKey={(row) => row.id} label="Products" emptyMessage="No products" onQueryChange={vi.fn()} isLoading />)
+
+    expect(screen.getByText('Matchstick gas lighter')).toBeTruthy()
+    expect(screen.getByRole('progressbar')).toBeTruthy()
+    expect(document.querySelectorAll('.MuiSkeleton-root')).toHaveLength(0)
+    expect(screen.getByText('Rows per page:')).toBeTruthy()
+    expect(screen.queryByText('Rows per page', { exact: true })).toBeNull()
+    expect(screen.queryByRole('button', { name: /disable column filters/i })).toBeNull()
+    expect(screen.queryByText('100 matches')).toBeNull()
+    expect(screen.getByRole('searchbox', { name: 'Search products' })).toBeTruthy()
+  })
+
+  it('allows direct pagination jumps across more than one thousand server pages', async () => {
+    const user = userEvent.setup()
+    const queries: DataGridQuery[] = []
+    renderMUI(<DataGrid rows={[{ id: 'p1', name: 'Product' }]} totalRows={10_000} columns={[{ id: 'name', header: 'Product', cell: (row) => row.name }]} getRowKey={(row) => row.id} label="Products" emptyMessage="No products" onQueryChange={(query) => queries.push(query)} />)
+
+    const pageField = screen.getByRole('spinbutton', { name: 'Go to page' })
+    await user.clear(pageField)
+    await user.type(pageField, '1000')
+    await user.keyboard('{Enter}')
+
+    await waitFor(() => expect(queries.at(-1)?.page).toBe(1000))
+    expect(screen.getByText('of 1000')).toBeTruthy()
+  })
+
   it('supports keyboard and pointer activation for primary actions', async () => {
     const user = userEvent.setup()
     const onClick = vi.fn()
@@ -20,6 +52,41 @@ describe('Gadgify MUI components', () => {
     expect(onClick).toHaveBeenCalledOnce()
     await user.click(screen.getByRole('button', { name: 'Add to cart' }))
     expect(onClick).toHaveBeenCalledTimes(2)
+  })
+
+  it('shows a readable in-cart quantity without stretching the product detail control', () => {
+    renderMUI(<AddToCartButton productId="product-1" onAdd={vi.fn()} onDecrease={vi.fn()} label="Add to cart" quantity={1} sx={{ width: 'fit-content', minWidth: 196, maxWidth: '100%' }} quantityControlSx={{ width: 220, maxWidth: '100%' }} />)
+
+    expect(screen.getByText('1 in cart')).toBeTruthy()
+    expect(screen.getByRole('group', { name: '1 item in cart' })).toBeTruthy()
+  })
+
+  it('joins an in-flight activity renewal when Continue is clicked', async () => {
+    let complete!: () => void
+    const operation = vi.fn(() => new Promise<void>((resolve) => { complete = resolve }))
+    const refresh = createSessionRefreshCoordinator(operation, () => true)
+    const activity = refresh(true)
+    const continueClick = refresh(true)
+
+    expect(operation).toHaveBeenCalledTimes(1)
+    complete()
+    await Promise.all([activity, continueClick])
+    expect(operation).toHaveBeenCalledTimes(1)
+  })
+
+  it('renews after an in-flight read-only expiry probe completes', async () => {
+    let completeProbe!: () => void
+    const operation = vi.fn((activity: boolean) => activity
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => { completeProbe = resolve }))
+    const refresh = createSessionRefreshCoordinator(operation, () => true)
+    const probe = refresh(false)
+    const continueClick = refresh(true)
+
+    expect(operation).toHaveBeenCalledTimes(1)
+    completeProbe()
+    await Promise.all([probe, continueClick])
+    expect(operation.mock.calls.map(([activity]) => activity)).toEqual([false, true])
   })
 
   it('keeps pending actions disabled and validation messages associated with fields', () => {

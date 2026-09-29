@@ -56,6 +56,7 @@ import orders from '../server/api/orders/index.js'
 import order from '../server/api/orders/[id].js'
 import orderTracking from '../server/api/orders/[id]/tracking.js'
 import razorpayOrder from '../server/api/payments/razorpay-order.js'
+import razorpayFailure from '../server/api/payments/razorpay-failure.js'
 import razorpayVerify from '../server/api/payments/razorpay-verify.js'
 import products from '../server/api/products/index.js'
 import product from '../server/api/products/[id].js'
@@ -145,6 +146,7 @@ const routes: Record<string, Handler> = {
   'newsletter/subscribe': newsletterSubscribe,
   orders,
   'payments/razorpay-order': razorpayOrder,
+  'payments/razorpay-failure': razorpayFailure,
   'payments/razorpay-verify': razorpayVerify,
   products,
   'webhooks/razorpay': razorpayWebhook,

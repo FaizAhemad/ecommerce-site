@@ -2,7 +2,9 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { db } from '../_lib/db.js'
 import {
   fetchPayment,
+  matchesAuthorizedPayment,
   matchesCapturedPayment,
+  recordAuthorizedPayment,
   recordCapturedPayment,
 } from '../_lib/payment-confirmation.js'
 import { requireUser } from '../_lib/auth.js'
@@ -42,7 +44,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const valid =
     expected.length === signature.length &&
     timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
-  if (!valid) return sendError(response, 400, 'PAYMENT_FAILED', 'Payment signature is invalid.', id)
+  if (!valid) return sendError(response, 400, 'PAYMENT_VERIFICATION_FAILED', 'We could not verify this payment response. Refresh the order status before trying again.', id)
   try {
     const order = await db.order.findFirst({
       where: { id: orderId, userId: user.id },
@@ -60,6 +62,19 @@ export default async function handler(request: VercelRequest, response: VercelRe
       )
     const providerPayment = await fetchPayment(providerPaymentId, key, secret, fetchWithTimeout)
     if (
+      matchesAuthorizedPayment(providerPayment, {
+        id: providerPaymentId,
+        orderId: providerOrderId,
+        amount: order.totalMinor,
+        currency: order.currency,
+      })
+    ) {
+      const recorded = await recordAuthorizedPayment(db, orderId, providerOrderId, order.totalMinor)
+      if (!recorded)
+        return sendError(response, 409, 'PAYMENT_CONFLICT', 'Payment status changed. Refresh this order before taking further action.', id)
+      return response.status(200).json({ verified: true, payment: { status: 'AUTHORIZED' }, orderStatus: order.status, requestId: id })
+    }
+    if (
       !matchesCapturedPayment(providerPayment, {
         id: providerPaymentId,
         orderId: providerOrderId,
@@ -71,7 +86,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
         response,
         409,
         'PAYMENT_UNCONFIRMED',
-        'Payment capture is not confirmed. Check your order status before attempting another payment.',
+        'Razorpay has not confirmed a completed payment yet. Your order is still awaiting payment. Refresh the order before retrying.',
         id,
       )
     const recorded = await recordCapturedPayment(db, orderId, providerOrderId, providerPaymentId)
@@ -80,18 +95,17 @@ export default async function handler(request: VercelRequest, response: VercelRe
         response,
         409,
         'PAYMENT_CONFLICT',
-        'Payment state changed. Check your order before trying again.',
+        'Payment status changed while we were checking it. Refresh this order before taking further action.',
         id,
       )
-    return response
-      .status(200)
-      .json({ verified: true, payment: { status: 'CAPTURED' }, requestId: id })
+    const currentOrder = await db.order.findFirst({ where: { id: orderId, userId: user.id }, select: { status: true } })
+    return response.status(200).json({ verified: true, payment: { status: 'CAPTURED' }, orderStatus: currentOrder?.status ?? order.status, requestId: id })
   } catch {
     return sendError(
       response,
       503,
       'DATABASE_UNAVAILABLE',
-      'Payment status could not be saved.',
+      'We could not save the verified payment status. Refresh your order before trying again.',
       id,
     )
   }

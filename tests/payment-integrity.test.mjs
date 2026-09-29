@@ -4,6 +4,7 @@ import {
   matchesCapturedPayment,
   fetchPayment,
   recordCapturedPayment,
+  recordFailedPayment,
   matchesFullRefund,
   recordFullRefund,
 } from '../server/api/_lib/payment-confirmation.ts'
@@ -128,7 +129,26 @@ test('capture records atomically and cannot overwrite refunded or differently-bo
   }
   assert.equal(await recordCapturedPayment(store, 'o', 'provider-o', 'p'), false)
   assert.deepEqual(calls[0].where.status, { not: 'REFUNDED' })
-  assert.deepEqual(calls[0].where.OR, [{ providerPaymentId: null }, { providerPaymentId: 'p' }])
+  assert.deepEqual(calls[0].where.OR, [
+    { providerPaymentId: null },
+    { providerPaymentId: 'p' },
+    { status: { in: ['PENDING', 'AUTHORIZED', 'FAILED'] } },
+  ])
+})
+test('verified late failure cannot replace an already authorized payment', async () => {
+  let updateWhere
+  const store = {
+    $transaction: async (action) => action({
+      payment: {
+        updateMany: async ({ where }) => {
+          updateWhere = where
+          return { count: 0 }
+        },
+      },
+    }),
+  }
+  assert.equal(await recordFailedPayment(store, 'o', 'provider-o', 100), false)
+  assert.deepEqual(updateWhere.status, { in: ['PENDING', 'FAILED'] })
 })
 test('webhook reader preserves original bytes and rejects reconstructed JSON or oversized streams', async () => {
   const raw = '{ "event": "payment.captured" }\n'

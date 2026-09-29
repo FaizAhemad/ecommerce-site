@@ -70,6 +70,18 @@ function NotFoundPage() {
   )
 }
 
+function AdminAccessRequired({ isAuthenticated, onNavigate }: { isAuthenticated: boolean; onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void }) {
+  return (
+    <section className="page-section" aria-labelledby="admin-access-title">
+      <h1 id="admin-access-title">{isAuthenticated ? 'Administrator access required' : 'Sign in to continue'}</h1>
+      <p>{isAuthenticated ? 'This area is available to authorized administrators.' : 'Sign in with an administrator account to open this page.'}</p>
+      <a href={isAuthenticated ? '/' : '/login'} onClick={onNavigate(isAuthenticated ? '/' : '/login')}>
+        {isAuthenticated ? 'Return to the storefront' : 'Sign in'}
+      </a>
+    </section>
+  )
+}
+
 function DebugErrorPage() {
   if (import.meta.env.DEV) throw new Error('Intentional error-boundary preview')
   return <p className="state-message">Debug route is available in development only.</p>
@@ -98,13 +110,13 @@ export function StorefrontRoute({
     case '/orders/shipments':
       return isAuthenticated ? <FulfillmentPage key="customer-fulfillment" audience="customer" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/admin/fulfillment':
-      return isAdmin ? <FulfillmentPage key="admin-fulfillment" audience="admin" /> : <section className="page-section"><h1>Administrator access required</h1></section>
+      return isAdmin ? <FulfillmentPage key="admin-fulfillment" audience="admin" /> : <AdminAccessRequired isAuthenticated={isAuthenticated} onNavigate={navigate} />
     case '/admin/seller-products':
-      return isAdmin ? <SellerCatalogPage key="admin-catalog" admin /> : <section className="page-section"><h1>Administrator access required</h1><a href="/login" onClick={navigate('/login')}>Sign in</a></section>
+      return isAdmin ? <SellerCatalogPage key="admin-catalog" admin /> : <AdminAccessRequired isAuthenticated={isAuthenticated} onNavigate={navigate} />
     case '/seller':
       return isAuthenticated ? <SellerPage key="seller" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/admin/sellers':
-      return isAdmin ? <SellerPage key="seller-review" admin /> : <section className="page-section"><h1>Administrator access required</h1><a href="/login" onClick={navigate('/login')}>Sign in</a></section>
+      return isAdmin ? <SellerPage key="seller-review" admin /> : <AdminAccessRequired isAuthenticated={isAuthenticated} onNavigate={navigate} />
     case '/profile':
       return isAuthenticated ? (
         <ProfilePage onNavigate={navigate} />
@@ -134,7 +146,7 @@ export function StorefrontRoute({
         <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
       )
     case '/track-order':
-      return <TrackOrderPage storefront={storefront} onNavigate={navigate} />
+      return <TrackOrderPage storefront={storefront} isAuthenticated={isAuthenticated} onNavigate={navigate} />
     case '/login':
       return isAuthenticated ? (
         <HomePage
@@ -169,7 +181,7 @@ export function StorefrontRoute({
       ) : isAdmin ? (
         <AdminPage storefront={storefront} onNavigate={navigate} />
       ) : (
-        <p className="state-message">Administrator access is required.</p>
+        <AdminAccessRequired isAuthenticated onNavigate={navigate} />
       )
     case '/privacy':
       return <PolicyPage storefront={storefront} policy="privacy" onNavigate={navigate} />
@@ -217,7 +229,7 @@ export function StorefrontRoute({
       return isAuthenticated && isAdmin ? (
         <SupportPage key="admin-support" storefront={storefront} isAuthenticated mode="admin" />
       ) : (
-        <p className="state-message">Administrator access is required.</p>
+        <AdminAccessRequired isAuthenticated={isAuthenticated} onNavigate={navigate} />
       )
     default:
       if (normalizedPath.startsWith('/admin/')) return <AdminRedirect />

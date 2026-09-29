@@ -2,7 +2,7 @@ import type { MouseEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, Truck } from 'lucide-react'
 import type { StorefrontApiResponse } from '../api/storefront'
-import { getOrder, orderStatusLabel } from '../api/orders'
+import { getOrder, orderStatusLabel, paymentStatusLabel } from '../api/orders'
 import { privateKey } from '../api/sessionScope'
 import { OrderPayment } from '../components/OrderPayment'
 import { OrderTimeline } from '../components/OrderTimeline'
@@ -90,7 +90,7 @@ export function OrderDetailPage({ storefront, orderId, onNavigate }: Props) {
               </section>
               <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-6" aria-labelledby="payment-status-title">
                 <h2 id="payment-status-title" className="!mb-3 !mt-0 !text-xl !font-semibold !leading-tight !tracking-tight text-[var(--ink)]">Payment</h2>
-                <p className="mb-3 text-sm text-[var(--muted)]">{order.payment ? `${order.payment.provider} · ${orderStatusLabel(order.payment.status)}` : 'No payment recorded.'}</p>
+                <p className="mb-3 text-sm text-[var(--muted)]">{order.payment ? `${order.payment.provider} · ${paymentStatusLabel(order.payment.status)}` : 'No payment recorded.'}</p>
                 {order.status === 'PENDING' && order.payment?.provider === 'RAZORPAY' && ['PENDING', 'FAILED'].includes(order.payment.status) && <OrderPayment orderId={order.id} onRefresh={() => void query.refetch({ cancelRefetch: false })} />}
               </section>
             </aside>

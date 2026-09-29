@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiFetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
-import { loadRazorpay, type PaymentWidget, type PaymentResult } from '../api/razorpay'
+import { loadRazorpay, type PaymentWidget, type PaymentResult, type PaymentFailure } from '../api/razorpay'
 import { assertCurrentSession, sessionGeneration } from '../api/sessionScope'
 import { useNotification } from './NotificationProvider'
 import { CreditCard } from 'lucide-react'
@@ -9,7 +9,8 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
     lock = useRef(false),
     controller = useRef<AbortController | null>(null),
     widget = useRef<PaymentWidget | null>(null),
-    verifying = useRef(false)
+    verifying = useRef(false),
+    dismissed = useRef(false)
   const [pending, setPending] = useState(false)
   const [feedback, setFeedback] = useState('')
   useEffect(
@@ -22,6 +23,7 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
   async function pay() {
     if (lock.current) return
     lock.current = true
+    dismissed.current = false
     setPending(true)
     setFeedback('Opening secure payment...')
     const abort = new AbortController()
@@ -90,6 +92,8 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
           })
           const body = (await response.json()) as {
             verified?: boolean
+            payment?: { status?: string }
+            orderStatus?: string
             error?: { message?: string }
           }
           if (!response.ok || body.verified !== true)
@@ -98,8 +102,16 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
                 'Payment is not confirmed. Check the order status before paying again.',
             )
           if (!abort.signal.aborted && generation === sessionGeneration()) {
-            setFeedback('Payment confirmed.')
-            notify('Payment confirmed.', 'success')
+            const terminalOrder = ['CANCELLED', 'REFUNDED'].includes(body.orderStatus ?? '')
+            const message = body.payment?.status === 'CAPTURED'
+              ? terminalOrder
+                ? 'Payment was captured, but this order is no longer active. Do not pay again; contact customer care for help.'
+                : 'Payment received and verified. Your order status has been updated.'
+              : terminalOrder
+                ? 'Payment is authorized but this order is no longer active. Do not pay again; contact customer care for help.'
+                : 'Payment is authorized and awaiting capture. Your order is not confirmed yet. Refresh shortly, and do not pay again while this status is pending.'
+            setFeedback(message)
+            notify(message, body.payment?.status === 'CAPTURED' ? 'success' : 'info')
             onRefresh()
           }
           release()
@@ -118,7 +130,9 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
         handler: (result) => void verify(result),
         modal: {
           ondismiss: () => {
-            if (!verifying.current) {
+            if (verifying.current) {
+              dismissed.current = true
+            } else {
               if (!abort.signal.aborted && generation === sessionGeneration()) {
                 setFeedback('Payment window closed. Refresh your order before paying again.')
                 notify('Payment window closed. Check the order status before trying again.', 'info')
@@ -129,12 +143,50 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
           },
         },
       })
-      widget.current.on('payment.failed', () => {
-        if (!abort.signal.aborted && generation === sessionGeneration()) {
-          setFeedback('Payment attempt failed. Check your order status before paying again.')
-          notify('Payment attempt failed. You can retry in the payment window or close it.')
-          onRefresh()
-        }
+      widget.current.on('payment.failed', (failure: PaymentFailure) => {
+        if (verifying.current || abort.signal.aborted || generation !== sessionGeneration()) return
+        verifying.current = true
+        void (async () => {
+          const paymentId = failure.error?.metadata?.payment_id
+          const fallback = 'We could not confirm this payment attempt. Your order status has not changed. Refresh the order before trying again. If your bank shows a debit, wait for the status to update before retrying.'
+          try {
+            if (!paymentId) throw new Error(fallback)
+            assertCurrentSession(generation)
+            const response = await apiFetch('/api/payments/razorpay-failure', {
+              method: 'POST',
+              signal: abort.signal,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId, razorpayOrderId: body.paymentOrderId, razorpayPaymentId: paymentId }),
+            })
+            const result = await response.json() as { verified?: boolean; payment?: { status?: string }; orderStatus?: string; error?: { message?: string } }
+            if (!response.ok || result.verified !== true)
+              throw new Error(result.error?.message ?? fallback)
+            if (abort.signal.aborted || generation !== sessionGeneration()) return
+            const terminalOrder = ['CANCELLED', 'REFUNDED'].includes(result.orderStatus ?? '')
+            const message = result.payment?.status === 'CAPTURED'
+              ? terminalOrder
+                ? 'Payment was captured, but this order is no longer active. Do not pay again; contact customer care for help.'
+                : 'Payment received and verified. Your order status has been updated.'
+              : result.payment?.status === 'AUTHORIZED'
+                ? terminalOrder
+                  ? 'Payment is authorized but this order is no longer active. Do not pay again; contact customer care for help.'
+                  : 'Payment is authorized and awaiting capture. Your order is not confirmed yet. Refresh shortly, and do not pay again while this status is pending.'
+                : 'This payment attempt could not be completed. Your order is still awaiting payment, so you may try again. If your bank shows a debit, check with your bank before retrying.'
+            setFeedback(message)
+            notify(message, result.payment?.status === 'CAPTURED' ? 'success' : 'info')
+            onRefresh()
+          } catch (error) {
+            if (!abort.signal.aborted && generation === sessionGeneration()) {
+              const message = error instanceof Error ? error.message : fallback
+              setFeedback(message)
+              notify(message, 'info')
+              onRefresh()
+            }
+          } finally {
+            verifying.current = false
+            if (dismissed.current) release()
+          }
+        })()
       })
       widget.current.open()
     } catch (error) {
@@ -146,7 +198,7 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
       <p className="mb-3 text-sm leading-6 text-[var(--muted)]">Continue with Razorpay to pay for this order. Your order changes to paid only after the server confirms the payment.</p>
       <button className="primary-button flex w-full items-center justify-center gap-2" disabled={pending} onClick={() => void pay()}>
         <CreditCard aria-hidden="true" className="size-4" />
-        {pending ? 'Payment in progress…' : 'Continue to Razorpay'}
+        {pending ? 'Payment in progress' : 'Continue to Razorpay'}
       </button>
       {feedback && <p className="mb-0 mt-3 rounded-lg bg-[var(--paper)] p-3 text-sm leading-6 text-[var(--ink)]" role="status" aria-live="polite">{feedback}</p>}
       <p className="mb-0 mt-3 text-xs leading-5 text-[var(--muted)]">

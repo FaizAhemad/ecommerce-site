@@ -72,7 +72,7 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
         sx={{
           ...pageSx,
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, .9fr) minmax(0, 1.1fr)' },
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, .95fr) minmax(0, 1.05fr)' },
           alignItems: 'center',
           gap: { xs: 3, md: 6 },
           pt: { xs: 3, md: 5 },
@@ -116,7 +116,11 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
           sx={{
             position: 'relative',
             minWidth: 0,
-            aspectRatio: { xs: '1.16', md: '1.25' },
+            aspectRatio: { xs: '1.42', md: '1.6' },
+            maxHeight: { xs: 320, sm: 380, md: 440 },
+            width: '100%',
+            maxWidth: { xs: 560, md: 'none' },
+            justifySelf: { xs: 'center', md: 'stretch' },
             overflow: 'hidden',
             border: '1px solid',
             borderColor: 'divider',

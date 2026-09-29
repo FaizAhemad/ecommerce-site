@@ -106,9 +106,6 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .app-loading-product {
-    animation: none;
-  }
   .product-skeleton .product-art,
   .skeleton-block,
   .skeleton-line,
@@ -169,7 +166,9 @@
   border-radius: 18px;
   background: var(--surface);
   box-shadow: 0 12px 32px rgba(40, 49, 59, 0.12);
-  animation: loading-float 4.8s ease-in-out infinite;
+  transform: rotate(var(--loading-rotation, 0deg)) translate(var(--loading-x, 0px), var(--loading-y, 0px));
+  transition: transform 180ms ease-out, box-shadow 240ms ease;
+  animation: loading-float 4.8s ease-in-out infinite, loading-card-enter 720ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
 .app-loading-product img {
   display: block;
@@ -180,25 +179,26 @@
 .app-loading-product-one {
   top: 6%;
   left: 10%;
-  transform: rotate(-9deg);
+  --loading-rotation: -9deg;
+  animation-delay: 0s, 0ms;
 }
 .app-loading-product-two {
   top: 7%;
   right: 10%;
-  animation-delay: -1.6s;
-  transform: rotate(8deg);
+  --loading-rotation: 8deg;
+  animation-delay: -1.6s, 110ms;
 }
 .app-loading-product-three {
   bottom: 1%;
   left: 13%;
-  animation-delay: -3.2s;
-  transform: rotate(5deg);
+  --loading-rotation: 5deg;
+  animation-delay: -3.2s, 220ms;
 }
 .app-loading-product-four {
   right: 12%;
   bottom: 2%;
-  animation-delay: -2.4s;
-  transform: rotate(-6deg);
+  --loading-rotation: -6deg;
+  animation-delay: -2.4s, 330ms;
 }
 .app-loading-brand {
   position: relative;
@@ -216,14 +216,20 @@
   font-size: clamp(19px, 4vw, 26px);
   font-weight: 700;
   letter-spacing: 0.16em;
+  animation: loading-brand-enter 760ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
 .app-loading > .app-loading-status {
-  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin: 6px 0 0;
   color: var(--muted);
   font-family: var(--font-body);
   font-size: 14px;
   letter-spacing: -0.01em;
   line-height: 1.5;
+  animation: loading-copy-enter 620ms ease-out 360ms both;
 }
 .app-loading-tagline {
   margin: 0;
@@ -232,8 +238,10 @@
   font-size: clamp(20px, 4vw, 25px);
   letter-spacing: -0.025em;
   line-height: 1.3;
+  animation: loading-copy-enter 620ms ease-out 220ms both;
 }
 .app-loading-mark {
+  position: relative;
   display: grid;
   place-items: center;
   width: 58px;
@@ -245,6 +253,30 @@
     24px var(--font-body);
   box-shadow: 0 4px 14px rgba(40, 49, 59, 0.2);
 }
+.app-loading-mark::after {
+  position: absolute;
+  inset: -5px;
+  border: 1px solid rgba(40, 49, 59, 0.18);
+  border-radius: inherit;
+  content: '';
+  animation: loading-mark-pulse 2.4s ease-out infinite;
+}
+.app-loading-dots {
+  display: inline-flex;
+  align-items: center;
+  height: 1em;
+  overflow: hidden;
+}
+.app-loading-dots span {
+  opacity: 0.2;
+  animation: loading-dot 1.25s ease-in-out infinite;
+}
+.app-loading-dots span:nth-child(2) {
+  animation-delay: 160ms;
+}
+.app-loading-dots span:nth-child(3) {
+  animation-delay: 320ms;
+}
 @keyframes loading-float {
   0%,
   100% {
@@ -252,6 +284,70 @@
   }
   50% {
     translate: 0 -10px;
+  }
+}
+@keyframes loading-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.92) rotate(var(--loading-rotation, 0deg));
+  }
+  to {
+    opacity: 1;
+    transform: rotate(var(--loading-rotation, 0deg)) translate(var(--loading-x, 0px), var(--loading-y, 0px));
+  }
+}
+@keyframes loading-brand-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes loading-copy-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes loading-mark-pulse {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(1.17);
+  }
+}
+@keyframes loading-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-loading-product,
+  .app-loading-brand,
+  .app-loading-tagline,
+  .app-loading > .app-loading-status,
+  .app-loading-dots span,
+  .app-loading-mark::after {
+    animation: none;
+    transition: none;
   }
 }
 @media (max-width: 480px) {

@@ -13,6 +13,7 @@ import { Chip } from './mui/Chip'
 import { IconButton } from './mui/IconButton'
 import { Stack } from './mui/Stack'
 import { Typography } from './mui/Typography'
+import { productAvailability } from './productAvailability'
 
 type ProductCardProps = {
   product: StorefrontApiResponse['products'][number]
@@ -195,6 +196,9 @@ export function ProductCard({
             )}
           </Box>
         </Stack>
+        {typeof product.stock === 'number' && (
+          <Chip {...productAvailability(product.stock)} size="small" sx={{ alignSelf: 'flex-start', height: 23, fontSize: 10, fontWeight: 650 }} />
+        )}
         <Box
           aria-label={product.reviewCount > 0 ? `${ratingLabel}: ${product.rating}, ${product.reviewCount} ${reviewsLabel}` : 'No reviews yet'}
           sx={{ display: 'flex', width: 'fit-content', maxWidth: '100%', minHeight: 28, alignItems: 'center', gap: 0.75, borderRadius: 999, px: 1, py: 0.5, backgroundColor: 'rgba(215,225,208,.42)', fontSize: 10, lineHeight: 1.2 }}
@@ -227,7 +231,7 @@ export function ProductCard({
         )}
         <Box sx={{ mt: 'auto', pt: 0.5 }}>
           <AddToCartButton
-            unavailableReason={product.purchase?.available === false ? product.purchase.reason ?? 'Currently unavailable' : undefined}
+            unavailableReason={typeof product.stock === 'number' && product.stock <= 0 ? 'Out of stock' : product.purchase?.available === false ? product.purchase.reason ?? 'Currently unavailable' : undefined}
             productId={product.id}
             onAdd={onAdd}
             label={addToCartLabel}
