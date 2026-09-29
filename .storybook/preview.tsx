@@ -7,7 +7,7 @@ const preview: Preview = {
     (Story) => (
       <ThemeProvider theme={gadgifyTheme}>
         <CssBaseline />
-        <div style={{ padding: 24, minHeight: '100vh', background: '#f7f4ed' }}>
+        <div style={{ padding: 24, minHeight: '100vh', background: gadgifyTheme.palette.background.default }}>
           <Story />
         </div>
       </ThemeProvider>

@@ -1,5 +1,7 @@
 # Agent instructions
 
+Owner rebrand direction (2026-09-30): follow REBRAND_IMPLEMENTATION_PLAN.md and SCHEMA_EVOLUTION_PLAN.md for the planned application-wide MUI redesign, loading/non-blocking interaction work and schema evolution. MUI is the target UI system, superseding historical Tailwind/Radix migration direction. Existing legacy styling stays only until its consumers migrate. The new palette is proposed, not deployed. APPLICATION_BACKLOG.md remains the sole checklist; all identity, financial, marketplace, live-operation and owner acceptance gates remain. This batch is planning/documentation only.
+
 Marketplace workspace batch (2026-09-23): follow SELLER_WORKSPACE.md. Seller drafts/media use reserved seller-product/seller-media keys, never live Product writes. Moderation approval exposes a public showcase only; mutations reset approval and remain shop/version scoped. Preserve selected snapshot-only seller order reads. Financial/fulfillment activation remains incomplete; no migration/verification has run.
 
 MP-02: preserve SELLER_ONBOARDING.md account-owned applications, verified-email submission, expected-version decisions, serializable shop/membership/audit changes and reserved seller-application keys. Seller onboarding never grants platform ADMIN or enables catalog/payouts. Ownership migration and verification remain pending.

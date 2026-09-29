@@ -7,9 +7,7 @@ const Root = styled(MuiCheckbox)(({ theme }) => ({
   width: 44,
   height: 44,
   padding: 10,
-  color: theme.palette.text.secondary,
-  '&:hover': { backgroundColor: 'rgba(199, 216, 102, 0.2)' },
-  '&.Mui-checked': { color: theme.palette.primary.main },
+  '&:hover': { backgroundColor: theme.palette.action.hover },
   '&.Mui-focusVisible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: -2 },
 }))
 
@@ -23,21 +21,20 @@ function CheckboxMark({ checked }: { checked: boolean }) {
         display: 'grid',
         placeItems: 'center',
         border: '1.5px solid',
-        borderColor: checked ? 'secondary.main' : '#96968e',
+        borderColor: 'currentColor',
         borderRadius: '5px',
-        bgcolor: checked ? 'secondary.main' : 'background.paper',
-        color: 'text.primary',
+        bgcolor: checked ? 'currentColor' : 'transparent',
         transition: 'background-color 120ms ease, border-color 120ms ease',
       }}
     >
-      {checked ? <CheckRoundedIcon sx={{ fontSize: 16 }} /> : null}
+      {checked ? <CheckRoundedIcon sx={{ fontSize: 16, color: 'background.paper' }} /> : null}
     </Box>
   )
 }
 
 export type CheckboxProps = MuiCheckboxProps
 
-/** Brand checkbox with a square citron selection mark and a 44px touch target. */
+/** Brand checkbox with a square primary-color selection mark and a 44px touch target. */
 export function Checkbox(props: CheckboxProps) {
   return (
     <Root

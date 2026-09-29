@@ -1,5 +1,7 @@
 # Codex project instructions
 
+Owner rebrand direction (2026-09-30): follow REBRAND_IMPLEMENTATION_PLAN.md and SCHEMA_EVOLUTION_PLAN.md for the planned application-wide MUI redesign, loading/non-blocking interaction work and schema evolution. MUI is the target UI system, superseding historical Tailwind/Radix migration direction. Existing legacy styling stays only until its consumers migrate. The new palette is proposed, not deployed. APPLICATION_BACKLOG.md remains the sole checklist; all identity, financial, marketplace, live-operation and owner acceptance gates remain. This batch is planning/documentation only.
+
 SELLER_WORKSPACE.md governs connected seller catalog/moderation/showcase pages. Keep drafts separate from Product/checkout, scoped private media, explicit public approval and snapshot-only order reads. Do not infer financial marketplace completion; provider/business decisions and deferred acceptance remain pending.
 
 MP-02 source is present: follow SELLER_ONBOARDING.md for session-owned applications and transactional versioned admin review. Keep seller-application storage reserved and seller permissions separate from ADMIN. Publishing/payment gates remain closed.

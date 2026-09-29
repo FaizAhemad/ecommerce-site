@@ -1,5 +1,7 @@
 # Luna UI/UX analysis
 
+Owner rebrand direction (2026-09-30): follow REBRAND_IMPLEMENTATION_PLAN.md and SCHEMA_EVOLUTION_PLAN.md for the planned application-wide MUI redesign, loading/non-blocking interaction work and schema evolution. MUI is the target UI system, superseding historical Tailwind/Radix migration direction. Existing legacy styling stays only until its consumers migrate. The new palette is proposed, not deployed. APPLICATION_BACKLOG.md remains the sole checklist; all identity, financial, marketplace, live-operation and owner acceptance gates remain. This batch is planning/documentation only.
+
 Status: working design analysis, 2026-09-25. This document translates the current Gadgify documentation, route inventory, owner screenshots and source review into an application-wide visual direction. It is not a completion checklist; `APPLICATION_BACKLOG.md` remains the only checklist.
 
 ## Product character

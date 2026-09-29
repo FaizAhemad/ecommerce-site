@@ -14,6 +14,41 @@ function renderMUI(ui: ReactNode) {
 afterEach(cleanup)
 
 describe('Gadgify MUI components', () => {
+  it('combines column filters and search in server queries and uses the server sort key', async () => {
+    const user = userEvent.setup()
+    const onQueryChange = vi.fn()
+    renderMUI(<DataGrid rows={[{ id: '1', name: 'Mat', price: 149, status: 'Published' }]} totalRows={100} columns={[
+      { id: 'name', header: 'Product', cell: (row) => row.name, getFilterValue: (row) => row.name, sortKey: 'title' },
+      { id: 'price', header: 'Price', cell: (row) => row.price, getFilterValue: (row) => row.price, filterType: 'number' },
+      { id: 'status', header: 'Visibility', cell: (row) => row.status, getFilterValue: (row) => row.status, filterOptions: [{ value: 'published', label: 'Published' }] },
+    ]} getRowKey={(row) => row.id} label="Products" emptyMessage="No products" onQueryChange={onQueryChange} />)
+
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
+    await waitFor(() => expect(onQueryChange.mock.lastCall?.[0].page).toBe(2))
+    await user.type(screen.getByRole('textbox', { name: 'Filter Product' }), 'Mat')
+    await user.type(screen.getByRole('spinbutton', { name: 'Filter Price' }), '149')
+    await user.click(screen.getByRole('combobox', { name: 'Filter Visibility' }))
+    await user.click(screen.getByRole('option', { name: 'Published' }))
+    await user.type(screen.getByRole('searchbox', { name: 'Search products' }), 'floral')
+    await user.click(screen.getByRole('button', { name: 'Sort by Product' }))
+    await waitFor(() => expect(onQueryChange.mock.lastCall?.[0]).toEqual({ page: 1, pageSize: 10, search: 'floral', filters: { name: 'Mat', price: '149', status: 'published' }, sortBy: 'title', sortDirection: 'asc' }))
+    expect(screen.getByRole('button', { name: 'Sort by Product' }).closest('th')!.getAttribute('aria-sort')).toBe('ascending')
+    await user.click(screen.getByRole('button', { name: 'Clear filters' }))
+    await waitFor(() => expect(onQueryChange.mock.lastCall?.[0].filters).toEqual({}))
+    expect(onQueryChange.mock.lastCall?.[0].search).toBe('')
+  })
+
+  it('changes page size through the standard pagination select and returns to page one', async () => {
+    const user = userEvent.setup()
+    const onQueryChange = vi.fn()
+    renderMUI(<DataGrid rows={[]} totalRows={100} columns={[{ id: 'id', header: 'Product', cell: () => '' }]} getRowKey={() => '1'} label="Products" emptyMessage="No products" onQueryChange={onQueryChange} />)
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
+    await waitFor(() => expect(onQueryChange.mock.lastCall?.[0].page).toBe(2))
+    await user.click(screen.getByRole('combobox', { name: /Rows per page/ }))
+    await user.click(screen.getByRole('option', { name: '25' }))
+    await waitFor(() => expect(onQueryChange.mock.lastCall?.[0]).toMatchObject({ page: 1, pageSize: 25 }))
+  })
+
   it('keeps loaded grid rows visible during refresh without rendering skeleton rows', () => {
     renderMUI(<DataGrid rows={[{ id: 'p1', name: 'Matchstick gas lighter' }]} totalRows={100} columns={[{ id: 'name', header: 'Product', cell: (row) => row.name }]} getRowKey={(row) => row.id} label="Products" emptyMessage="No products" onQueryChange={vi.fn()} isLoading />)
 

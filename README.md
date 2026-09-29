@@ -1,5 +1,7 @@
 # White-label Commerce Platform
 
+Owner rebrand direction (2026-09-30): follow REBRAND_IMPLEMENTATION_PLAN.md and SCHEMA_EVOLUTION_PLAN.md for the planned application-wide MUI redesign, loading/non-blocking interaction work and schema evolution. MUI is the target UI system, superseding historical Tailwind/Radix migration direction. Existing legacy styling stays only until its consumers migrate. The new palette is proposed, not deployed. APPLICATION_BACKLOG.md remains the sole checklist; all identity, financial, marketplace, live-operation and owner acceptance gates remain. This batch is planning/documentation only.
+
 Current UI direction (2026-09-25): follow [UI_UX_REVIEW_GUIDE.md](UI_UX_REVIEW_GUIDE.md) for every component, notification, overlay, page and state. Consolidate shared tokens/layout/primitives before page polish; preserve current commerce and security gates. APPLICATION_BACKLOG.md remains the sole checklist; source changes do not establish browser/device acceptance.
 
 UI testing plan: see [UI_UX_REVIEW_GUIDE.md](UI_UX_REVIEW_GUIDE.md#automated-ui-and-validation-testing-strategy). Playwright Test and axe are planned; existing Node.js suites remain. Installation/execution and browser/device acceptance are pending, tracked in APPLICATION_BACKLOG.md.

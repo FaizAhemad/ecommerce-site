@@ -1,5 +1,26 @@
 # Application backlog
 
+## Rebrand and schema roadmap (2026-09-30)
+
+Specifications: [REBRAND_IMPLEMENTATION_PLAN.md](REBRAND_IMPLEMENTATION_PLAN.md) and [SCHEMA_EVOLUTION_PLAN.md](SCHEMA_EVOLUTION_PLAN.md). This roadmap refines UI-01?UI-09 and existing commerce requirements; it does not replace security/business gates or declare new implementation.
+
+- [ ] RB-01: Shared MUI theme/control and application grid foundation implemented with interaction tests and stories (2026-09-30); complete catalog state coverage, contrast and phone-width visual acceptance.
+- [ ] RB-02: Migrate shell/navigation/footer and separate public/private startup/loading states.
+- [ ] RB-03: Improve cart response using existing optimistic state, eliminate redundant product reads, and implement revision-aware quantity coordination/reconciliation.
+- [ ] RB-04: Rebrand Home, Products, product cards and Product Details with real content and mobile purchase controls.
+- [ ] RB-05: Migrate Cart, Checkout, Orders/Detail/tracking/returns while preserving financial truth.
+- [ ] RB-06: Migrate auth/profile/support/policies, dialogs and notifications with complete interaction states.
+- [ ] RB-07: Finish shared grid/cell editor design and all 14 admin tabs plus standalone admin routes.
+- [ ] RB-08: Migrate shops and seller onboarding/catalog/media/fulfillment with scoped permissions.
+- [ ] RB-09: Remove unused legacy styling/dependencies after consumer audit; complete performance/accessibility/regression and owner device acceptance.
+- [ ] SE-01: Reconcile Prisma/SQL/reserved-setting contracts and design cart revision/receipt plus historical snapshot integrity.
+- [ ] SE-02: Prepare structured catalog content and SKU/option schema with simple-product compatibility.
+- [ ] SE-03: Integrate SKU-aware cart/order snapshots, inventory authority and admin/seller authoring transactionally.
+- [ ] SE-04: Add payment-attempt history and immutable order address/adjustment snapshots without financial replay.
+- [ ] SE-05: Gradually normalize selected operational records; add measured indexes/private-media lifecycle and approved item-level fulfillment/returns.
+
+All schema changes require owner migration rehearsal/application and evidence. Regional delivery/tax, marketplace finance, analytics/privacy and medicine decisions remain separately gated. RB-01 shared MUI/grid implementation is underway; later consumer migration remains pending. See PROJECT_STATUS.md for evidence.
+
 The current page and route inventory is maintained in [`PAGE_INVENTORY.md`](PAGE_INVENTORY.md). Any page or route change must update that inventory and the relevant status documentation in the same change.
 
 Completion status reviewed against current source and recorded evidence on 2026-09-21. This is the single completion checklist for product requirements, security gates and UI work. Other documents describe scope and evidence; they must not maintain competing completion lists.

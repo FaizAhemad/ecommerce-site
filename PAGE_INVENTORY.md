@@ -1,5 +1,9 @@
 # Page and route inventory
 
+## Shared MUI/grid coverage - 2026-09-30
+
+Existing consumers of src/components/DataGrid.tsx inherit the header-filter, native sorting/pagination, direct-jump and body-only spinner refinement. Shared MUI consumers inherit theme/control state fixes. Actual application-grid stories cover default, empty, initial load, refresh, 1,200 pages and phone-width fixtures. Interaction evidence is in PROJECT_STATUS.md; all route/admin-tab rendered and device acceptance remains pending.
+
 2026-09-29 App startup loader: the standalone pre-layout loading screen now has staggered card entrance, subtle pointer parallax, a pulsing brand mark and animated status dots. Decorative images remain hidden from assistive technology; the status stays a single polite announcement, and reduced-motion preference disables motion. Offline build and component suite pass; no browser/device observation is claimed.
 
 2026-09-29 Payment feedback: order pages distinguish awaiting payment, payment not completed, capture pending and paid. A failed Razorpay attempt is server-verified before Payment becomes FAILED; Order stays PENDING to allow retry. Authorization does not confirm or fulfill an order; late failure events cannot downgrade authorization/capture/refund. Only unpaid PENDING orders can retry. Ambiguous/mismatched provider results leave status unchanged and tell the customer to refresh or contact care. Production/provider/browser acceptance remains pending.
@@ -35,6 +39,8 @@
 2026-09-29 Home MUI contrast follow-up: primary link buttons inherit MUI contrast colors after excluding `.MuiButton-root` from the legacy link color reset; product badge chips are suppressed when badge data is empty. Build/component tests pass; rendered confirmation is pending.
 2026-09-27 Home/catalog merchandising: Home uses a product-led generated hero and catalog-facet category links; Products promo slides use separate imagery for Home & Kitchen, practical gadgets and playful accessories/toys. Products category query parameters seed and track the selected facet. Local desktop visual check confirmed the page/campaign artwork loads; full slide-by-slide, phone and tablet acceptance remains pending.
 
+
+2026-09-30 planned coverage: REBRAND_IMPLEMENTATION_PLAN.md maps every registered storefront/account/policy/shop/seller route, all 14 admin tabs, standalone admin routes, startup, shared primitives and recovery states to RB-01?RB-09. SCHEMA_EVOLUTION_PLAN.md links underlying data dependencies. MUI coverage remains partial; planning does not mark any additional component or route migrated. Browser/device acceptance remains pending.
 2026-09-26 typography foundation: one shared system sans family now backs the body/display tokens, Tailwind `font-sans`, legacy page styles and native form controls. Font sizes/weights continue to set hierarchy. Route-by-route rendered and device review remains pending.
 
 2026-09-27 shared header: navigation spacing is responsive, Home uses consistent title case, Log out is compact and sentence case, and Search opens a focused popover with labeled submit/close actions, Escape dismissal and focus return for both close paths. Global keyboard focus is a thinner two-pixel outline; search input uses a restrained border/glow. Desktop browser interaction checked locally; full route and phone/tablet review remains pending.

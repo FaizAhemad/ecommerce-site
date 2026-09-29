@@ -10,11 +10,11 @@ The centralized exports include the MUI Material components used across Gadgify:
 
 - Actions: `Button`, `ButtonGroup`, `IconButton`, `Link`, `Menu`, `MenuItem`, `Tooltip`.
 - Inputs: `Autocomplete`, `Checkbox`, `FormControl`, `FormControlLabel`, `FormHelperText`, `FormLabel`, `InputAdornment`, `InputLabel`, `Radio`, `RadioGroup`, `Select`, `Switch`, `TextField`.
-- Data display: `Accordion`, `AccordionDetails`, `AccordionSummary`, `Avatar`, `Badge`, `Breadcrumbs`, `Card`, `CardActions`, `CardContent`, `CardHeader`, `Chip`, `Divider`, `Paper`, `Stack`, `Table`, `TableBody`, `TableCell`, `TableContainer`, `TableHead`, `TablePagination`, `TableRow`, `Typography`.
+- Data display: `Accordion`, `AccordionDetails`, `AccordionSummary`, `Avatar`, `Badge`, `Breadcrumbs`, `Card`, `CardActions`, `CardContent`, `CardHeader`, `Chip`, `Divider`, `Paper`, `Stack`, `Table`, `TableBody`, `TableCell`, `TableContainer`, `TableHead`, `TablePagination`, `TableRow`, `TableSortLabel`, `Typography`.
 - Feedback and loading: `Alert`, `AlertTitle`, `CircularProgress`, `LinearProgress`, `Skeleton`, `Snackbar`.
 - Navigation: `Container`, `Pagination`, `Tab`, `Tabs`.
 - Overlays: `Backdrop`, `Dialog`, `DialogActions`, `DialogContent`, `DialogTitle`, `Drawer`.
-- Server data grid: MUI X Community `DataGrid`, currently used under its free MIT feature set.
+- Application server grid: `../DataGrid.tsx`, composed from shared MUI Table, TableSortLabel, TextField and TablePagination. The separate MUI X Community wrapper is available for its MIT feature set; it is not the current application grid.
 
 ## Stories and tests
 
@@ -28,7 +28,7 @@ This list maps existing Gadgify components to the MUI primitives they should use
 | --- | --- |
 | `SiteLayout`, `PageContainer`, `SellerNavigation` | `Container`, `Box`, `Stack`, `AppBar`, `Toolbar`, `Tabs`, `Button`, `IconButton`, `Badge` |
 | `ProductCard`, `ProductGrid`, `PromoCarousel`, `AddToCartButton`, `RatingStars` | `Card`, `CardContent`, `CardActions`, `Button`, `ButtonGroup`, `IconButton`, `Chip`, `Rating`, `Skeleton`, `Stack` |
-| `DataGrid` | MUI X Community `DataGrid`, server-side pagination/sort/filter, retained rows during refresh, centered progress indicator |
+| `DataGrid` | Shared MUI Table composition, server-side pagination/sort/filter, retained rows during refresh, body-only progress indicator |
 | `FormDialog`, `ProfileForms`, `CheckoutSubmit`, `CheckoutSettings`, `CouponManager`, `PolicyEditor` | `Dialog`, `Drawer`, `TextField`, `Select`, `FormControl`, `Checkbox`, `RadioGroup`, `Switch`, `Button`, `Alert` |
 | `FilterSidebar` | `Drawer`, `Button`, `Checkbox`, `FormControl`, `Select`, `Typography` (drawer now migrated) |
 | `NotificationProvider`, `ConnectionStatus`, `NotificationHistory` | `Snackbar`, `Alert`, `Badge`, `Chip`, `Stack` |
@@ -38,3 +38,13 @@ This list maps existing Gadgify components to the MUI primitives they should use
 | `SiteTour`, `SessionActivity` | `Dialog`, `Popover`, `Tooltip`, `Button`, `LinearProgress`, `Alert` |
 
 Tailwind utility styling remains in unconverted feature code until all listed consumers are migrated and verified. The Products filter drawer has already moved to MUI. Remove Tailwind build integration only in the final migration batch after a source scan confirms there are no remaining consumers.
+
+## Shared component foundation - 2026-09-30
+
+The theme now uses white surfaces, a cool neutral canvas, teal primary actions and semantic feedback colors. Controls use 44px compact / 48px regular touch targets, 16px input text, visible keyboard focus, and consistent borders/spacing. Button, IconButton, Checkbox, Radio, Switch and Chip preserve MUI semantic colors; TextField and Select preserve error and disabled borders. Existing legacy page styles still require consumer migration.
+
+The application grid uses labelled text/number/select fields immediately below headers, visible All select placeholders, right-aligned search, conditional Clear filters, TableSortLabel and TablePagination. Filtering/search is debounced into the existing server query contract; no client-side filtering or invented operator support is added. Pagination has one page-size label and range, first/previous/next/last actions and a bounded page-jump input. Refresh retains supplied rows, with measured body-only spinner placement instead of skeletons or fixed offsets over filters. Callers must retain rows/counts during fetching and continue managing mutation locks and errors.
+
+MUI X header filters and simultaneous multi-column filtering require Pro; this composition preserves those application requirements without introducing a paid dependency. References: [MUI filtering](https://mui.com/x/react-data-grid/filtering/), [MUI Table](https://mui.com/material-ui/react-table/), [TablePagination](https://mui.com/material-ui/api/table-pagination/) and [theme components](https://mui.com/material-ui/customization/theme-components/).
+
+`shared-grid.stories.tsx` demonstrates the actual application grid (default, refreshing, initial loading, empty, 1,200 pages and phone width). It emits query fixtures and does not save edits or fetch data. The older `data-grid.stories.tsx` demonstrates the separate X Community wrapper. Interaction tests cover combined server filter/search/sort, page-size reset, direct jumps, accessible controls and retained rows. Rendered/device and all-component state coverage remain pending.

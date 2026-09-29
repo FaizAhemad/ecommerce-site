@@ -1,5 +1,9 @@
 # Architecture, security and UI/UX audit
 
+## Shared component correction - 2026-09-30
+
+Source finding: the application grid used fixed loading offsets and handwritten pagination while Storybook demonstrated a separate MUI X wrapper. It now uses measured body geometry, MUI TableSortLabel/TablePagination and stories of the actual application component. Shared wrappers preserve semantic action/selection colors and field error states. Multiple server filters remain a Material Table composition under the existing API contract; no Pro dependency was introduced. Browser/device acceptance and full catalog/consumer migration remain open.
+
 2026-09-29 Admin MUI migration batch 1: `/admin` shell, shared server-side DataGrid and FormDialog are now MUI-based. Preserve its query/server semantics and editor pending/focus protections. Admin tab internals and standalone admin routes remain to migrate; browser/device acceptance is pending.
 
 2026-09-29 DataGrid pagination/loading refinement: keep loaded rows in place during refresh, reserve a simple empty body row for initial loading, and show only the centered progress indicator instead of skeleton placeholders. Keep column filters visible, align global search right, and omit match-count/filter-toggle chips. The responsive footer groups page size left and result range before direct page navigation right; direct jumps remain available for large server result sets. Component tests cover loading, no skeletons and a 1,000-page jump; visual/device acceptance remains pending.
@@ -28,6 +32,8 @@
 
 2026-09-27 header review: the owner screenshot exposed an oversized Log out label, a broken search glyph/weak search flow, crowded navigation and a heavy input focus frame. Source now uses a proper icon, compact sentence-case action label, responsive nav gaps, labeled Search/Close controls, Escape dismissal/focus return and a restrained keyboard focus indicator. Local desktop interaction was checked; test/device and other viewport acceptance remain pending.
 
+
+2026-09-30 source audit: REBRAND_IMPLEMENTATION_PLAN.md records competing legacy/MUI tokens, startup gating, small card typography, a redundant pre-cart product fetch, per-product mutation locks, dual grid abstractions and notification portal migration risks. SCHEMA_EVOLUTION_PLAN.md maps content, SKU, cart revision, payment-attempt and historical snapshot needs to safe additive evolution. These are source findings and proposals; no rendered/mobile/production evidence or runtime redesign is established by this batch.
 2026-09-25 scope clarification: every UI component/state, including notifications and overlays, requires review. Shared color/spacing/type/layout/control foundations come before isolated loader styling. UI_UX_REVIEW_GUIDE.md defines component and route coverage; verification remains pending.
 
 2026-09-27 product reload screenshot: `/product/:id` serves SEO-visible product text before the SPA starts; the source had no early-loaded styles, causing a browser-default serif flash. The fallback now has a responsive inline storefront presentation and safe lead image, then hands off to the interactive page. Empty product rating summaries show `0.0`, `0 ratings` and `0 reviews`. Source-only; rendered reload/mobile verification remains pending.
