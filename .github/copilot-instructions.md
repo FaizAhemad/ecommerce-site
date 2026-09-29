@@ -10,7 +10,7 @@ Latest priority override: marketplace MP-01–MP-09 precedes the earlier UI-firs
 
 Preserve SESSION_SECURITY.md: server-enforced role-specific idle/absolute expiry, activity-only CSRF renewal and no background-read renewal. Legacy 30-day sessions require fresh login; verification is pending.
 
-UI now takes priority: follow UI-01–UI-09 in APPLICATION_BACKLOG.md. Tailwind CSS v4 is the styling standard for new and migrated UI; use shared class composition and Radix-backed shadcn-style primitives for complex behavior. Do not add plain CSS for migrated components. App.css loads Tailwind theme/utilities before legacy feature sheets layered below them; retain legacy CSS for unmigrated screens and preserve brand variables. Preserve financial/auth behavior, focus and modal notifications. Primary auth/checkout remain pages; no rendered acceptance is claimed.
+UI now takes priority: follow UI-01–UI-09 in APPLICATION_BACKLOG.md. Owner direction (2026-09-29) makes MUI the target UI system for every page and shared component. Use the centralized Gadgify theme, provider and exports in src/components/mui; do not add new Tailwind utilities or shadcn/Radix primitives. Existing Tailwind/legacy CSS is migration compatibility only; remove it after consumers are converted and verified. Preserve financial/auth behavior, focus and modal notifications. Primary auth/checkout remain pages; no rendered acceptance is claimed.
 
 E33 refunds: preserve reserved refund-attempt claims before provider writes, explicit full-amount approval, capture/identity checks and no financial replay. Only provider-fetched full-refund proof changes financial status. See REFUND_OPERATIONS.md; verification remains deferred.
 

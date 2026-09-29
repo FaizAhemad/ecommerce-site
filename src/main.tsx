@@ -4,9 +4,12 @@ import './index.css'
 import './i18n'
 import App from './App.tsx'
 import { queryClient } from './api/queryClient'
+import { MUIProvider } from './components/mui/MUIProvider'
 
 createRoot(document.getElementById('root')!).render(
-  <QueryClientProvider client={queryClient}>
-    <App />
-  </QueryClientProvider>,
+  <MUIProvider>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </MUIProvider>,
 )

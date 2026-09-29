@@ -1,6 +1,7 @@
 import { apiFetch } from './http'
 export type Quote = {
   enabled: boolean
+  reason?: string
   subtotalMinor?: number
   shippingMinor?: number
   taxMinor?: number

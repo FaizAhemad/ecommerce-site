@@ -22,7 +22,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
       where: { userId: user.id, OR: [{ id: orderId }, { orderNumber: orderId }] },
       select: {
         id: true,
+        orderNumber: true,
         status: true,
+        createdAt: true,
         shipment: { select: {
           carrier: true, trackingCode: true, status: true,
           events: { select: { id: true, status: true, description: true, location: true, occurredAt: true },
@@ -33,7 +35,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (!order) return sendError(response, 404, 'NOT_FOUND', 'Order not found.', id)
     return response
       .status(200)
-      .json({ orderId: order.id, status: order.status, shipment: order.shipment, requestId: id })
+      .json({ orderId: order.id, orderNumber: order.orderNumber, status: order.status, createdAt: order.createdAt, shipment: order.shipment, requestId: id })
   } catch {
     return sendError(
       response,

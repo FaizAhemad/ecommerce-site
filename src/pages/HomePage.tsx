@@ -3,12 +3,45 @@ import type { StorefrontApiResponse } from '../api/storefront'
 import { ArrowIcon } from '../components/ArrowIcon'
 import { ProductGrid } from '../components/ProductGrid'
 import { SubscribeSection } from '../components/SubscribeSection'
+import { Box } from '../components/mui/Box'
+import { Button } from '../components/mui/Button'
+import { Card } from '../components/mui/Card'
+import { CardContent } from '../components/mui/CardContent'
+import { Stack } from '../components/mui/Stack'
+import { Typography } from '../components/mui/Typography'
+
 type HomePageProps = {
   storefront: StorefrontApiResponse
   onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void
   onAdd: (productId: string) => Promise<void>
   onOpenProduct: (id: string) => void
 }
+
+const pageSx = {
+  width: '100%',
+  maxWidth: '90rem',
+  mx: 'auto',
+  px: { xs: 2, md: 4 },
+}
+
+const overlineSx = {
+  mb: 1,
+  color: 'text.secondary',
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: '0.12em',
+  lineHeight: 1.4,
+  textTransform: 'uppercase' as const,
+}
+
+const sectionTitleSx = {
+  m: 0,
+  fontSize: 'clamp(1.7rem, 3vw, 2.35rem)',
+  fontWeight: 500,
+  lineHeight: 1.12,
+  letterSpacing: '-0.04em',
+}
+
 export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomePageProps) {
   const { hero, collection, story } = storefront.content
   const currency = new Intl.NumberFormat(storefront.localization.locale, {
@@ -30,93 +63,175 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
     Toys: 'Colorful finds made for play.',
     Clothing: 'Comfortable pieces for everyday wear.',
   }
+
   return (
-    <>
-      <section className="hero-section" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <p className="eyebrow">{hero.eyebrow}</p>
-          <h1 id="hero-title">{hero.title}</h1>
-          <p className="hero-text">
+    <Stack component="main" spacing={{ xs: 5, md: 8 }} sx={{ pb: { xs: 6, md: 10 } }}>
+      <Box
+        component="section"
+        aria-labelledby="hero-title"
+        sx={{
+          ...pageSx,
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, .9fr) minmax(0, 1.1fr)' },
+          alignItems: 'center',
+          gap: { xs: 3, md: 6 },
+          pt: { xs: 3, md: 5 },
+        }}
+      >
+        <Stack spacing={{ xs: 2, md: 2.5 }} sx={{ alignItems: 'flex-start', py: { md: 4 } }}>
+          <Typography component="p" sx={{ ...overlineSx, color: 'success.main', mb: 0 }}>
+            {hero.eyebrow}
+          </Typography>
+          <Typography
+            component="h1"
+            id="hero-title"
+            sx={{
+              m: 0,
+              maxWidth: 620,
+              fontSize: 'clamp(2.65rem, 6.5vw, 5.6rem)',
+              fontWeight: 500,
+              lineHeight: 0.98,
+              letterSpacing: '-0.065em',
+              textWrap: 'balance',
+            }}
+          >
+            {hero.title}
+          </Typography>
+          <Typography sx={{ maxWidth: 520, color: 'text.secondary', fontSize: { xs: 16, md: 18 } }}>
             {storefront.identity.tagline} {hero.description}
-          </p>
-          <a className="primary-button" href="/products" onClick={onNavigate('/products')}>
-            {hero.actionLabel} <ArrowIcon direction="right" />
-          </a>
-        </div>
-        <div className="hero-art">
-          <img
-            className="hero-art-image"
+          </Typography>
+          <Button
+            component="a"
+            href="/products"
+            onClick={onNavigate('/products')}
+            variant="contained"
+            size="large"
+            endIcon={<ArrowIcon direction="right" />}
+            sx={{ minHeight: 48, px: 2.5 }}
+          >
+            {hero.actionLabel}
+          </Button>
+        </Stack>
+        <Box
+          sx={{
+            position: 'relative',
+            minWidth: 0,
+            aspectRatio: { xs: '1.16', md: '1.25' },
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: { xs: 3, md: 4 },
+            backgroundColor: '#e7eadf',
+            boxShadow: '0 18px 48px rgba(37,40,33,.09)',
+          }}
+        >
+          <Box
+            component="img"
             src="/images/gadgify-curated-finds.jpg"
             alt={hero.artworkDescription}
             fetchPriority="high"
+            sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }}
           />
-        </div>
-      </section>
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: 'absolute',
+              inset: 'auto 0 0',
+              height: '22%',
+              background: 'linear-gradient(transparent, rgba(37,40,33,.16))',
+            }}
+          />
+        </Box>
+      </Box>
+
       {categories.length > 0 && (
-        <section
-          className="mx-auto w-full max-w-[90rem] px-4 pb-14 md:px-8 md:pb-20"
-          aria-labelledby="home-categories-title"
-        >
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-4 sm:mb-6">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--green)]">
+        <Box component="section" aria-labelledby="home-categories-title" sx={pageSx}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            sx={{ alignItems: { sm: 'flex-end' }, justifyContent: 'space-between', mb: 2.5 }}
+          >
+            <Box>
+              <Typography component="p" sx={{ ...overlineSx, color: 'success.main' }}>
                 Find your kind of useful
-              </p>
-              <h2
-                className="m-0 font-[var(--font-display)] text-[clamp(1.6rem,3vw,2.25rem)] font-normal leading-tight tracking-[-0.04em] text-[var(--ink)]"
-                id="home-categories-title"
-              >
+              </Typography>
+              <Typography component="h2" id="home-categories-title" sx={sectionTitleSx}>
                 Shop by category
-              </h2>
-            </div>
-            <a
-              className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[var(--ink)] underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--ink)]"
+              </Typography>
+            </Box>
+            <Button
+              component="a"
               href="/products"
               onClick={onNavigate('/products')}
+              variant="text"
+              endIcon={<ArrowIcon direction="right" />}
+              sx={{ alignSelf: { xs: 'flex-start', sm: 'auto' }, px: 1 }}
             >
-              View all products <ArrowIcon direction="right" />
-            </a>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
+              View all products
+            </Button>
+          </Stack>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              gap: { xs: 1.5, md: 2 },
+              '@media (min-width:600px)': { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
+              '@media (min-width:1000px)': { gridTemplateColumns: 'repeat(5, minmax(0, 1fr))' },
+            }}
+          >
             {categories.map((category, index) => {
               const path = `/products?category=${encodeURIComponent(category)}`
               return (
-                <a
-                  className="group flex min-h-28 items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 no-underline transition-colors hover:border-[var(--green)] hover:bg-[var(--surface-raised)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] sm:min-h-32 sm:p-5"
+                <Card
+                  component="a"
                   href={path}
                   onClick={onNavigate(path)}
                   key={category}
+                  variant="outlined"
+                  sx={{
+                    display: 'flex',
+                    minHeight: { xs: 132, sm: 148 },
+                    color: 'text.primary',
+                    textDecoration: 'none',
+                    transition: 'border-color 160ms ease, background-color 160ms ease, transform 160ms ease',
+                    '&:hover': { borderColor: 'secondary.dark', backgroundColor: '#fbfaf6', transform: 'translateY(-2px)' },
+                    '&:focus-visible': { outline: '3px solid', outlineColor: 'secondary.dark', outlineOffset: 2 },
+                    '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover': { transform: 'none' } },
+                  }}
                 >
-                  <span className="min-w-0">
-                    <span className="mb-2 block font-sans text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                      0{index + 1} / CATEGORY
-                    </span>
-                    <span className="block text-sm font-semibold leading-5 text-[var(--ink)] sm:text-base">
-                      {category}
-                    </span>
-                    <span className="mt-1.5 block text-xs leading-5 text-[var(--muted)]">
-                      {categoryDescriptions[category] ?? 'Explore useful everyday finds.'}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-lg text-[var(--muted)] transition-transform group-hover:translate-x-1 group-hover:text-[var(--ink)]" aria-hidden="true">
-                    →
-                  </span>
-                </a>
+                  <CardContent sx={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, p: { xs: 1.5, sm: 2 } }}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography component="span" sx={{ ...overlineSx, display: 'block', mb: 1, fontSize: 9 }}>
+                        {`0${index + 1} / CATEGORY`}
+                      </Typography>
+                      <Typography component="span" sx={{ display: 'block', fontWeight: 700, lineHeight: 1.35 }}>
+                        {category}
+                      </Typography>
+                      <Typography component="span" sx={{ display: 'block', mt: 0.75, color: 'text.secondary', fontSize: 12, lineHeight: 1.5 }}>
+                        {categoryDescriptions[category] ?? 'Explore useful everyday finds.'}
+                      </Typography>
+                    </Box>
+                    <Typography component="span" aria-hidden="true" sx={{ flexShrink: 0, color: 'text.secondary', fontSize: 22, transition: 'transform 160ms ease', 'a:hover &': { transform: 'translateX(4px)' } }}>
+                      →
+                    </Typography>
+                  </CardContent>
+                </Card>
               )
             })}
-          </div>
-        </section>
+          </Box>
+        </Box>
       )}
-      <section className="home-products page-section" aria-labelledby="featured-products-title">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Featured edit</p>
-            <h2 id="featured-products-title">Trending now</h2>
-          </div>
-          <p className="section-note">
+
+      <Box component="section" aria-labelledby="featured-products-title" sx={pageSx}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ alignItems: { md: 'flex-end' }, justifyContent: 'space-between', mb: 2.5 }}>
+          <Box>
+            <Typography component="p" sx={{ ...overlineSx, color: 'success.main' }}>Featured edit</Typography>
+            <Typography component="h2" id="featured-products-title" sx={sectionTitleSx}>Trending now</Typography>
+          </Box>
+          <Typography sx={{ maxWidth: 420, color: 'text.secondary', fontSize: 14 }}>
             A considered selection of customer favorites and new arrivals.
-          </p>
-        </div>
+          </Typography>
+        </Stack>
         <ProductGrid
           products={featured}
           currency={currency}
@@ -126,28 +241,39 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
           onAdd={onAdd}
           onOpenProduct={onOpenProduct}
         />
-        <a
-          className="primary-button home-explore"
-          href="/products"
-          onClick={onNavigate('/products')}
-        >
-          Explore all products <ArrowIcon direction="right" />
-        </a>
-      </section>
-      <section className="home-story page-section">
-        <div>
-          <p className="eyebrow">{story.eyebrow}</p>
-          <h2>{story.title}</h2>
-        </div>
-        <p className="hero-text">{story.description}</p>
-      </section>
-      <section className="home-products page-section" aria-labelledby="latest-products-title">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Latest arrivals</p>
-            <h2 id="latest-products-title">Fresh for the everyday</h2>
-          </div>
-        </div>
+        <Button component="a" href="/products" onClick={onNavigate('/products')} variant="contained" endIcon={<ArrowIcon direction="right" />} sx={{ mt: 3, minHeight: 48 }}>
+          Explore all products
+        </Button>
+      </Box>
+
+      <Card
+        component="section"
+        aria-labelledby="home-story-title"
+        sx={{
+          ...pageSx,
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          alignItems: 'center',
+          gap: { xs: 1.5, md: 5 },
+          py: { xs: 3, md: 5 },
+          background: 'linear-gradient(110deg, #eff1e8, #fffefa 76%)',
+          boxShadow: 'none',
+        }}
+      >
+        <Box>
+          <Typography component="p" sx={{ ...overlineSx, color: 'success.main' }}>{story.eyebrow}</Typography>
+          <Typography component="h2" id="home-story-title" sx={sectionTitleSx}>{story.title}</Typography>
+        </Box>
+        <Typography sx={{ maxWidth: 590, color: 'text.secondary', fontSize: { xs: 15, md: 17 } }}>
+          {story.description}
+        </Typography>
+      </Card>
+
+      <Box component="section" aria-labelledby="latest-products-title" sx={pageSx}>
+        <Box sx={{ mb: 2.5 }}>
+          <Typography component="p" sx={{ ...overlineSx, color: 'success.main' }}>Latest arrivals</Typography>
+          <Typography component="h2" id="latest-products-title" sx={sectionTitleSx}>Fresh for the everyday</Typography>
+        </Box>
         <ProductGrid
           products={trending}
           currency={currency}
@@ -157,15 +283,12 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
           onAdd={onAdd}
           onOpenProduct={onOpenProduct}
         />
-        <a
-          className="primary-button home-explore"
-          href="/products"
-          onClick={onNavigate('/products')}
-        >
-          View the full collection <ArrowIcon direction="right" />
-        </a>
-      </section>
-      <SubscribeSection />
-    </>
+        <Button component="a" href="/products" onClick={onNavigate('/products')} variant="contained" endIcon={<ArrowIcon direction="right" />} sx={{ mt: 3, minHeight: 48 }}>
+          View the full collection
+        </Button>
+      </Box>
+
+      <Box sx={pageSx}><SubscribeSection /></Box>
+    </Stack>
   )
 }

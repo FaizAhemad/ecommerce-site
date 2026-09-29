@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 export function PageContainer({ path, children }: { path: string; children: ReactNode }) {
-  const width = /^\/(login|signup|forgot-password|reset-password|verify-email|profile)\/?$/.test(
+  const width = /^\/(login|signup|forgot-password|reset-password|verify-email)\/?$/.test(
     path,
   )
     ? 'form'
@@ -9,7 +9,7 @@ export function PageContainer({ path, children }: { path: string; children: Reac
           path,
         )
       ? 'reading'
-      : /^\/(shops|seller|admin\/fulfillment|admin\/seller-products|cart|orders|checkout|product)(\/|$)/.test(path)
+      : /^\/(shops|seller|admin\/fulfillment|admin\/seller-products|cart|orders|checkout|profile|product)(\/|$)/.test(path)
         ? 'content'
         : 'wide'
   return (

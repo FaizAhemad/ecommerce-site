@@ -15,18 +15,20 @@ function storeFixture({
   orderStatus,
   failRestock = false,
   failCreate = false,
-  checkout = { enabled: true, shippingMinor: 25, taxBps: 1000 },
+  shippingFeeMinor = 0,
+  quantity = 1,
+  checkout = { enabled: true, shippingMinor: 0, taxBps: 1000 },
   country = 'IN',
   ownership = { moderationStatus: 'APPROVED', shop: { id: 'gadgify-platform', name: 'Gadgify', slug: 'gadgify', isPlatform: true, status: 'APPROVED' } },
 } = {}) {
   let state = {
     products: {
-      p: { id: 'p', name: 'Test', priceMinor: 100, stock, isActive: true, shopOwnership: ownership },
+      p: { id: 'p', name: 'Test', priceMinor: 100, shippingFeeMinor, stock, isActive: true, shopOwnership: ownership },
       ...(secondStock === undefined
         ? {}
         : { q: { id: 'q', name: 'Second', priceMinor: 200, stock: secondStock, isActive: true, shopOwnership: ownership } }),
     },
-    carts: { a: [{ productId: 'p', quantity: 1 }], b: [{ productId: 'p', quantity: 1 }] },
+    carts: { a: [{ productId: 'p', quantity }], b: [{ productId: 'p', quantity: 1 }] },
     orders: orderStatus
       ? [
           {
@@ -227,37 +229,65 @@ test('manual status editing cannot mark money refunded without provider reconcil
 
 const checkoutOptions = {
   requestId: '11111111-1111-4111-8111-111111111111',
-  expectedTotalMinor: 135,
+  expectedTotalMinor: 110,
   rules: checkoutRules,
   calculate: checkoutTotal,
 }
-test('checkout validates configured minor amounts and does not assume free delivery or tax', () => {
+test('checkout validates optional tax and treats missing tax and delivery charges as zero', () => {
   for (const value of [
     undefined,
     '{}',
     'null',
-    '{"enabled":true,"shippingMinor":-1,"taxBps":0}',
     '{"enabled":true,"shippingMinor":0,"taxBps":10001}',
   ])
     assert.equal(checkoutRules(value), null)
-  assert.deepEqual(checkoutTotal(101, { enabled: true, shippingMinor: 25, taxBps: 1000 }), {
+  assert.deepEqual(checkoutTotal(101, { enabled: true, shippingMinor: 0, taxBps: 1000 }), {
     subtotalMinor: 101,
-    shippingMinor: 25,
+    shippingMinor: 0,
     taxMinor: 10,
-    totalMinor: 136,
+    totalMinor: 111,
     currency: 'INR',
   })
   assert.throws(() => checkoutTotal(2147483647, { enabled: true, shippingMinor: 1, taxBps: 0 }))
+  assert.deepEqual(checkoutRules('{"enabled":true,"shippingMinor":500,"taxBps":0}'), {
+    enabled: true,
+    shippingMinor: 0,
+    taxBps: 0,
+  })
+  assert.deepEqual(checkoutRules('{"enabled":true}'), {
+    enabled: true,
+    shippingMinor: 0,
+    taxBps: 0,
+  })
 })
 test('checkout calculates stored prices/charges and repeats return the same order without reserving again', async () => {
   const fixture = storeFixture({ stock: 10 })
   const first = await createCartOrder(fixture.store, 'a', 'address-a', checkoutOptions)
   const second = await createCartOrder(fixture.store, 'a', 'address-a', checkoutOptions)
   assert.equal(first.id, second.id)
-  assert.equal(first.totalMinor, 135)
+  assert.equal(first.totalMinor, 110)
   assert.equal(first.payment.create.provider, 'RAZORPAY')
   assert.equal(fixture.state().orders.length, 1)
   assert.equal(fixture.state().products.p.stock, 9)
+})
+test('checkout ignores legacy product delivery fees and keeps delivery free until shipping rules exist', async () => {
+  const fixture = storeFixture({ stock: 10, shippingFeeMinor: 40, quantity: 3, checkout: { enabled: true, shippingMinor: 25, taxBps: 0 } })
+  const order = await createCartOrder(fixture.store, 'a', 'address-a', {
+    ...checkoutOptions,
+    expectedTotalMinor: 300,
+  })
+  assert.equal(order.shippingMinor, 0)
+  assert.equal(order.totalMinor, 300)
+  assert.equal(order.items[0].shippingFeeMinor, 0)
+})
+test('checkout treats a product with no delivery fee as free delivery', async () => {
+  const fixture = storeFixture({ stock: 10, shippingFeeMinor: null })
+  const order = await createCartOrder(fixture.store, 'a', 'address-a', checkoutOptions)
+  assert.equal(order.shippingMinor, 0)
+  assert.equal(order.totalMinor, 110)
+  assert.equal(order.items[0].shippingFeeMinor, 0)
+  assert.equal(fixture.state().products.p.stock, 9)
+  assert.equal(fixture.state().orders.length, 1)
 })
 test('checkout rejects a changed total atomically and retains cart and inventory', async () => {
   const fixture = storeFixture({ stock: 10 })

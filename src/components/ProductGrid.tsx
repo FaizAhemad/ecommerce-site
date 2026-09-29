@@ -1,8 +1,8 @@
 import type { StorefrontProduct } from '../api/storefront'
 import { ProductCard } from './ProductCard'
-import { productGridClass } from './productCardStyles'
 import { getCartPendingAction, useCart } from '../api/cart'
 import { sessionUser } from '../api/sessionScope'
+import { Box } from './mui/Box'
 
 type ProductGridProps = {
   products: readonly StorefrontProduct[]
@@ -28,7 +28,19 @@ export function ProductGrid({
   const isCartLoading = Boolean(sessionUser() && cart.isPending)
 
   return (
-    <div className={productGridClass}>
+    <Box
+      sx={{
+        display: 'grid',
+        width: '100%',
+        gridTemplateColumns: {
+          xs: 'repeat(2, minmax(0, 1fr))',
+          md: 'repeat(auto-fill, minmax(min(100%, 230px), 1fr))',
+        },
+        columnGap: { xs: 1.5, md: 2.5 },
+        rowGap: { xs: 2.5, md: 4 },
+        alignItems: 'stretch',
+      }}
+    >
       {products.map((product) => (
         <ProductCard
           key={product.id}
@@ -45,6 +57,6 @@ export function ProductGrid({
           cartPendingAction={getCartPendingAction(product.id)}
         />
       ))}
-    </div>
+    </Box>
   )
 }

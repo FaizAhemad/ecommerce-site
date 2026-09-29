@@ -104,7 +104,7 @@ export async function createCartOrder(
       throw new OrderActionError(503, 'COUPON_UNAVAILABLE', 'Coupon checkout is unavailable.')
     const totals =
       rules && checkout
-        ? checkout.calculate(subtotalMinor, rules, coupon?.discountMinor, coupon?.taxTreatment)
+        ? checkout.calculate(subtotalMinor, rules, coupon?.discountMinor, coupon?.taxTreatment, rules.shippingMinor)
         : { subtotalMinor, totalMinor: subtotalMinor }
     if (checkout && totals.totalMinor !== checkout.expectedTotalMinor)
       throw new OrderActionError(
@@ -123,6 +123,7 @@ export async function createCartOrder(
             productId: item.productId,
             productName: item.product.name,
             unitPriceMinor: item.product.priceMinor,
+            shippingFeeMinor: 0,
             quantity: item.quantity,
           })),
         },

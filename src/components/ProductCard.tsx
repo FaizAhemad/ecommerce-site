@@ -2,23 +2,17 @@ import { readWishlist, toggleWishlistItem, wishlistPending } from '../api/wishli
 import type { StorefrontApiResponse } from '../api/storefront'
 import { Heart } from 'lucide-react'
 import { useEffect, useState, type MouseEvent } from 'react'
-import { cn } from '../lib/utils'
 import { AddToCartButton } from './AddToCartButton'
 import { RatingStars } from './RatingStars'
 import { useNotification } from './NotificationProvider'
 import { updateCart } from '../api/cart'
-import {
-  productAddButtonClass,
-  productAddButtonLayoutClass,
-  productCardClass,
-  productInfoClass,
-  productMediaClass,
-  productRatingClass,
-  productSwatchesClass,
-  productTitleClass,
-  productTitleRowClass,
-  productWishlistClass,
-} from './productCardStyles'
+import { Box } from './mui/Box'
+import { Card } from './mui/Card'
+import { CardContent } from './mui/CardContent'
+import { Chip } from './mui/Chip'
+import { IconButton } from './mui/IconButton'
+import { Stack } from './mui/Stack'
+import { Typography } from './mui/Typography'
 
 type ProductCardProps = {
   product: StorefrontApiResponse['products'][number]
@@ -86,12 +80,12 @@ export function ProductCard({
     )
 
   return (
-    <article
-      className={productCardClass}
+    <Card
+      component="article"
       tabIndex={0}
       onClick={(event) => {
         const target = event.target as HTMLElement
-        if (target.closest('.catalog-product-image, .catalog-product-title')) onOpen()
+        if (target.closest('[data-product-open]')) onOpen()
       }}
       onKeyDown={(event) => {
         if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
@@ -99,140 +93,153 @@ export function ProductCard({
           onOpen()
         }
       }}
+      sx={{
+        display: 'flex',
+        width: '100%',
+        maxWidth: 280,
+        minWidth: 0,
+        height: '100%',
+        flexDirection: 'column',
+        justifySelf: 'center',
+        p: 1,
+        transition: 'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
+        '&:hover': { transform: 'translateY(-2px)', borderColor: 'rgba(40,49,59,.3)', boxShadow: '0 12px 28px rgba(37,40,33,.1)' },
+        '&:focus-visible': { outline: '3px solid', outlineColor: 'secondary.dark', outlineOffset: 2 },
+        '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover': { transform: 'none' } },
+      }}
     >
-      <div className={productMediaClass}>
-        <span className="absolute left-3.5 top-3.5 z-10 text-[9px] uppercase tracking-[0.08em] text-[#324239]">
-          {product.badge}
-        </span>
+      <Box sx={{ position: 'relative', aspectRatio: '1 / 1', overflow: 'hidden', borderRadius: 1.25, backgroundColor: '#e7eadf' }}>
+        {product.badge?.trim() && (
+          <Chip
+            label={product.badge}
+            size="small"
+            sx={{ position: 'absolute', zIndex: 1, top: 1, left: 1, maxWidth: '90%', height: 24, backgroundColor: 'rgba(255,254,250,.94)', color: 'text.primary', fontSize: 9, letterSpacing: '.08em', textTransform: 'uppercase', boxShadow: '0 1px 4px rgba(37,40,33,.12)' }}
+          />
+        )}
         {primaryImage ? (
-          <img
-            className="catalog-product-image block size-full cursor-pointer object-cover"
+          <Box
+            data-product-open
+            component="img"
             src={primaryImage.url}
             alt={primaryImage.alt}
+            sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
           />
         ) : (
-          <div className="absolute left-1/2 top-1/2 h-[52%] w-[42%] -translate-x-1/2 -translate-y-1/2 rotate-[-7deg] rounded-[48%_48%_18%_18%] bg-[#ebeee4] shadow-[23px_18px_0_rgba(36,92,75,0.26)]" />
+          <Box
+            aria-hidden="true"
+            sx={{ position: 'absolute', width: '42%', height: '52%', top: '24%', left: '29%', borderRadius: '48% 48% 18% 18%', backgroundColor: '#ebeee4', boxShadow: '23px 18px 0 rgba(36,92,75,.26)', transform: 'rotate(-7deg)' }}
+          />
         )}
-      </div>
+      </Box>
 
-      <div className={productInfoClass}>
-        <div className="flex min-w-0 flex-col">
-          <p className="mb-1 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-[10px] font-semibold uppercase leading-[1.3] tracking-[0.1em] text-[var(--muted)]">
-            {product.category}
-          </p>
-          <div className={productTitleRowClass}>
-            <h3 className={cn('catalog-product-title m-0 cursor-pointer', productTitleClass)} title={product.name}>
-              {product.name}
-            </h3>
-            <button
-              className={cn(
-                productWishlistClass,
-                wishlisted && 'border-[#d52f45]/30 bg-[#d52f45]/5 text-[#d52f45]',
-              )}
-              type="button"
-              disabled={actionLocked}
-              aria-busy={actionLocked}
-              onClick={toggleWishlist}
-              aria-label={
-                actionLocked
-                  ? 'Updating wishlist'
-                  : wishlisted
-                    ? 'Remove from wishlist'
-                    : 'Add to wishlist'
-              }
-              aria-pressed={wishlisted}
-            >
-              <Heart
-                aria-hidden="true"
-                className={cn('size-4', wishlisted && 'fill-current')}
-              />
-            </button>
-          </div>
-          {product.seller && !product.seller.isPlatform && (
-            <p className="mt-1.5 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-[11px] leading-[1.4] text-[var(--muted)]">
-              Sold by {product.seller.name}
-            </p>
-          )}
-        </div>
-
-        <div className="flex min-h-11 w-full items-center gap-2">
-          <div className="grid min-h-[42px] min-w-0 flex-1 content-center gap-1">
-            <strong className="max-w-full break-words text-left font-sans text-[clamp(18px,1.35vw,21px)] font-extrabold leading-[1.15] tracking-[-0.025em] text-[var(--ink)]">
+      <CardContent sx={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 1, px: 1, pt: 1.5, pb: 1, '&:last-child': { pb: 1 } }}>
+        <Typography component="p" noWrap sx={{ m: 0, color: 'text.secondary', fontSize: 10, fontWeight: 700, lineHeight: 1.3, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+          {product.category}
+        </Typography>
+        <Stack direction="row" spacing={0.75} sx={{ minHeight: 44, alignItems: 'flex-start' }}>
+          <Typography
+            data-product-open
+            component="h3"
+            title={product.name}
+            sx={{
+              display: '-webkit-box',
+              minWidth: 0,
+              flex: 1,
+              m: 0,
+              overflow: 'hidden',
+              color: 'success.dark',
+              fontSize: { xs: 14, sm: 15 },
+              fontWeight: 650,
+              lineHeight: 1.35,
+              overflowWrap: 'anywhere',
+              WebkitBoxOrient: 'vertical',
+              WebkitLineClamp: 2,
+              cursor: 'pointer',
+            }}
+          >
+            {product.name}
+          </Typography>
+          <IconButton
+            aria-label={actionLocked ? 'Updating wishlist' : wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+            aria-pressed={wishlisted}
+            aria-busy={actionLocked}
+            disabled={actionLocked}
+            onClick={toggleWishlist}
+            sx={{ flexShrink: 0, mt: -0.75, color: wishlisted ? 'error.main' : 'text.secondary', border: '1px solid', borderColor: wishlisted ? 'rgba(180,35,24,.24)' : 'divider', backgroundColor: wishlisted ? 'rgba(180,35,24,.05)' : 'transparent', '&:hover': { color: 'error.main', backgroundColor: 'rgba(180,35,24,.06)' }, '&:disabled': { animation: 'pulse 1.4s ease-in-out infinite' } }}
+          >
+            <Heart aria-hidden="true" size={17} fill={wishlisted ? 'currentColor' : 'none'} />
+          </IconButton>
+        </Stack>
+        {product.seller && !product.seller.isPlatform && (
+          <Typography component="p" noWrap sx={{ m: 0, mt: -0.75, color: 'text.secondary', fontSize: 11 }}>
+            Sold by {product.seller.name}
+          </Typography>
+        )}
+        <Stack direction="row" spacing={1} sx={{ minHeight: 44, alignItems: 'center', mt: 0.25 }}>
+          <Box sx={{ display: 'grid', minWidth: 0, flex: 1, alignContent: 'center', gap: 0.5 }}>
+            <Typography component="strong" sx={{ color: 'text.primary', fontSize: 'clamp(18px,1.35vw,21px)', fontWeight: 800, lineHeight: 1.15, letterSpacing: '-.025em', overflowWrap: 'anywhere' }}>
               {currency.format(product.price)}
-            </strong>
-            {product.compareAtPriceMinor != null &&
-              product.priceMinor != null &&
-              product.compareAtPriceMinor > product.priceMinor && (
-                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-sans text-[11px] leading-tight">
-                  <del className="text-[var(--muted)] decoration-[var(--muted)]">
-                    {currency.format(product.compareAtPriceMinor / 100)}
-                  </del>
-                  <span className="rounded-full bg-[#e9efdf] px-1.5 py-1 text-[10px] font-bold text-[#36563c]">
-                    {Math.round(
-                      ((product.compareAtPriceMinor - product.priceMinor) /
-                        product.compareAtPriceMinor) *
-                        100,
-                    )}% off
-                  </span>
-                </div>
-              )}
-          </div>
-        </div>
-      </div>
-
-      <div
-        className={productRatingClass}
-        aria-label={
-          product.reviewCount > 0
-            ? `${ratingLabel}: ${product.rating}, ${product.reviewCount} ${reviewsLabel}`
-            : 'No reviews yet'
-        }
-      >
-        {product.reviewCount > 0 ? (
-          <>
-            <RatingStars rating={product.rating} />
-            <b className="shrink-0 font-semibold">{product.rating.toFixed(1)}</b>
-            <em className="not-italic text-[var(--muted)]">
-              ({product.reviewCount} {reviewsLabel})
-            </em>
-          </>
-        ) : (
-          <span className="text-[var(--muted)]">No reviews yet</span>
+            </Typography>
+            {product.compareAtPriceMinor != null && product.priceMinor != null && product.compareAtPriceMinor > product.priceMinor && (
+              <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
+                <Typography component="del" sx={{ color: 'text.secondary', fontSize: 11 }}>
+                  {currency.format(product.compareAtPriceMinor / 100)}
+                </Typography>
+                <Chip
+                  label={`${Math.round(((product.compareAtPriceMinor - product.priceMinor) / product.compareAtPriceMinor) * 100)}% off`}
+                  size="small"
+                  color="success"
+                  sx={{ height: 22, fontSize: 10 }}
+                />
+              </Stack>
+            )}
+          </Box>
+        </Stack>
+        <Box
+          aria-label={product.reviewCount > 0 ? `${ratingLabel}: ${product.rating}, ${product.reviewCount} ${reviewsLabel}` : 'No reviews yet'}
+          sx={{ display: 'flex', width: 'fit-content', maxWidth: '100%', minHeight: 28, alignItems: 'center', gap: 0.75, borderRadius: 999, px: 1, py: 0.5, backgroundColor: 'rgba(215,225,208,.42)', fontSize: 10, lineHeight: 1.2 }}
+        >
+          {product.reviewCount > 0 ? (
+            <>
+              <RatingStars rating={product.rating} />
+              <Typography component="b" sx={{ flexShrink: 0, fontSize: 10, fontWeight: 700 }}>{product.rating.toFixed(1)}</Typography>
+              <Typography component="span" noWrap sx={{ color: 'text.secondary', fontSize: 10 }}>
+                ({product.reviewCount} {reviewsLabel})
+              </Typography>
+            </>
+          ) : (
+            <Typography component="span" sx={{ color: 'text.secondary', fontSize: 10 }}>No reviews yet</Typography>
+          )}
+        </Box>
+        {displayColors.length > 0 && (
+          <Stack direction="row" spacing={1} aria-label={`Available colors: ${displayColors.join(', ')}`} sx={{ minHeight: 24, alignItems: 'center', pb: 0.5 }}>
+            {displayColors.map((color) => (
+              <Box
+                component="span"
+                sx={{ width: 18, height: 18, flexShrink: 0, border: '1px solid rgba(37,40,33,.2)', borderRadius: '50%' }}
+                style={{ backgroundColor: product.colorValues?.[color] ?? color.toLowerCase() }}
+                key={color}
+                title={color}
+                aria-label={color}
+              />
+            ))}
+          </Stack>
         )}
-      </div>
-
-      {displayColors.length > 0 && (
-        <div className={productSwatchesClass} aria-label={`Available colors: ${displayColors.join(', ')}`}>
-          {displayColors.map((color) => (
-            <span
-              className="size-[18px] shrink-0 rounded-full border border-[rgba(37,40,33,0.2)]"
-              style={{ backgroundColor: product.colorValues?.[color] ?? color.toLowerCase() }}
-              key={color}
-              title={color}
-              aria-label={color}
-            />
-          ))}
-        </div>
-      )}
-
-      <AddToCartButton
-        unavailableReason={
-          product.purchase?.available === false
-            ? product.purchase.reason ?? 'Currently unavailable'
-            : undefined
-        }
-        productId={product.id}
-        onAdd={onAdd}
-        label={addToCartLabel}
-        className={productAddButtonClass}
-        iconClassName="ml-auto text-lg leading-none"
-        quantity={quantity}
-        isCartLoading={isCartLoading}
-        isUpdating={isCartUpdating}
-        pendingAction={cartPendingAction}
-        onDecrease={decreaseQuantity}
-        quantityControlClassName={productAddButtonLayoutClass}
-      />
-    </article>
+        <Box sx={{ mt: 'auto', pt: 0.5 }}>
+          <AddToCartButton
+            unavailableReason={product.purchase?.available === false ? product.purchase.reason ?? 'Currently unavailable' : undefined}
+            productId={product.id}
+            onAdd={onAdd}
+            label={addToCartLabel}
+            quantity={quantity}
+            isCartLoading={isCartLoading}
+            isUpdating={isCartUpdating}
+            pendingAction={cartPendingAction}
+            onDecrease={decreaseQuantity}
+            fullWidth
+          />
+        </Box>
+      </CardContent>
+    </Card>
   )
 }

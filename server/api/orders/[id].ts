@@ -41,7 +41,16 @@ export default async function handler(request: VercelRequest, response: VercelRe
         totalMinor: true,
         items: { select: { id: true, productName: true, quantity: true, unitPriceMinor: true } },
         payment: { select: { status: true, provider: true } },
-        shipment: { select: { status: true, carrier: true, trackingCode: true } },
+        shipment: { select: {
+          status: true,
+          carrier: true,
+          trackingCode: true,
+          events: {
+            select: { id: true, status: true, description: true, location: true, occurredAt: true },
+            orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
+            take: 100,
+          },
+        } },
         shippingAddress: {
           select: {
             userId: true,

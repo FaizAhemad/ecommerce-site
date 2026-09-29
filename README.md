@@ -23,7 +23,7 @@ Current roadmap priority: [Gadgify multi-vendor marketplace](MARKETPLACE_REQUIRE
 
 Current unverified E30 work includes coupon redemption, customer return requests, manual shipment tracking, order email-attempt history, private support attachments/conversations and basic route metadata. See APPLICATION_BACKLOG and PROJECT_STATUS before deployment; two new support migrations are prepared but not applied.
 
-Vite, React and TypeScript storefront with Node.js API handlers, Prisma/PostgreSQL, Vercel Blob, Resend and Razorpay integration code. The UI uses the light-only Ink and Citron theme. Tailwind CSS v4 is the styling standard for new and migrated UI; the Products page is the first migration, while legacy feature styles remain for other screens. This is an application in development; remaining security and commerce work gates production readiness.
+Vite, React and TypeScript storefront with Node.js API handlers, Prisma/PostgreSQL, Vercel Blob, Resend and Razorpay integration code. The UI uses the light-only Ink and Citron theme. MUI is the target system for all new and migrated UI; its shared Gadgify theme, exports, Storybook and tests are under `src/components/mui`. Existing Tailwind and legacy styles remain during migration. This is an application in development; remaining security and commerce work gates production readiness.
 
 Reviewed against the current workspace on 2026-09-12, including staged changes. Workspace implementation does not imply deployment.
 

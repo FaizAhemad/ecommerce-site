@@ -54,7 +54,7 @@ a {
 button {
   cursor: pointer;
 }
-a:not(.primary-button):not(.secondary-button) {
+a:not(.primary-button):not(.secondary-button):not(.MuiButton-root) {
   color: inherit;
 }
 

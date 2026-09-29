@@ -53,16 +53,15 @@ function CheckoutSettingsForm({ initial, saved }: { initial?: Rules; saved: () =
     event.preventDefault()
     if (lock.current) return
     const fields = new FormData(event.currentTarget)
-    const shipping = String(fields.get('shipping') ?? ''),
-      tax = String(fields.get('tax') ?? '')
-    if (!/^\d+(\.\d{1,2})?$/.test(shipping) || !/^\d+(\.\d{1,2})?$/.test(tax)) {
-      notify('Enter delivery charges and tax with at most two decimal places.')
+    const tax = String(fields.get('tax') ?? '').trim()
+    if (tax && !/^\d+(\.\d{1,2})?$/.test(tax)) {
+      notify('Enter tax with at most two decimal places.')
       return
     }
     const rules = {
       enabled: fields.get('enabled') === 'on',
-      shippingMinor: Math.round(Number(shipping) * 100),
-      taxBps: Math.round(Number(tax) * 100),
+      shippingMinor: 0,
+      taxBps: tax ? Math.round(Number(tax) * 100) : 0,
     }
     lock.current = true
     setPending(true)
@@ -93,32 +92,18 @@ function CheckoutSettingsForm({ initial, saved }: { initial?: Rules; saved: () =
     <form className="payment-form" onSubmit={(event) => void submit(event)}>
       <h3>Online checkout — India / INR</h3>
       <p>
-        Set approved delivery charges and tax before enabling checkout. This applies one delivery
-        charge per order and tax to the item subtotal. Product-specific tax and regional delivery
-        rules are not supported by this configuration.
+        Delivery is free at launch. Tax is optional and defaults to 0%. Regional delivery quotes
+        will remain disabled until dispatch coverage and carrier rates are configured.
       </p>
+      <p>No per-item or order-level delivery fee is charged currently. Delivery will be quoted once per shipment after regional rates are configured.</p>
       <label>
-        Delivery charge (₹)
-        <input
-          name="shipping"
-          type="number"
-          min="0"
-          max="100000"
-          step="0.01"
-          required
-          defaultValue={initial ? initial.shippingMinor / 100 : ''}
-          disabled={pending}
-        />
-      </label>
-      <label>
-        Tax (%)
+        Tax (%) <span>(optional)</span>
         <input
           name="tax"
           type="number"
           min="0"
           max="100"
           step="0.01"
-          required
           defaultValue={initial ? initial.taxBps / 100 : ''}
           disabled={pending}
         />

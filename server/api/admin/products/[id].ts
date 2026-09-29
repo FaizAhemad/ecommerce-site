@@ -17,7 +17,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const ownership = await db.shopProduct.findUnique({ where: { productId }, include: { shop: { select: { isPlatform: true } } } })
     if (ownership && !ownership.shop.isPlatform) return sendError(response, 409, 'SELLER_REVIEW_REQUIRED', 'Manage this product through Seller products and moderation.', id)
-    const currentProduct = await db.product.findUnique({ where: { id: productId }, select: { priceMinor: true, compareAtPriceMinor: true } })
+    const currentProduct = await db.product.findUnique({ where: { id: productId }, select: { priceMinor: true, compareAtPriceMinor: true, shippingFeeMinor: true } })
     if (!currentProduct) return sendError(response, 404, 'NOT_FOUND', 'Product not found.', id)
     if (request.method === 'DELETE') {
       await db.product.update({ where: { id: productId }, data: { isActive: false } })
@@ -31,6 +31,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       category?: string
       description?: string
       priceMinor?: number
+      shippingFeeMinor?: number
       compareAtPriceMinor?: number | null
       stock?: number
       isActive?: boolean
@@ -39,6 +40,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (typeof body.category === 'string') data.category = body.category.trim()
     if (typeof body.description === 'string') data.description = body.description
     if (Number.isInteger(body.priceMinor)) data.priceMinor = Number(body.priceMinor)
+    if (body.shippingFeeMinor !== undefined) data.shippingFeeMinor = 0
     if (body.compareAtPriceMinor === null) data.compareAtPriceMinor = null
     else if (Number.isInteger(body.compareAtPriceMinor)) data.compareAtPriceMinor = Number(body.compareAtPriceMinor)
     if (Number.isInteger(body.stock)) data.stock = Number(body.stock)
@@ -49,6 +51,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
         (typeof body.category !== 'string' || !body.category.trim())) ||
       (body.priceMinor !== undefined &&
         (!Number.isInteger(body.priceMinor) || Number(body.priceMinor) < 0 || Number(body.priceMinor) > 2147483647)) ||
+      (body.shippingFeeMinor !== undefined && body.shippingFeeMinor !== null &&
+        body.shippingFeeMinor !== 0) ||
       (body.compareAtPriceMinor !== undefined && body.compareAtPriceMinor !== null &&
         (!Number.isInteger(body.compareAtPriceMinor) || Number(body.compareAtPriceMinor) < 0 || Number(body.compareAtPriceMinor) > 2147483647)) ||
       (body.stock !== undefined && (!Number.isInteger(body.stock) || Number(body.stock) < 0))

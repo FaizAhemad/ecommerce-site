@@ -16,7 +16,12 @@ export type OrderDetail = Omit<OrderSummary, 'items' | 'payment'> & {
   shippingMinor: number
   taxMinor: number
   payment: { status: string; provider: string } | null
-  shipment: { status: string; carrier: string | null; trackingCode: string | null } | null
+  shipment: {
+    status: string
+    carrier: string | null
+    trackingCode: string | null
+    events: { id: string; status: string; description: string | null; location: string | null; occurredAt: string }[]
+  } | null
   shippingAddress: {
     name: string
     line1: string

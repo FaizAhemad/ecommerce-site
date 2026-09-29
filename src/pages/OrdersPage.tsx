@@ -67,8 +67,6 @@ export function OrdersPage({ storefront, onNavigate }: Props) {
         </div>
       </header>
 
-      <PurchaseFeedback />
-
       {history.isPending && (
         <div className="grid gap-4" aria-label="Loading your orders" aria-busy="true" role="status">
           {[0, 1].map((item) => (
@@ -152,7 +150,7 @@ export function OrdersPage({ storefront, onNavigate }: Props) {
                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                       Order number
                     </p>
-                    <h2 className="m-0 break-all text-base font-semibold text-[var(--ink)] sm:text-lg">
+                    <h2 className="!m-0 max-w-2xl break-all font-mono !text-xs !font-semibold !leading-5 !tracking-normal text-[var(--ink)] sm:!text-sm">
                       {order.orderNumber}
                     </h2>
                   </div>
@@ -218,6 +216,8 @@ export function OrdersPage({ storefront, onNavigate }: Props) {
           </button>
         </div>
       )}
+
+      {orders.length > 0 && <PurchaseFeedback />}
 
       <aside className="flex flex-col gap-2 border-t border-[var(--line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
         <div>

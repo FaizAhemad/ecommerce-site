@@ -10,6 +10,8 @@ import { ShipmentManager } from '../components/ShipmentManager'
 import { NotificationHistory } from '../components/NotificationHistory'
 import { PaymentRefunds } from '../components/PaymentRefunds'
 import { FormDialog } from '../components/FormDialog'
+import { DataGrid, type DataGridQuery } from '../components/DataGrid'
+import { Archive, ChevronDown, Image as ImageIcon, Pencil, Upload } from 'lucide-react'
 import { apiFetch as fetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
 import { csrfToken } from '../api/csrf'
 import { queryClient } from '../api/queryClient'
@@ -25,6 +27,7 @@ type AdminProduct = {
   name: string
   category: string
   priceMinor: number
+  shippingFeeMinor: number | null
   compareAtPriceMinor?: number | null
   stock: number
   isActive: boolean
@@ -83,7 +86,12 @@ export function AdminPage({ storefront, onNavigate }: Props) {
     setKeptImages([...(product?.images ?? [])].sort((a, b) => a.sortOrder - b.sortOrder))
     setKeptVideos([...(product?.videos ?? [])].sort((a, b) => a.sortOrder - b.sortOrder))
   }
-  const createdProducts = useRef(new Map<string, AdminProduct>())
+  const loadRevision = useRef<Record<string, number>>({})
+  const gridUrls = useRef({
+    products: '/api/admin/products?page=1&pageSize=10',
+    orders: '/api/admin/orders?page=1&pageSize=10',
+    customers: '/api/admin/customers?page=1&pageSize=10',
+  })
   const productFormRef = useRef<HTMLFormElement>(null)
   const selectedMedia = useRef(new Map<HTMLInputElement, File[]>())
   const [section, setSection] = useState<Section>('overview')
@@ -95,10 +103,12 @@ export function AdminPage({ storefront, onNavigate }: Props) {
   const [categoryBusy, setCategoryBusy] = useState(false)
   const load = useCallback(
     (url: string, key: string) => {
+      const revision = (loadRevision.current[key] ?? 0) + 1
+      loadRevision.current[key] = revision
       setLoadStates((current) => ({ ...current, [key]: 'loading' }))
       return queryClient
         .fetchQuery({
-          queryKey: privateKey('admin', key),
+          queryKey: privateKey('admin', key, url),
           staleTime: 0,
           gcTime: 0,
           queryFn: async ({ signal }) => {
@@ -108,30 +118,13 @@ export function AdminPage({ storefront, onNavigate }: Props) {
           },
         })
         .then((body) => {
+          if (loadRevision.current[key] !== revision) return
           assertCurrentSession(generation)
           setLoadStates((current) => ({ ...current, [key]: 'ready' }))
-          setData((current: any) => {
-            if (key !== 'products') return { ...current, [key]: body }
-            const products: AdminProduct[] = body.products ?? []
-            const serverIds = new Set(products.map((product) => product.id))
-            // Preserve confirmed creations that an earlier list snapshot does not contain.
-            const missing = [...createdProducts.current.values()]
-              .reverse()
-              .filter((product) => !serverIds.has(product.id))
-            return {
-              ...current,
-              products: {
-                ...body,
-                products: [
-                  ...missing,
-                  ...products.map((product) => createdProducts.current.get(product.id) ?? product),
-                ],
-              },
-            }
-          })
+          setData((current: any) => ({ ...current, [key]: body }))
         })
         .catch(() => {
-          if (generation === sessionGeneration())
+          if (generation === sessionGeneration() && loadRevision.current[key] === revision)
             setLoadStates((current) => ({ ...current, [key]: 'error' }))
         })
     },
@@ -141,9 +134,6 @@ export function AdminPage({ storefront, onNavigate }: Props) {
     const map: Partial<Record<Section, [string, string]>> = {
       overview: ['/api/admin/analytics', 'analytics'],
       analytics: ['/api/admin/analytics', 'analytics'],
-      products: ['/api/admin/products', 'products'],
-      orders: ['/api/admin/orders', 'orders'],
-      customers: ['/api/admin/customers', 'customers'],
     }
     const item = map[section]
     let active = true
@@ -154,6 +144,21 @@ export function AdminPage({ storefront, onNavigate }: Props) {
       active = false
     }
   }, [section, load])
+  const queryGrid = useCallback((key: 'products' | 'orders' | 'customers', query: DataGridQuery) => {
+    const params = new URLSearchParams({ page: String(query.page), pageSize: String(query.pageSize) })
+    if (query.search) params.set('search', query.search)
+    if (query.sortBy) {
+      params.set('sortBy', query.sortBy)
+      params.set('sortDirection', query.sortDirection ?? 'asc')
+    }
+    for (const [column, value] of Object.entries(query.filters)) params.set(`filter_${column}`, value)
+    const url = `/api/admin/${key}?${params.toString()}`
+    gridUrls.current[key] = url
+    void load(url, key)
+  }, [load])
+  const onProductsQuery = useCallback((query: DataGridQuery) => queryGrid('products', query), [queryGrid])
+  const onOrdersQuery = useCallback((query: DataGridQuery) => queryGrid('orders', query), [queryGrid])
+  const onCustomersQuery = useCallback((query: DataGridQuery) => queryGrid('customers', query), [queryGrid])
   useEffect(() => {
     if (section !== 'products') return
     const inputs = Array.from(
@@ -326,6 +331,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
         category: String(form.get('category') ?? ''),
         description: String(form.get('description') ?? ''),
         priceMinor: Number(form.get('price')) * 100,
+        shippingFeeMinor: 0,
         compareAtPriceMinor: form.get('compareAtPrice') ? Math.round(Number(form.get('compareAtPrice')) * 100) : null,
         stock: Number(form.get('stock')),
         colors,
@@ -346,20 +352,8 @@ export function AdminPage({ storefront, onNavigate }: Props) {
         } | null
         throw new Error(failure?.error?.message ?? 'Product could not be saved. Please try again.')
       }
-      const result = (await response.json()) as { product: AdminProduct }
-      createdProducts.current.set(result.product.id, result.product)
-      setData((current: any) => ({
-        ...current,
-        products: {
-          ...current.products,
-          products: [
-            result.product,
-            ...(current.products?.products ?? []).filter(
-              (product: AdminProduct) => product.id !== result.product.id,
-            ),
-          ],
-        },
-      }))
+      await response.json()
+      void load(gridUrls.current.products, 'products')
       formElement.reset()
       setNotice('')
       setEditing(null)
@@ -388,37 +382,15 @@ export function AdminPage({ storefront, onNavigate }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      if (response.ok && url.startsWith('/api/admin/products/')) {
-        const result = (await response.json()) as { product: AdminProduct }
-        createdProducts.current.set(result.product.id, result.product)
-        setData((current: any) => ({
-          ...current,
-          products: {
-            ...current.products,
-            products: current.products.products.map((product: AdminProduct) =>
-              product.id === result.product.id ? result.product : product,
-            ),
-          },
-        }))
-      }
       if (!response.ok) {
         const result = (await response.json().catch(() => null)) as {
           error?: { message?: string }
         } | null
         throw new Error(result?.error?.message ?? 'Update failed. Please refresh and try again.')
       }
-      if (url === '/api/admin/orders') {
-        const result = (await response.json()) as { order: { id: string; status: string } }
-        setData((current: any) => ({
-          ...current,
-          orders: {
-            ...current.orders,
-            orders: current.orders.orders.map((order: { id: string }) =>
-              order.id === result.order.id ? { ...order, ...result.order } : order,
-            ),
-          },
-        }))
-      }
+      await response.json()
+      if (url.startsWith('/api/admin/products/')) void load(gridUrls.current.products, 'products')
+      if (url === '/api/admin/orders') void load(gridUrls.current.orders, 'orders')
       notify(message, 'success')
     } catch (error) {
       notify(error instanceof Error ? error : 'Update failed. Please try again.')
@@ -427,33 +399,68 @@ export function AdminPage({ storefront, onNavigate }: Props) {
       setBusy(false)
     }
   }
+  const moneyField = (
+    product: AdminProduct,
+    field: 'priceMinor' | 'compareAtPriceMinor',
+    label: string,
+    value: number | null | undefined,
+    nullable = false,
+  ) => (
+    <div className="relative w-32">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--muted)]" aria-hidden="true">₹</span>
+      <input
+        key={`${product.id}-${field}-${value ?? 'unset'}`}
+        aria-label={`${label} for ${product.name}`}
+        className="min-h-11 w-full rounded-lg border border-[var(--line)] bg-[var(--paper)] py-2 pl-7 pr-2 text-sm tabular-nums text-[var(--ink)] focus-visible:border-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:opacity-60"
+        type="number"
+        min="0"
+        max={21474836.47}
+        step="0.01"
+        required={!nullable}
+        placeholder={nullable ? 'Not set' : '0.00'}
+        defaultValue={value == null ? '' : (value / 100).toFixed(2)}
+        disabled={busy}
+        onBlur={(event) => {
+          const input = event.currentTarget
+          if (!input.checkValidity()) {
+            input.reportValidity()
+            return
+          }
+          const rawValue = input.value.trim()
+          const nextValue = rawValue === '' && nullable ? null : Math.round(Number(rawValue) * 100)
+          if (nextValue === value) return
+          void patch(`/api/admin/products/${product.id}`, { [field]: nextValue }, `${label} updated.`)
+        }}
+      />
+    </div>
+  )
   const analytics = data.analytics ?? {}
   const products = data.products?.products ?? []
   const orders = data.orders?.orders ?? []
   const customers = data.customers?.customers ?? []
+  const productCategoryOptions = [...new Set<string>(categories)]
+    .sort((left, right) => left.localeCompare(right))
+    .map((category) => ({ value: category, label: category }))
+  const customerRoleOptions = ['CUSTOMER', 'ADMIN'].map((role) => ({ value: role, label: role }))
   const activeKey = section === 'overview' ? 'analytics' : section
   return (
-    <section className="admin-page page-section">
-      <div className="admin-heading">
+    <div className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+      <header className="flex flex-col gap-5 border-b border-[var(--line)] pb-6 sm:flex-row sm:items-end sm:justify-between sm:pb-8">
         <div>
-          <p className="eyebrow">ADMINISTRATION</p>
-          <h1>Gadgify control center</h1>
-          <p className="hero-text">Manage your store from one workspace.</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Administration</p>
+          <h1 className="m-0 text-3xl font-semibold tracking-tight text-[var(--ink)] sm:text-4xl">Gadgify control center</h1>
+          <p className="mb-0 mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)] sm:text-base">Manage products, orders, customer care, and store operations.</p>
         </div>
-        <a className="secondary-button" href="/" onClick={onNavigate('/')}>
-          View storefront
-        </a>
-      </div>
-      <div className="admin-shell">
-        <aside className="admin-sidebar">
-          <a href="/admin/fulfillment" onClick={onNavigate('/admin/fulfillment')}>Shop fulfillment</a>
-          <a href="/admin/sellers" onClick={onNavigate('/admin/sellers')}>Seller applications</a>
-          <a href="/admin/seller-products" onClick={onNavigate('/admin/seller-products')}>Seller products</a>
+        <a className="secondary-button min-h-11 shrink-0" href="/" onClick={onNavigate('/')}>View storefront</a>
+      </header>
+      <div className="space-y-3">
+        <nav aria-label="Admin sections" className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              className={section === tab.id ? 'is-active' : ''}
+              className={`min-h-11 rounded-xl border px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50 ${section === tab.id ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--surface)]' : 'border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--surface-raised)]'}`}
               type="button"
+              aria-pressed={section === tab.id}
               disabled={busy}
               onClick={() => {
                 beginEdit(null)
@@ -463,15 +470,34 @@ export function AdminPage({ storefront, onNavigate }: Props) {
               {tab.label}
             </button>
           ))}
-        </aside>
-        <div className="admin-content" aria-busy={loadStates[activeKey] === 'loading'}>
-          {loadStates[activeKey] === 'loading' && <p role="status">Loading this section?</p>}
+        </nav>
+        <nav aria-label="Additional admin tools" className="flex flex-wrap gap-x-5 gap-y-2 border-b border-[var(--line)] pb-4 text-sm">
+          <a className="text-[var(--muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline" href="/admin/fulfillment" onClick={onNavigate('/admin/fulfillment')}>Shop fulfillment</a>
+          <a className="text-[var(--muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline" href="/admin/sellers" onClick={onNavigate('/admin/sellers')}>Seller applications</a>
+          <a className="text-[var(--muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline" href="/admin/seller-products" onClick={onNavigate('/admin/seller-products')}>Seller products</a>
+          <a className="text-[var(--muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline" href="/admin/support" onClick={onNavigate('/admin/support')}>Support inbox</a>
+        </nav>
+      </div>
+      <div className="min-w-0" aria-busy={loadStates[activeKey] === 'loading'}>
+          {loadStates[activeKey] === 'loading' && !['products', 'orders', 'customers'].includes(activeKey) && (
+            <div className="flex min-h-32 items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-5 py-6 text-sm text-[var(--muted)]" role="status" aria-live="polite">
+              <span className="size-5 animate-spin rounded-full border-2 border-[var(--line)] border-t-[var(--ink)] motion-reduce:animate-none" aria-hidden="true" />
+              <span>Loading {section === 'overview' ? 'overview' : section}…</span>
+            </div>
+          )}
           {loadStates[activeKey] === 'error' && (
-            <div role="alert" className="state-panel">
-              <p>Unable to load this section. Please retry.</p>
+            <div role="alert" className="flex flex-col gap-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div>
+                <h2 className="m-0 text-base font-semibold text-[var(--ink)]">This section could not be loaded</h2>
+                <p className="mb-0 mt-1 text-sm leading-6 text-[var(--muted)]">Check your connection and try again. Your changes have not been submitted.</p>
+              </div>
               <button
                 className="secondary-button"
-                onClick={() => void load(`/api/admin/${activeKey}`, activeKey)}
+                type="button"
+                onClick={() => {
+                  const gridKey = activeKey as keyof typeof gridUrls.current
+                  void load(gridKey in gridUrls.current ? gridUrls.current[gridKey] : `/api/admin/${activeKey}`, activeKey)
+                }}
               >
                 Try again
               </button>
@@ -479,7 +505,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
           )}
           <div
             hidden={
-              !['payments', 'messages', 'settings', 'returns', 'feedback', 'policies', 'coupons', 'shipments', 'notifications'].includes(
+              !['products', 'orders', 'customers', 'payments', 'messages', 'settings', 'returns', 'feedback', 'policies', 'coupons', 'shipments', 'notifications'].includes(
                 activeKey,
               ) && loadStates[activeKey] !== 'ready'
             }
@@ -502,7 +528,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                   text={
                     editing
                       ? 'Update product details and media, then save your changes.'
-                      : 'Create products with stock, colors, images, and videos.'
+                      : 'Create products with stock, colors, images, and videos. Delivery is free at launch.'
                   }
                 />
                 <button className="primary-button" disabled={busy} onClick={() => { beginEdit(null); setProductOpen(true) }}>Add product</button>
@@ -574,6 +600,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                       required
                     />
                   </label>
+                  
                   <label>
                     Original price (optional)
                     <input
@@ -708,114 +735,108 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                   )}
                 </form>
                 </FormDialog>
-                {products.length ? (
-                  <Table>
-                    <table className="admin-table">
-                      <tbody>
-                        {products.map((product: any) => (
-                          <tr key={product.id}>
-                            <td>
-                              {product.name}
-                              <small>{product.category}</small>
-                            </td>
-                            <td>₹{(product.priceMinor / 100).toLocaleString('en-IN')}</td>
-                            <td>
-                              <input
-                                key={product.stock}
-                                disabled={busy}
-                                className="admin-inline-input"
-                                type="number"
-                                min="0"
-                                defaultValue={product.stock}
-                                onBlur={(event) => {
-                                  if (Number(event.target.value) !== product.stock)
-                                    void patch(
-                                      `/api/admin/products/${product.id}`,
-                                      { stock: Number(event.target.value) },
-                                      'Stock updated.',
-                                    )
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <button
-                                className="admin-text-button"
-                                disabled={busy}
-                                onClick={() => { beginEdit(product); setProductOpen(true) }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                className="admin-text-button"
-                                disabled={busy}
-                                onClick={() =>
-                                  patch(
-                                    `/api/admin/products/${product.id}`,
-                                    { isActive: !product.isActive },
-                                    'Visibility updated.',
-                                  )
-                                }
-                              >
-                                {product.isActive ? 'Archive' : 'Publish'}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </Table>
-                ) : (
-                  <Empty text="No products have been created yet." />
-                )}
+                <DataGrid
+                  rows={products as AdminProduct[]}
+                  totalRows={data.products?.pagination?.total ?? 0}
+                  isLoading={loadStates.products === 'loading'}
+                  onQueryChange={onProductsQuery}
+                  label="Products"
+                  emptyMessage="No products have been created yet."
+                  getRowKey={(product) => product.id}
+                  columns={[
+                    {
+                      id: 'product',
+                      header: 'Product',
+                      sortKey: 'name',
+                      getFilterValue: (product) => product.name,
+                      getSortValue: (product) => product.name,
+                      minWidthClass: 'min-w-64',
+                      cell: (product) => <div className="flex min-w-56 items-center gap-3"><span className="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] text-[var(--muted)]">{product.images?.[0]?.url ? <img src={product.images[0].url} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" onError={(event) => { event.currentTarget.hidden = true }} /> : <ImageIcon className="size-5" aria-hidden="true" />}</span><span className="font-medium leading-5 text-[var(--ink)]">{product.name}</span></div>,
+                    },
+                    {
+                      id: 'category',
+                      header: 'Category',
+                      getFilterValue: (product) => product.category,
+                      getSortValue: (product) => product.category,
+                      filterOptions: productCategoryOptions,
+                      minWidthClass: 'min-w-40',
+                      cell: (product) => product.category,
+                    },
+                    {
+                      id: 'price',
+                      header: 'Price',
+                      sortKey: 'priceMinor',
+                      getFilterValue: (product) => (product.priceMinor / 100).toLocaleString('en-IN'),
+                      getSortValue: (product) => product.priceMinor,
+                      filterType: 'number', filterStep: 0.01, minWidthClass: 'min-w-28',
+                      cell: (product) => moneyField(product, 'priceMinor', 'Price', product.priceMinor),
+                    },
+                    {
+                      id: 'originalPrice',
+                      header: 'Original price',
+                      sortKey: 'compareAtPriceMinor',
+                      getFilterValue: (product) => product.compareAtPriceMinor == null ? '' : (product.compareAtPriceMinor / 100).toFixed(2),
+                      getSortValue: (product) => product.compareAtPriceMinor ?? -1,
+                      filterType: 'number', filterStep: 0.01, minWidthClass: 'min-w-36',
+                      cell: (product) => moneyField(product, 'compareAtPriceMinor', 'Original price', product.compareAtPriceMinor, true),
+                    },
+                    {
+                      id: 'stock',
+                      header: 'Stock',
+                      getFilterValue: (product) => product.stock,
+                      getSortValue: (product) => product.stock,
+                      filterType: 'number', filterStep: 1, minWidthClass: 'min-w-28',
+                      cell: (product) => <input key={product.stock} aria-label={`Stock for ${product.name}`} disabled={busy} className="admin-inline-input min-h-11 w-24 rounded-lg border border-[var(--line)] bg-[var(--paper)] px-3 text-base text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]" type="number" min="0" defaultValue={product.stock} onBlur={(event) => {
+                        if (Number(event.target.value) !== product.stock) void patch(`/api/admin/products/${product.id}`, { stock: Number(event.target.value) }, 'Stock updated.')
+                      }} />,
+                    },
+                    {
+                      id: 'visibility',
+                      header: 'Visibility',
+                      sortKey: 'isActive',
+                      getFilterValue: (product) => product.isActive ? 'published' : 'archived',
+                      filterOptions: [{ value: 'published', label: 'Published' }, { value: 'archived', label: 'Archived' }],
+                      getSortValue: (product) => product.isActive ? 'Published' : 'Archived',
+                      cell: (product) => <div className="relative w-32"><select key={`${product.id}-${product.isActive}`} aria-label={`Visibility for ${product.name}`} className="min-h-11 w-full appearance-none rounded-lg border border-[var(--line)] bg-[var(--paper)] px-3 pr-8 text-sm font-medium text-[var(--ink)] focus-visible:border-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:opacity-60" defaultValue={product.isActive ? 'published' : 'archived'} disabled={busy} onChange={(event) => patch(`/api/admin/products/${product.id}`, { isActive: event.target.value === 'published' }, 'Visibility updated.')}><option value="published">Published</option><option value="archived">Archived</option></select><ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]" aria-hidden="true" /></div>,
+                    },
+                    {
+                      id: 'actions',
+                      header: 'Actions',
+                      filterable: false,
+                      minWidthClass: 'min-w-28',
+                      cell: (product) => <div className="flex items-center gap-2"><button className="inline-flex size-10 appearance-none items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--surface-raised)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:opacity-50" aria-label={`Edit ${product.name}`} title="Edit product" disabled={busy} onClick={() => { beginEdit(product); setProductOpen(true) }}><Pencil className="size-4" aria-hidden="true" /></button><button className="inline-flex size-10 appearance-none items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--surface-raised)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:opacity-50" aria-label={`${product.isActive ? 'Archive' : 'Publish'} ${product.name}`} title={product.isActive ? 'Archive product' : 'Publish product'} disabled={busy} onClick={() => patch(`/api/admin/products/${product.id}`, { isActive: !product.isActive }, 'Visibility updated.')}>{product.isActive ? <Archive className="size-4" aria-hidden="true" /> : <Upload className="size-4" aria-hidden="true" />}</button></div>,
+                    },
+                  ]}
+                />
               </>
             )}
             {section === 'orders' && (
               <>
                 <Title title="Orders" text="Review orders and update fulfillment status." />
-                {orders.length ? (
-                  <Table>
-                    <table className="admin-table">
-                      <tbody>
-                        {orders.map((o: any) => (
-                          <tr key={o.id}>
-                            <td>{o.orderNumber}</td>
-                            <td>₹{(o.totalMinor / 100).toLocaleString('en-IN')}</td>
-                            <td>
-                              <select
-                                disabled={
-                                  busy || ['CANCELLED', 'REFUNDED', 'SHIPPED', 'DELIVERED'].includes(o.status)
-                                }
-                                value={o.status}
-                                onChange={(e) =>
-                                  patch(
-                                    '/api/admin/orders',
-                                    { orderId: o.id, status: e.target.value },
-                                    'Order updated.',
-                                  )
-                                }
-                              >
-                                <option>PENDING</option>
-                                <option>CONFIRMED</option>
-                                <option>PROCESSING</option>
-                                <option disabled>SHIPPED</option>
-                                <option disabled>DELIVERED</option>
-                                <option
-                                  disabled={o.status !== 'PENDING' && o.status !== 'CONFIRMED'}
-                                >
-                                  CANCELLED
-                                </option>
-                                <option disabled>REFUNDED</option>
-                              </select>
-                              <button className="secondary-button" onClick={() => setSection('shipments')}>Manage shipment</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </Table>
-                ) : (
-                  <Empty text="No orders have been placed yet." />
-                )}
+                <DataGrid
+                  rows={orders}
+                  totalRows={data.orders?.pagination?.total ?? 0}
+                  isLoading={loadStates.orders === 'loading'}
+                  onQueryChange={onOrdersQuery}
+                  label="Orders"
+                  emptyMessage="No orders have been placed yet."
+                  getRowKey={(order: any) => order.id}
+                  columns={[
+                    { id: 'order', header: 'Order', sortKey: 'orderNumber', getFilterValue: (order: any) => order.orderNumber, getSortValue: (order: any) => order.orderNumber, cell: (order: any) => <span className="whitespace-nowrap font-medium">{order.orderNumber}</span> },
+                    { id: 'total', header: 'Total', sortKey: 'totalMinor', getFilterValue: (order: any) => (order.totalMinor / 100).toLocaleString('en-IN'), getSortValue: (order: any) => order.totalMinor, filterType: 'number', filterStep: 0.01, cell: (order: any) => `₹${(order.totalMinor / 100).toLocaleString('en-IN')}` },
+                    {
+                      id: 'status',
+                      header: 'Status',
+                      getFilterValue: (order: any) => order.status,
+                      filterOptions: ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'].map((status) => ({ value: status, label: status })),
+                      getSortValue: (order: any) => order.status,
+                      cell: (order: any) => <div className="relative w-fit"><select aria-label={`Status for order ${order.orderNumber}`} className="min-h-11 appearance-none rounded-lg border border-[var(--line)] bg-[var(--paper)] py-2 pl-3 pr-9 text-sm text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:cursor-not-allowed disabled:opacity-60" disabled={busy || ['CANCELLED', 'REFUNDED', 'SHIPPED', 'DELIVERED'].includes(order.status)} value={order.status} onChange={(event) => patch('/api/admin/orders', { orderId: order.id, status: event.target.value }, 'Order updated.')}>
+                        <option>PENDING</option><option>CONFIRMED</option><option>PROCESSING</option><option disabled>SHIPPED</option><option disabled>DELIVERED</option><option disabled={order.status !== 'PENDING' && order.status !== 'CONFIRMED'}>CANCELLED</option><option disabled>REFUNDED</option>
+                      </select><ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]" aria-hidden="true" /></div>,
+                    },
+                    { id: 'actions', header: 'Actions', filterable: false, cell: () => <button className="secondary-button min-h-11" type="button" onClick={() => setSection('shipments')}>Manage shipment</button> },
+                  ]}
+                />
               </>
             )}
             {section === 'payments' && (
@@ -833,24 +854,21 @@ export function AdminPage({ storefront, onNavigate }: Props) {
             {section === 'customers' && (
               <>
                 <Title title="Customers" text="Review customer accounts and order history." />
-                {customers.length ? (
-                  <Table>
-                    <table className="admin-table">
-                      <tbody>
-                        {customers.map((c: any) => (
-                          <tr key={c.id}>
-                            <td>{c.name ?? '—'}</td>
-                            <td>{c.email ?? '—'}</td>
-                            <td>{c.role}</td>
-                            <td>{c._count.orders}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </Table>
-                ) : (
-                  <Empty text="No customer records yet." />
-                )}
+                <DataGrid
+                  rows={customers}
+                  totalRows={data.customers?.pagination?.total ?? 0}
+                  isLoading={loadStates.customers === 'loading'}
+                  onQueryChange={onCustomersQuery}
+                  label="Customers"
+                  emptyMessage="No customer records yet."
+                  getRowKey={(customer: any) => customer.id}
+                  columns={[
+                    { id: 'name', header: 'Name', getFilterValue: (customer: any) => customer.name, getSortValue: (customer: any) => customer.name, cell: (customer: any) => customer.name ?? '—' },
+                    { id: 'email', header: 'Email', getFilterValue: (customer: any) => customer.email, getSortValue: (customer: any) => customer.email, cell: (customer: any) => customer.email ?? '—' },
+                    { id: 'role', header: 'Role', getFilterValue: (customer: any) => customer.role, getSortValue: (customer: any) => customer.role, filterOptions: customerRoleOptions, cell: (customer: any) => customer.role },
+                    { id: 'orders', header: 'Orders', getFilterValue: (customer: any) => customer._count.orders, getSortValue: (customer: any) => customer._count.orders, cell: (customer: any) => customer._count.orders },
+                  ]}
+                />
               </>
             )}
             {section === 'messages' && (
@@ -901,9 +919,8 @@ export function AdminPage({ storefront, onNavigate }: Props) {
             {section === 'shipments' && <><Title title="Shipments" text="Record dispatch, tracking and delivery updates." /><ShipmentManager /></>}
             {section === 'notifications' && <><Title title="Notifications" text="Review order and delivery email attempts." /><NotificationHistory /></>}
           </div>
-        </div>
       </div>
-    </section>
+    </div>
   )
 }
 
@@ -948,16 +965,6 @@ function Title({ title, text }: { title: string; text: string }) {
 function Panel({ text }: { text: string }) {
   return (
     <div className="admin-panel">
-      <p>{text}</p>
-    </div>
-  )
-}
-function Table({ children }: { children: any }) {
-  return <div className="admin-table-wrap">{children}</div>
-}
-function Empty({ text }: { text: string }) {
-  return (
-    <div className="admin-empty">
       <p>{text}</p>
     </div>
   )

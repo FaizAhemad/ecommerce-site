@@ -24,7 +24,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   if (!user) return
   try {
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      if (request.method === 'GET') return response.status(200).json({ enabled: false })
+      if (request.method === 'GET') return response.status(200).json({ enabled: false, reason: 'Payments are not available right now. Please try again later.' })
       if (request.method === 'POST')
         return sendError(
           response,
@@ -38,7 +38,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       const rules = checkoutRules(
         (await db.storeSetting.findUnique({ where: { key: 'checkout' } }))?.value,
       )
-      if (!rules?.enabled) return response.status(200).json({ enabled: false })
+      if (!rules?.enabled) return response.status(200).json({ enabled: false, reason: 'Online checkout is not enabled yet.' })
       const cart = await db.cart.findUnique({
         where: { userId: user.id },
         include: { items: { include: { product: { include: { shopOwnership: { include: { shop: true } } } } } } },

@@ -1,14 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Check, ChevronDown, ListFilter, RotateCcw } from 'lucide-react'
+import { Box } from './mui/Box'
+import { Button } from './mui/Button'
+import { Drawer } from './mui/Drawer'
+import { IconButton } from './mui/IconButton'
+import { Typography } from './mui/Typography'
+import CloseIcon from '@mui/icons-material/Close'
 import type { ProductSort } from '../api/storefront'
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-  SheetTrigger,
-} from './ui/sheet'
 
 type Props = {
   collapseLabel?: string
@@ -69,6 +67,7 @@ export function FilterSidebar({
   onColorToggle,
   onRating,
 }: Props) {
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const activeFilterCount = useMemo(
     () =>
       [
@@ -232,51 +231,43 @@ export function FilterSidebar({
       </aside>
 
       <div className="mb-5 flex items-center justify-between gap-3 md:hidden">
-        <Sheet>
-          <SheetTrigger asChild>
-            <button
-              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--surface-raised)] px-4 text-sm font-medium text-[var(--ink)] shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
-              type="button"
+        <>
+            <Button
+              variant="outlined"
+              startIcon={<ListFilter aria-hidden="true" className="size-4" />}
+              onClick={() => setDrawerOpen(true)}
+              aria-expanded={drawerOpen}
             >
-              <ListFilter aria-hidden="true" className="size-4" />
               Filter
               {activeFilterCount > 0 && (
                 <span className="grid size-5 place-items-center rounded-full bg-[var(--ink)] text-xs text-white">
                   {activeFilterCount}
                 </span>
               )}
-            </button>
-          </SheetTrigger>
-          <SheetContent closeLabel="Close filters">
-            <header className="border-b border-[var(--line)] px-5 pb-5 pr-16 pt-7">
-              <SheetTitle>Filters</SheetTitle>
-              <SheetDescription className="mt-2">
-                Refine the collection to find what you need.
-              </SheetDescription>
-            </header>
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">{filterFields}</div>
-            <footer className="flex gap-3 border-t border-[var(--line)] bg-[var(--surface-raised)] p-4">
+            </Button>
+          <Drawer
+            anchor="left"
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            slotProps={{ paper: { sx: { width: 'min(22rem, calc(100vw - 24px))', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' } } }}
+            aria-labelledby="catalog-filter-title"
+          >
+            <Box component="header" sx={{ borderBottom: 1, borderColor: 'divider', px: 2.5, py: 2.5, pr: 8, position: 'relative' }}>
+              <Typography id="catalog-filter-title" variant="h6">Filters</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Refine the collection to find what you need.</Typography>
+              <IconButton aria-label="Close filters" onClick={() => setDrawerOpen(false)} sx={{ position: 'absolute', right: 12, top: 12 }}><CloseIcon /></IconButton>
+            </Box>
+            <Box sx={{ minHeight: 0, flex: 1, overflowY: 'auto', px: 2.5, py: 2.5 }}>{filterFields}</Box>
+            <Box component="footer" sx={{ display: 'flex', gap: 1.5, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper', p: 2 }}>
               {activeFilterCount > 0 && (
-                <button
-                  className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md border border-[var(--line)] px-4 text-sm font-medium text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
-                  type="button"
-                  onClick={onClear}
-                >
-                  <RotateCcw aria-hidden="true" className="size-4" />
+                <Button variant="outlined" fullWidth onClick={onClear} startIcon={<RotateCcw aria-hidden="true" className="size-4" />}>
                   {clearLabel}
-                </button>
+                </Button>
               )}
-              <SheetClose asChild>
-                <button
-                  className="min-h-11 flex-1 rounded-md bg-[var(--ink)] px-4 text-sm font-medium text-white hover:bg-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
-                  type="button"
-                >
-                  Done
-                </button>
-              </SheetClose>
-            </footer>
-          </SheetContent>
-        </Sheet>
+              <Button variant="contained" fullWidth onClick={() => setDrawerOpen(false)}>Done</Button>
+            </Box>
+          </Drawer>
+        </>
         {activeFilterCount > 0 && (
           <button
             className="min-h-11 rounded px-2 text-xs font-medium uppercase tracking-wide text-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"

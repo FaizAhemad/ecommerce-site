@@ -12,6 +12,7 @@ export type CartItem = {
     name: string
     category: string
     priceMinor: number
+    shippingFeeMinor?: number | null
     images?: { id: string; url: string; alt: string | null; sortOrder: number }[]
   }
 }

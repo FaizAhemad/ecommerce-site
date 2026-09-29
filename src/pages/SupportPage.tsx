@@ -5,7 +5,7 @@ import { supportRequest, type SupportTicket } from '../api/support'
 import { SupportTicketCard } from '../components/SupportTicketCard'
 import { SupportAttachments } from '../components/SupportAttachments'
 import { useNotification } from '../components/NotificationProvider'
-import { ChevronDown } from 'lucide-react'
+import { ArrowUpRight, ChevronDown, ClipboardList, MessageCircle, PackageSearch, Truck } from 'lucide-react'
 import type { StorefrontApiResponse } from '../api/storefront'
 export function SupportPage({
   storefront,
@@ -86,12 +86,13 @@ export function SupportPage({
 
   if (!list) {
     return (
-      <section className="w-full" aria-labelledby="support-title">
+      <div className="w-full">
+      <section className="mx-auto w-full max-w-[1240px] px-4 py-7 sm:px-6 sm:py-9 lg:px-8 lg:py-12" aria-labelledby="support-title">
         <p className="m-0 font-sans text-xs font-semibold uppercase tracking-[0.14em] text-[var(--green)]">
           {storefront.identity.businessName} · Customer care
         </p>
         <div className="mt-3 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.65fr)] md:items-end md:gap-8">
-          <h1 id="support-title" className="m-0 max-w-3xl text-4xl font-semibold leading-[1.05] tracking-[-0.04em] text-[var(--ink)] sm:text-5xl">
+          <h1 id="support-title" className="!m-0 !max-w-none !text-4xl !font-semibold !leading-[1.05] !tracking-[-0.04em] text-[var(--ink)] sm:!text-5xl">
             Support, made simple.
           </h1>
           <p className="m-0 max-w-xl text-sm leading-6 text-[var(--muted)] md:justify-self-end">
@@ -99,57 +100,61 @@ export function SupportPage({
           </p>
         </div>
 
-        <nav aria-label="Helpful links" className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <nav aria-label="Helpful links" className="mt-6 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:mt-8 sm:gap-4 xl:grid-cols-4">
           {[
-            ['/products', 'Browse products', 'Find items and read product reviews.'],
-            ['/orders', 'Your orders', 'Review order and payment status.'],
-            ['/track-order', 'Track an order', 'See the latest recorded delivery updates.'],
-            [isAuthenticated ? '/support-requests' : '/login', 'Support requests', 'Create a request and follow its status.'],
-          ].map(([path, title, description]) => (
+            { path: '/products', title: 'Browse products', description: 'Find items and read product reviews.', Icon: PackageSearch },
+            { path: '/orders', title: 'Your orders', description: 'Review order and payment status.', Icon: ClipboardList },
+            { path: '/track-order', title: 'Track an order', description: 'See the latest recorded delivery updates.', Icon: Truck },
+            { path: isAuthenticated ? '/support-requests' : '/login', title: 'Support requests', description: 'Create a request and follow its status.', Icon: MessageCircle },
+          ].map(({ path, title, description, Icon }) => (
             <a
               key={title}
               href={path}
               onClick={onNavigate?.(path)}
-              className="group min-h-28 rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-4 transition-colors hover:border-[var(--green)] hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+              className="group flex min-h-24 items-start gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-4 transition-[border-color,background-color,transform,box-shadow] hover:-translate-y-0.5 hover:border-[rgba(40,49,59,0.3)] hover:bg-[var(--surface)] hover:shadow-[0_8px_20px_rgba(36,42,35,0.07)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] sm:min-h-28 sm:p-5"
             >
-              <span className="block text-sm font-semibold text-[var(--ink)]">{title}</span>
-              <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">{description}</span>
+              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[rgba(215,225,208,0.45)] text-[var(--ink)]"><Icon aria-hidden="true" className="size-[18px]" /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold leading-5 text-[var(--ink)]">{title}</span>
+                <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">{description}</span>
+              </span>
+              <ArrowUpRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[var(--muted)] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
             </a>
           ))}
         </nav>
 
-        <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)] lg:gap-8">
-          <section aria-labelledby="support-faq-title">
+        <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)] lg:gap-10 xl:mt-10">
+          <section className="min-w-0" aria-labelledby="support-faq-title">
             <p className="m-0 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">Helpful answers</p>
-            <h2 id="support-faq-title" className="mb-4 mt-1 text-2xl font-semibold tracking-tight text-[var(--ink)]">Common questions</h2>
-            <div className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
-              <details className="group py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--ink)] marker:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--green)]">Finding and reviewing products<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
-                <p className="mb-0 mt-3 text-sm leading-6 text-[var(--muted)]">Use {link('/products', 'Products')} to search and filter the catalogue. Open a product to see its details, available media and customer reviews. Sign in to submit or edit your own review.</p>
+            <h2 id="support-faq-title" className="!mb-5 !mt-1 !text-2xl !font-semibold !leading-tight !tracking-tight text-[var(--ink)] sm:!mb-6">Common questions</h2>
+            <div className="divide-y divide-[var(--line)] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface-raised)] px-4 sm:px-6">
+              <details className="group py-5 sm:py-6">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold leading-6 text-[var(--ink)] marker:hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] sm:text-base">Finding and reviewing products<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
+                <p className="mb-0 mt-4 max-w-prose text-sm leading-7 text-[var(--muted)]">Use {link('/products', 'Products')} to search and filter the catalogue. Open a product to see its details, available media and customer reviews. Sign in to submit or edit your own review.</p>
               </details>
-              <details className="group py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--green)]">Delivery addresses and account access<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
-                <p className="mb-0 mt-3 text-sm leading-6 text-[var(--muted)]">Visit {link('/profile', 'Profile')} to manage your details and saved addresses. If you cannot sign in, use {link('/forgot-password', 'password recovery')}. Email verification status and links are available in Profile.</p>
+              <details className="group py-5 sm:py-6">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold leading-6 text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] sm:text-base">Delivery addresses and account access<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
+                <p className="mb-0 mt-4 max-w-prose text-sm leading-7 text-[var(--muted)]">Visit {link('/profile', 'Profile')} to manage your details and saved addresses. If you cannot sign in, use {link('/forgot-password', 'password recovery')}. Email verification status and links are available in Profile.</p>
               </details>
-              <details className="group py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--green)]">Checkout and payment status<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
-                <p className="mb-0 mt-3 text-sm leading-6 text-[var(--muted)]">Review your cart and confirmed charges before ordering. Checkout may be unavailable while the shop is configuring it. Payment is confirmed separately; if a request is interrupted, check {link('/orders', 'Orders')} before trying again.</p>
+              <details className="group py-5 sm:py-6">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold leading-6 text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] sm:text-base">Checkout and payment status<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
+                <p className="mb-0 mt-4 max-w-prose text-sm leading-7 text-[var(--muted)]">Review your cart and confirmed charges before ordering. Checkout may be unavailable while the shop is configuring it. Payment is confirmed separately; if a request is interrupted, check {link('/orders', 'Orders')} before trying again.</p>
               </details>
-              <details className="group py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--green)]">Delivery, cancellation, returns and refunds<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
-                <p className="mb-0 mt-3 text-sm leading-6 text-[var(--muted)]">Open your order for recorded tracking details. Read the published {link('/returns', 'returns policy')} and {link('/refund-policy', 'refund policy')}. If policy information is unavailable or you need an order-specific decision, contact support with the order number before proceeding.</p>
+              <details className="group py-5 sm:py-6">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold leading-6 text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] sm:text-base">Delivery, cancellation, returns and refunds<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
+                <p className="mb-0 mt-4 max-w-prose text-sm leading-7 text-[var(--muted)]">Open your order for recorded tracking details. Read the published {link('/returns', 'returns policy')} and {link('/refund-policy', 'refund policy')}. If policy information is unavailable or you need an order-specific decision, contact support with the order number before proceeding.</p>
               </details>
-              <details className="group py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--green)]">Following a support request<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
-                <p className="mb-0 mt-3 text-sm leading-6 text-[var(--muted)]">Sign in to create a request, then visit {link('/support-requests', 'Support requests')} for its recorded status and resolution. A saved request remains trackable even if email confirmation is unavailable.</p>
+              <details className="group py-5 sm:py-6">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold leading-6 text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] sm:text-base">Following a support request<ChevronDown aria-hidden="true" className="size-4 shrink-0 text-[var(--muted)] transition-transform group-open:rotate-180" /></summary>
+                <p className="mb-0 mt-4 max-w-prose text-sm leading-7 text-[var(--muted)]">Sign in to create a request, then visit {link('/support-requests', 'Support requests')} for its recorded status and resolution. A saved request remains trackable even if email confirmation is unavailable.</p>
               </details>
             </div>
-            <p className="mb-0 mt-4 text-xs leading-5 text-[var(--muted)]">For information about customer data, visit {link('/privacy', 'Privacy')}. Never send passwords or full payment-card details through support.</p>
+            <p className="mb-0 mt-4 text-xs leading-6 text-[var(--muted)]">For information about customer data, visit {link('/privacy', 'Privacy')}. Never send passwords or full payment-card details through support.</p>
           </section>
 
-          <aside className="rounded-2xl border border-[var(--line)] bg-[var(--surface-raised)] p-5 sm:p-6" aria-labelledby="contact-support-title">
+          <aside className="rounded-2xl border border-[var(--line)] bg-[var(--surface-raised)] p-5 sm:p-6 lg:sticky lg:top-24" aria-labelledby="contact-support-title">
             <p className="m-0 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--green)]">Contact our team</p>
-            <h2 id="contact-support-title" className="mb-2 mt-1 text-xl font-semibold tracking-tight text-[var(--ink)]">Still need a hand?</h2>
+            <h2 id="contact-support-title" className="!mb-2 !mt-1 !text-xl !font-semibold !leading-tight !tracking-tight text-[var(--ink)]">Still need a hand?</h2>
             <p className="m-0 text-sm leading-6 text-[var(--muted)]">Send a private request and keep a record you can return to.</p>
             <a className="mt-3 inline-block break-all text-sm font-medium text-[var(--green)] underline decoration-[var(--line)] underline-offset-4" href={`mailto:${storefront.contact.supportEmail}`}>
               {storefront.contact.supportEmail}
@@ -200,6 +205,7 @@ export function SupportPage({
           </aside>
         </div>
       </section>
+      </div>
     )
   }
   return (

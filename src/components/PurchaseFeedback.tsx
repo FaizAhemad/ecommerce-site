@@ -31,17 +31,18 @@ export function PurchaseFeedback() {
     } catch (error) { if (!abort.signal.aborted) notify(error instanceof Error ? error : new Error('Unable to save feedback.')) }
     finally { lock.current = false; if (!abort.signal.aborted) setPending(false) }
   }
-  if (query.isPending) return <p role="status">Checking purchase feedback…</p>
-  if (query.isError) return <div className="state-message"><p>Purchase feedback is temporarily unavailable. Your order is unaffected.</p><button className="secondary-button" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry feedback</button></div>
-  if (saved || query.data?.feedback) return <p className="state-message">Thank you for sharing your purchase experience.</p>
+  if (query.isPending) return <p className="m-0 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-sm text-[var(--muted)]" role="status">Checking purchase feedback…</p>
+  if (query.isError) return <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" role="alert"><p className="mb-3">Purchase feedback is temporarily unavailable. Your order is unaffected.</p><button className="secondary-button" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry feedback</button></div>
+  if (saved || query.data?.feedback) return <p className="m-0 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-sm text-[var(--ink)]" role="status">Thank you for sharing your purchase experience.</p>
   if (!query.data?.eligible) return null
-  return <section className="state-message" aria-labelledby="feedback-title">
-    <h2 id="feedback-title">How was your first purchase?</h2>
-    <p>Tell us about your experience with order {query.data.orderNumber}. This feedback is private to Gadgify administrators and is not a product review.</p>
-    <form className="payment-form" onSubmit={event => void submit(event)}>
-      <label>Your experience<select name="rating" required defaultValue="" disabled={pending}><option value="" disabled>Choose a rating</option>{[1,2,3,4,5].map(rating => <option key={rating} value={rating}>{rating} / 5</option>)}</select></label>
-      <label>Comments (optional)<textarea name="comment" maxLength={2000} rows={4} disabled={pending} /></label>
-      <button className="primary-button" disabled={pending}>{pending ? 'Saving feedback…' : 'Share feedback'}</button>
+  return <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-6" aria-labelledby="feedback-title">
+    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--green)]">Private order feedback</p>
+    <h2 id="feedback-title" className="!mb-2 !mt-0 !text-2xl !font-normal !leading-tight !tracking-tight text-[var(--ink)] sm:!text-3xl">How was your purchase?</h2>
+    <p className="mb-5 max-w-2xl text-sm leading-6 text-[var(--muted)]">Share feedback about order <span className="font-mono text-xs">{query.data.orderNumber}</span>. It is visible to Gadgify administrators and is not a product review.</p>
+    <form className="grid max-w-2xl gap-4" onSubmit={event => void submit(event)}>
+      <label className="grid gap-2 text-sm font-medium text-[var(--ink)]">Your experience<select className="min-h-12 w-full rounded-lg border border-[var(--line)] bg-[var(--paper)] px-3 text-base text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:opacity-60" name="rating" required defaultValue="" disabled={pending}><option value="" disabled>Choose a rating</option>{[1,2,3,4,5].map(rating => <option key={rating} value={rating}>{rating} / 5</option>)}</select></label>
+      <label className="grid gap-2 text-sm font-medium text-[var(--ink)]"><span>Comments <span className="font-normal text-[var(--muted)]">(optional)</span></span><textarea className="min-h-28 w-full resize-y rounded-lg border border-[var(--line)] bg-[var(--paper)] p-3 text-base leading-6 text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:opacity-60" name="comment" maxLength={2000} rows={4} disabled={pending} /></label>
+      <button className="primary-button w-fit" disabled={pending}>{pending ? 'Saving feedback…' : 'Share feedback'}</button>
     </form>
   </section>
 }

@@ -1,6 +1,15 @@
 import { useNotification } from './NotificationProvider'
 import { subscribeToNewsletter } from '../api/newsletter'
 import { useRef, useState, type FormEvent } from 'react'
+import { Alert } from './mui/Alert'
+import { Box } from './mui/Box'
+import { Button } from './mui/Button'
+import { Card } from './mui/Card'
+import { CardContent } from './mui/CardContent'
+import { Stack } from './mui/Stack'
+import { TextField } from './mui/TextField'
+import { Typography } from './mui/Typography'
+
 export function SubscribeSection() {
   const notify = useNotification()
   const submitting = useRef(false)
@@ -21,34 +30,40 @@ export function SubscribeSection() {
         result.alreadySubscribed
           ? 'This email is already subscribed.'
           : result.confirmationFailed
-          ? 'You are subscribed, but we could not confirm the email was sent. No need to subscribe again.'
-          : result.emailSent
-            ? 'You are subscribed. A confirmation email is on its way.'
-            : 'You are subscribed.',
+            ? 'You are subscribed, but we could not confirm the email was sent. No need to subscribe again.'
+            : result.emailSent
+              ? 'You are subscribed. A confirmation email is on its way.'
+              : 'You are subscribed.',
         result.alreadySubscribed ? 'error' : result.confirmationFailed ? 'info' : 'success',
       )
     } catch (error) {
       setStatus('error')
-      notify(
-        error instanceof Error ? error : 'We could not subscribe you right now. Please try again.',
-      )
+      notify(error instanceof Error ? error : 'We could not subscribe you right now. Please try again.')
     } finally {
       submitting.current = false
     }
   }
+
   return (
-    <section className="subscribe-section page-section" aria-labelledby="subscribe-title">
-      <div>
-        <p className="eyebrow">STAY IN THE LOOP</p>
-        <h2 id="subscribe-title">Good things, occasionally.</h2>
-        <p>New arrivals, thoughtful edits, and useful ideas delivered to your inbox.</p>
-      </div>
-      <form className="subscribe-form" onSubmit={submit}>
-        {alreadySubscribed && <p role="alert">This email is already subscribed.</p>}
-        <label htmlFor="subscribe-email">Email address</label>
-        <div>
-          <input
+    <Card component="section" aria-labelledby="subscribe-title" sx={{ background: 'linear-gradient(115deg, #eef0e6, #fffefa 78%)', boxShadow: 'none' }}>
+      <CardContent sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr minmax(300px, .85fr)' }, alignItems: 'center', gap: { xs: 3, md: 6 }, p: { xs: 2.5, md: 4 }, '&:last-child': { pb: { xs: 2.5, md: 4 } } }}>
+        <Box>
+          <Typography component="p" sx={{ mb: 1, color: 'success.dark', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+            Stay in the loop
+          </Typography>
+          <Typography component="h2" id="subscribe-title" sx={{ mb: 1.25, fontSize: 'clamp(1.7rem, 3vw, 2.35rem)', fontWeight: 500, lineHeight: 1.12, letterSpacing: '-.04em' }}>
+            Good things, occasionally.
+          </Typography>
+          <Typography sx={{ maxWidth: 520, color: 'text.secondary' }}>
+            New arrivals, thoughtful edits, and useful ideas delivered to your inbox.
+          </Typography>
+        </Box>
+        <Stack component="form" spacing={1.5} onSubmit={submit}>
+          {alreadySubscribed && <Alert severity="info">This email is already subscribed. You can edit the address to try another.</Alert>}
+          {status === 'error' && <Alert severity="error">We couldn’t subscribe you right now. Please try again.</Alert>}
+          <TextField
             id="subscribe-email"
+            label="Email address"
             type="email"
             required
             value={email}
@@ -59,17 +74,20 @@ export function SubscribeSection() {
             }}
             placeholder="you@example.com"
             disabled={status === 'loading' || (status === 'success' && !alreadySubscribed)}
+            autoComplete="email"
           />
-          <button
-            className="primary-button"
+          <Button
             type="submit"
+            variant="contained"
             disabled={status === 'loading' || status === 'success'}
+            aria-busy={status === 'loading'}
+            endIcon={<Box component="span" aria-hidden="true" sx={{ fontSize: 18 }}>→</Box>}
+            sx={{ minHeight: 48, alignSelf: { sm: 'flex-end' }, px: 2.5 }}
           >
-            {status === 'loading' ? 'Joining…' : alreadySubscribed ? 'Already subscribed' : status === 'success' ? 'Subscribed' : 'Subscribe'}{' '}
-            <span aria-hidden="true">→</span>
-          </button>
-        </div>
-      </form>
-    </section>
+            {status === 'loading' ? 'Joining…' : alreadySubscribed ? 'Already subscribed' : status === 'success' ? 'Subscribed' : 'Subscribe'}
+          </Button>
+        </Stack>
+      </CardContent>
+    </Card>
   )
 }

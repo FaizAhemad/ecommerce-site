@@ -16,6 +16,9 @@
     "build": "prisma generate && tsc -b && tsc -p tsconfig.api.json --pretty false && vite build",
     "build:offline": "tsc -b && tsc -p tsconfig.api.json --pretty false && node scripts/build-offline.mjs",
     "test": "node --experimental-strip-types --test tests/http-timeout.test.mjs tests/media-upload.test.mjs tests/rate-limit.test.mjs tests/customer-isolation.test.mjs tests/wishlist-optimistic.test.mjs tests/vercel-routing.test.mjs tests/order-transactions.test.mjs tests/payment-order-state.test.mjs tests/csrf.test.mjs tests/api-errors.test.mjs tests/password-recovery.test.mjs tests/email-verification.test.mjs tests/profile.test.mjs tests/order-history.test.mjs tests/backlog-batch.test.mjs tests/support.test.mjs tests/payment-integrity.test.mjs tests/returns.test.mjs tests/feedback.test.mjs tests/policies.test.mjs",
+    "test:components": "vitest run --config vitest.config.ts",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
     "rate-limits:cleanup": "node scripts/cleanup-rate-limits.mjs",
     "test:rate-limits:db": "node --experimental-strip-types tests/rate-limit-postgres.mjs",
     "lint": "oxlint",
@@ -28,8 +31,12 @@
     "seed": "node prisma/seed.mjs"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.4.0",
+    "@mui/material": "^9.4.0",
+    "@mui/x-data-grid": "^9.14.0",
     "@prisma/client": "^6.12.0",
-    "@radix-ui/react-dialog": "^1.1.23",
     "@tanstack/react-query": "^5.102.8",
     "@vercel/blob": "^2.8.0",
     "clsx": "^2.1.1",
@@ -41,16 +48,26 @@
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
+    "@storybook/addon-docs": "^10.6.0",
+    "@storybook/react-vite": "^10.6.0",
     "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
+    "jsdom": "^30.1.1",
     "oxlint": "^1.79.0",
     "prettier": "3.9.6",
     "prisma": "^6.12.0",
+    "storybook": "^10.6.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "vitest": "^5.0.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }

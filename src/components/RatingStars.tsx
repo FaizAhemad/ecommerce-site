@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { Rating } from './mui/Rating'
 
 type RatingStarsProps = {
   rating: number
@@ -6,40 +6,25 @@ type RatingStarsProps = {
   label?: string
 }
 
-const starPath = 'M12 2.5 14.9 8.7l6.8.9-4.9 4.8 1.2 6.8L12 18l-6 3.2 1.1-6.8-4.9-4.8 6.8-.9L12 2.5z'
-
 export function RatingStars({ rating, size = 'small', label }: RatingStarsProps) {
-  const instanceId = useId().replace(/:/g, '')
   const value = Number.isFinite(rating) ? Math.max(0, Math.min(5, rating)) : 0
 
   return (
-    <span
-      className={`inline-flex flex-shrink-0 items-center gap-px align-middle leading-none ${size === 'medium' ? '[&>svg]:size-[17px]' : '[&>svg]:size-[13px]'} [&>svg]:block`}
-      aria-hidden={label ? undefined : true}
-      role={label ? 'img' : undefined}
+    <Rating
+      value={value}
+      precision={0.1}
+      readOnly
+      size={size}
       aria-label={label}
-    >
-      {Array.from({ length: 5 }, (_, index) => {
-        const fill = Math.max(0, Math.min(1, value - index))
-        const clipId = `${instanceId}-star-${index}`
-        return (
-          <svg key={index} viewBox="0 0 24 24" focusable="false">
-            <defs>
-              <clipPath id={clipId}>
-                <rect width={24 * fill} height="24" />
-              </clipPath>
-            </defs>
-            <path className="fill-[#ddd9ce]" d={starPath} />
-            {fill > 0 && (
-              <path
-                className="fill-[var(--yellow)]"
-                d={starPath}
-                clipPath={`url(#${clipId})`}
-              />
-            )}
-          </svg>
-        )
-      })}
-    </span>
+      aria-hidden={label ? undefined : true}
+      sx={{
+        display: 'inline-flex',
+        flexShrink: 0,
+        gap: '1px',
+        verticalAlign: 'middle',
+        fontSize: size === 'medium' ? 17 : 13,
+        '& .MuiRating-iconEmpty': { color: '#ddd9ce' },
+      }}
+    />
   )
 }
