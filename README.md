@@ -1,5 +1,7 @@
 # White-label Commerce Platform
 
+Route pages are loaded on demand through `React.lazy` in `src/router.tsx`, with a shared Suspense state inside the persistent site shell. Keep page imports lazy so public startup does not fetch unrelated admin/seller/checkout modules. Build sizes are recorded in `PROJECT_STATUS.md`; production load-time acceptance remains owner-verified.
+
 Owner rebrand direction (2026-09-30): follow REBRAND_IMPLEMENTATION_PLAN.md and SCHEMA_EVOLUTION_PLAN.md for the planned application-wide MUI redesign, loading/non-blocking interaction work and schema evolution. MUI is the target UI system, superseding historical Tailwind/Radix migration direction. Existing legacy styling stays only until its consumers migrate. The new palette is proposed, not deployed. APPLICATION_BACKLOG.md remains the sole checklist; all identity, financial, marketplace, live-operation and owner acceptance gates remain. This batch is planning/documentation only.
 
 Current UI direction (2026-09-25): follow [UI_UX_REVIEW_GUIDE.md](UI_UX_REVIEW_GUIDE.md) for every component, notification, overlay, page and state. Consolidate shared tokens/layout/primitives before page polish; preserve current commerce and security gates. APPLICATION_BACKLOG.md remains the sole checklist; source changes do not establish browser/device acceptance.

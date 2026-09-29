@@ -1,5 +1,9 @@
 # Page and route inventory
 
+## Route-code loading coverage - 2026-09-30
+
+All 19 routed page components now load on demand via React.lazy. A shared inline MUI Suspense status reserves space inside the persistent SiteLayout. Existing route permissions/redirects and App error recovery remain in place. Home no longer eagerly imports Admin, Orders, checkout, support or seller page modules. Failed network/deployment chunk loads retain the existing explicit reload recovery. Browser cold-load, navigation and real-device acceptance remain pending; build/test evidence is in PROJECT_STATUS.md.
+
 ## Shared MUI/grid coverage - 2026-09-30
 
 Existing consumers of src/components/DataGrid.tsx inherit the header-filter, native sorting/pagination, direct-jump and body-only spinner refinement. Shared MUI consumers inherit theme/control state fixes. Actual application-grid stories cover default, empty, initial load, refresh, 1,200 pages and phone-width fixtures. Interaction evidence is in PROJECT_STATUS.md; all route/admin-tab rendered and device acceptance remains pending.

@@ -5,7 +5,7 @@
 Specifications: [REBRAND_IMPLEMENTATION_PLAN.md](REBRAND_IMPLEMENTATION_PLAN.md) and [SCHEMA_EVOLUTION_PLAN.md](SCHEMA_EVOLUTION_PLAN.md). This roadmap refines UI-01?UI-09 and existing commerce requirements; it does not replace security/business gates or declare new implementation.
 
 - [ ] RB-01: Shared MUI theme/control and application grid foundation implemented with interaction tests and stories (2026-09-30); complete catalog state coverage, contrast and phone-width visual acceptance.
-- [ ] RB-02: Migrate shell/navigation/footer and separate public/private startup/loading states.
+- [ ] RB-02: Route-level lazy loading and persistent-shell Suspense implemented (2026-09-30); migrate shell/navigation/footer, separate public/private startup states and verify production/device performance.
 - [ ] RB-03: Improve cart response using existing optimistic state, eliminate redundant product reads, and implement revision-aware quantity coordination/reconciliation.
 - [ ] RB-04: Rebrand Home, Products, product cards and Product Details with real content and mobile purchase controls.
 - [ ] RB-05: Migrate Cart, Checkout, Orders/Detail/tracking/returns while preserving financial truth.

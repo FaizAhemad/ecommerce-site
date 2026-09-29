@@ -1,5 +1,9 @@
 # Architecture, security and UI/UX audit
 
+## Startup import waterfall - 2026-09-30
+
+Owner localhost waterfall plus source review identified eager imports of every page in router.tsx. Implemented route-level lazy imports and shell-preserving Suspense. Build output confirms separate page chunks and a smaller main entry. This does not establish a production latency result or remove the remaining shared CSS/bootstrap/image costs. Check production cold-cache resources separately from Vite development module requests.
+
 ## Shared component correction - 2026-09-30
 
 Source finding: the application grid used fixed loading offsets and handwritten pagination while Storybook demonstrated a separate MUI X wrapper. It now uses measured body geometry, MUI TableSortLabel/TablePagination and stories of the actual application component. Shared wrappers preserve semantic action/selection colors and field error states. Multiple server filters remain a Material Table composition under the existing API contract; no Pro dependency was introduced. Browser/device acceptance and full catalog/consumer migration remain open.

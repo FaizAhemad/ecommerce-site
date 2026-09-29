@@ -1,26 +1,29 @@
 import type { SessionUser } from './api/sessionScope'
-import { useEffect, type MouseEvent } from 'react'
+import { lazy, Suspense, useEffect, type MouseEvent } from 'react'
+import { Box } from './components/mui/Box'
+import { CircularProgress } from './components/mui/CircularProgress'
+import { Typography } from './components/mui/Typography'
 import type { StorefrontApiResponse } from './api/storefront'
-import { HomePage } from './pages/HomePage'
-import { ShopPage } from './pages/ShopPage'
-import { SupportPage } from './pages/SupportPage'
-import { ProductDetailPage } from './pages/ProductDetailPage'
-import { CartPage } from './pages/CartPage'
-import { PolicyPage } from './pages/PolicyPage'
-import { PaymentPage } from './pages/PaymentPage'
-import { TrackOrderPage } from './pages/TrackOrderPage'
-import { AuthPage } from './pages/AuthPage'
-import { PasswordRecoveryPage } from './pages/PasswordRecoveryPage'
-import { EmailVerificationPage } from './pages/EmailVerificationPage'
-import { ProfilePage } from './pages/ProfilePage'
-import { SellerPage } from './pages/SellerPage'
-import { SellerCatalogPage } from './pages/SellerCatalogPage'
-import { FulfillmentPage } from './pages/FulfillmentPage'
-import { ShopsPage } from './pages/ShopsPage'
+const HomePage = lazy(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })))
+const ShopPage = lazy(() => import('./pages/ShopPage').then((module) => ({ default: module.ShopPage })))
+const SupportPage = lazy(() => import('./pages/SupportPage').then((module) => ({ default: module.SupportPage })))
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage').then((module) => ({ default: module.ProductDetailPage })))
+const CartPage = lazy(() => import('./pages/CartPage').then((module) => ({ default: module.CartPage })))
+const PolicyPage = lazy(() => import('./pages/PolicyPage').then((module) => ({ default: module.PolicyPage })))
+const PaymentPage = lazy(() => import('./pages/PaymentPage').then((module) => ({ default: module.PaymentPage })))
+const TrackOrderPage = lazy(() => import('./pages/TrackOrderPage').then((module) => ({ default: module.TrackOrderPage })))
+const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })))
+const PasswordRecoveryPage = lazy(() => import('./pages/PasswordRecoveryPage').then((module) => ({ default: module.PasswordRecoveryPage })))
+const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage').then((module) => ({ default: module.EmailVerificationPage })))
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then((module) => ({ default: module.ProfilePage })))
+const SellerPage = lazy(() => import('./pages/SellerPage').then((module) => ({ default: module.SellerPage })))
+const SellerCatalogPage = lazy(() => import('./pages/SellerCatalogPage').then((module) => ({ default: module.SellerCatalogPage })))
+const FulfillmentPage = lazy(() => import('./pages/FulfillmentPage').then((module) => ({ default: module.FulfillmentPage })))
+const ShopsPage = lazy(() => import('./pages/ShopsPage').then((module) => ({ default: module.ShopsPage })))
 import { safeRouteId } from './routePaths'
-import { OrdersPage } from './pages/OrdersPage'
-import { OrderDetailPage } from './pages/OrderDetailPage'
-import { AdminPage } from './pages/AdminPage'
+const OrdersPage = lazy(() => import('./pages/OrdersPage').then((module) => ({ default: module.OrdersPage })))
+const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage').then((module) => ({ default: module.OrderDetailPage })))
+const AdminPage = lazy(() => import('./pages/AdminPage').then((module) => ({ default: module.AdminPage })))
 import { usePageMetadata } from './api/pageMetadata'
 
 type RouteProps = {
@@ -87,7 +90,7 @@ function DebugErrorPage() {
   return <p className="state-message">Debug route is available in development only.</p>
 }
 
-export function StorefrontRoute({
+function RouteContent({
   path,
   storefront,
   onAdd,
@@ -270,4 +273,13 @@ export function StorefrontRoute({
         />
       )
   }
+}
+
+/** Load only the selected page; the surrounding site shell stays mounted. */
+export function StorefrontRoute(props: RouteProps) {
+  return (
+    <Suspense fallback={<Box role="status" aria-live="polite" sx={{ minHeight: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}><CircularProgress size={24} aria-hidden="true" /><Typography color="text.secondary">Loading page...</Typography></Box>}>
+      <RouteContent {...props} />
+    </Suspense>
+  )
 }

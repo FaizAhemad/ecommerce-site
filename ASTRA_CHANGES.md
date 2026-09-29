@@ -1,5 +1,9 @@
 # Astra change handoff
 
+## Route splitting handoff - 2026-09-30
+
+Preserve module-scope React.lazy page imports and StorefrontRoute Suspense boundary. Do not restore eager page imports or preload private pages for guests. The shared shell and existing route/server authorization remain unchanged. PROJECT_STATUS.md records entry-size evidence and remaining performance acceptance.
+
 ## Shared MUI handoff - 2026-09-30
 
 Use the refined shared MUI theme and src/components/DataGrid.tsx composition for subsequent migration. shared-grid.stories.tsx demonstrates the application grid; data-grid.stories.tsx is the separate X Community example. Preserve server queries and retained results. See PROJECT_STATUS.md for evidence and pending catalog/device coverage.
