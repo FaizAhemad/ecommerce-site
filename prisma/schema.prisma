@@ -373,6 +373,7 @@ model OrderItem {
   unitPriceMinor Int
   shippingFeeMinor Int      @default(0)
   quantity       Int
+  discountMinor Int @default(0)
   order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product        Product @relation(fields: [productId], references: [id])
   @@index([productId])
@@ -451,6 +452,10 @@ model Shop {
   id String @id
   slug String @unique
   name String
+  phone String?
+  address String?
+  city String?
+  gstReviewStatus String @default("PENDING")
   status String @default("PENDING")
   isPlatform Boolean @default(false)
   createdAt DateTime @default(now()) @db.Timestamp(3)
@@ -475,6 +480,11 @@ model ShopProduct {
   productId String @id
   shopId String
   moderationStatus String @default("DRAFT")
+  offerStatus String @default("NOT_OFFERED")
+  feeType String?
+  feeValue Int?
+  offerVersion Int @default(0)
+  acceptedOfferVersion Int?
   createdAt DateTime @default(now()) @db.Timestamp(3)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Restrict)
@@ -487,6 +497,12 @@ model ShopOrderItem {
   orderItemId String @id
   shopId String
   shopName String
+  feeType String?
+  feeValue Int?
+  offerVersion Int?
+  feeBaseMinor Int @default(0)
+  feeAmountMinor Int @default(0)
+  feeStatus String @default("PENDING")
   createdAt DateTime @default(now()) @db.Timestamp(3)
   orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Restrict)

@@ -197,7 +197,7 @@ export function ProductCard({
           </Box>
         </Stack>
         {typeof product.stock === 'number' && (
-          <Chip {...productAvailability(product.stock)} size="small" sx={{ alignSelf: 'flex-start', height: 23, fontSize: 10, fontWeight: 650 }} />
+          <Chip {...(product.stock <= 0 ? productAvailability(product.stock) : product.purchase?.available === false && product.seller && !product.seller.isPlatform ? { label: 'Offer pending', color: 'warning' as const } : productAvailability(product.stock))} size="small" sx={{ alignSelf: 'flex-start', height: 23, fontSize: 10, fontWeight: 650 }} />
         )}
         <Box
           aria-label={product.reviewCount > 0 ? `${ratingLabel}: ${product.rating}, ${product.reviewCount} ${reviewsLabel}` : 'No reviews yet'}

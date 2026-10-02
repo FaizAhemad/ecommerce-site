@@ -2,6 +2,14 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { apiFetch } from '../api/http'
 import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScope'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Card } from './mui/Card'
+import { Chip } from './mui/Chip'
+import { CircularProgress } from './mui/CircularProgress'
+import { Paper } from './mui/Paper'
+import { Stack } from './mui/Stack'
+import { Typography } from './mui/Typography'
 type Item = { id: string; orderId: string; kind: string; status: string; updatedAt: string; attempts?: number; availableAt?: string; legacy: boolean }
 const labels: Record<string, string> = { ACCEPTED: 'Provider accepted', PENDING: 'Queued', PROCESSING: 'Processing', RETRY: 'Waiting to retry', FAILED: 'Provider rejected', UNCONFIRMED: 'Unconfirmed — investigate before taking action', SKIPPED: 'Skipped — verified recipient unavailable', BLOCKED: 'Blocked — configuration requires investigation' }
 export function NotificationHistory() {
@@ -40,17 +48,19 @@ export function NotificationHistory() {
       if (generation === sessionGeneration() && !controller.signal.aborted) setProcessing(false)
     }
   }
-  return <>
-    <p>Order, shop shipment, return and dispute emails. Accepted does not confirm inbox delivery. Queued messages support bounded retries; legacy and unconfirmed attempts are never replayed automatically.</p>
-    {query.data?.pages[0]?.supportConfigured === false && <p role="status">The private support inbox is not configured. Staff dispute notifications will wait; saved conversations remain available.</p>}
-    {query.data?.pages[0]?.configured === false && <p role="status">Email provider configuration is missing. Queued messages wait for configuration.</p>}
-    <button className="secondary-button" disabled={processing || !query.data?.pages[0]?.configured} onClick={() => void processDue()}>{processing ? 'Processing…' : 'Process due notifications'}</button>
-    {message && <p role="status">{message}</p>}
-    <button className="secondary-button" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Refresh notification history</button>
-    {query.isPending && <p role="status">Loading notifications…</p>}
-    {query.isError && <p role="alert">Notification history is unavailable.</p>}
-    {!query.isPending && !query.isError && !items.length && <p>No notification records.</p>}
-    {items.map((item) => <article className="record-card" key={item.id}><h3>{item.kind.replaceAll('_', ' ')}</h3><p>Order ID: {item.orderId}</p><p>{labels[item.status] ?? 'Unknown status'}{item.legacy ? ' (legacy attempt)' : ''}</p>{item.attempts !== undefined && <p>Attempts: {item.attempts} / 5</p>}{item.status === 'RETRY' && item.availableAt && <p>Eligible after: {new Date(item.availableAt).toLocaleString()}</p>}<small>{new Date(item.updatedAt).toLocaleString()}</small></article>)}
-    {query.hasNextPage && <button className="secondary-button" disabled={query.isFetching} onClick={() => void query.fetchNextPage({ cancelRefetch: false })}>Load more notifications</button>}
-  </>
+  return <Stack spacing={2}>
+    <Alert severity="info">Order, shop shipment, return and dispute emails. Accepted does not confirm inbox delivery. Queued messages support bounded retries; legacy and unconfirmed attempts are never replayed automatically.</Alert>
+    {query.data?.pages[0]?.supportConfigured === false && <Alert severity="warning">The private support inbox is not configured. Staff dispute notifications will wait; saved conversations remain available.</Alert>}
+    {query.data?.pages[0]?.configured === false && <Alert severity="warning">Email provider configuration is missing. Queued messages wait for configuration.</Alert>}
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+      <Button variant="contained" disabled={processing || !query.data?.pages[0]?.configured} onClick={() => void processDue()}>{processing ? 'Processing…' : 'Process due notifications'}</Button>
+      <Button variant="outlined" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Refresh notification history</Button>
+    </Stack>
+    {message && <Alert severity="info" role="status">{message}</Alert>}
+    {query.isPending && <Stack role="status" direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 3 }}><CircularProgress size={20} /><Typography color="text.secondary">Loading notifications…</Typography></Stack>}
+    {query.isError && <Alert severity="error" role="alert">Notification history is unavailable.</Alert>}
+    {!query.isPending && !query.isError && !items.length && <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}><Typography variant="h6">No notification records</Typography></Paper>}
+    {items.map((item) => <Card variant="outlined" component="article" key={item.id} sx={{ p: { xs: 2, sm: 2.5 } }}><Stack spacing={1}><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}><Typography component="h2" variant="h6">{item.kind.replaceAll('_', ' ')}</Typography><Chip size="small" label={labels[item.status] ?? 'Unknown status'} color={item.status === 'ACCEPTED' ? 'success' : ['FAILED', 'BLOCKED'].includes(item.status) ? 'error' : 'default'} /></Stack><Typography variant="body2">Order ID: {item.orderId}</Typography>{item.legacy && <Alert severity="warning">Legacy attempt; it will not be replayed.</Alert>}{item.attempts !== undefined && <Typography variant="body2">Attempts: {item.attempts} / 5</Typography>}{item.status === 'RETRY' && item.availableAt && <Typography variant="body2">Eligible after: {new Date(item.availableAt).toLocaleString()}</Typography>}<Typography variant="caption" color="text.secondary">Updated {new Date(item.updatedAt).toLocaleString()}</Typography></Stack></Card>)}
+    {query.hasNextPage && <Button variant="outlined" sx={{ alignSelf: 'flex-start' }} disabled={query.isFetching} onClick={() => void query.fetchNextPage({ cancelRefetch: false })}>Load more notifications</Button>}
+  </Stack>
 }

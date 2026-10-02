@@ -4,14 +4,30 @@ import { adminPolicy, type PolicyKind, type PolicyState } from '../api/policies'
 import { privateKey } from '../api/sessionScope'
 import { queryClient } from '../api/queryClient'
 import { useNotification } from './NotificationProvider'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Checkbox } from './mui/Checkbox'
+import { CircularProgress } from './mui/CircularProgress'
+import { FormControl } from './mui/FormControl'
+import { FormControlLabel } from './mui/FormControlLabel'
+import { InputLabel } from './mui/InputLabel'
+import { MenuItem } from './mui/MenuItem'
+import { Paper } from './mui/Paper'
+import { Select } from './mui/Select'
+import { Stack } from './mui/Stack'
+import { TextField } from './mui/TextField'
+import { Typography } from './mui/Typography'
 
 export function PolicyEditor() {
   const [kind, setKind] = useState<PolicyKind>('privacy'), [locale, setLocale] = useState('en')
   const query = useQuery({ queryKey: privateKey('admin', 'policy', kind, locale), queryFn: ({ signal }) => adminPolicy(kind, locale, signal), retry: false })
-  return <>
-    <div className="profile-actions"><label>Policy<select value={kind} onChange={event => setKind(event.target.value as PolicyKind)}>{['privacy','returns','refund','terms','shipping','cancellation','cookies'].map(value => <option key={value} value={value}>{value}</option>)}</select></label><label>Language<select value={locale} onChange={event => setLocale(event.target.value)}><option value="en">English</option><option value="hi">Hindi</option><option value="mr">Marathi</option></select></label></div>
-    {query.isPending ? <p role="status">Loading policy…</p> : query.isError ? <div role="alert"><p>Unable to load the policy.</p><button className="secondary-button" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry</button></div> : query.data && <PolicyForm key={`${kind}:${locale}:${query.data.version}`} kind={kind} locale={locale} state={query.data} />}
-  </>
+  return <Stack spacing={2.5}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+      <FormControl fullWidth><InputLabel id="policy-kind-label">Policy</InputLabel><Select labelId="policy-kind-label" label="Policy" value={kind} onChange={event => setKind(event.target.value as PolicyKind)}>{['privacy','returns','refund','terms','shipping','cancellation','cookies'].map(value => <MenuItem key={value} value={value}>{value[0].toUpperCase() + value.slice(1)}</MenuItem>)}</Select></FormControl>
+      <FormControl fullWidth><InputLabel id="policy-locale-label">Language</InputLabel><Select labelId="policy-locale-label" label="Language" value={locale} onChange={event => setLocale(String(event.target.value))}><MenuItem value="en">English</MenuItem><MenuItem value="hi">Hindi</MenuItem><MenuItem value="mr">Marathi</MenuItem></Select></FormControl>
+    </Stack>
+    {query.isPending ? <Stack role="status" direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 3 }}><CircularProgress size={20} /><Typography color="text.secondary">Loading policy…</Typography></Stack> : query.isError ? <Alert severity="error" action={<Button color="inherit" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry</Button>}>Unable to load the policy.</Alert> : query.data && <PolicyForm key={`${kind}:${locale}:${query.data.version}`} kind={kind} locale={locale} state={query.data} />}
+  </Stack>
 }
 function PolicyForm({ kind, locale, state }: { kind: PolicyKind; locale: string; state: PolicyState }) {
   const notify = useNotification(), lock = useRef(false), controller = useRef<AbortController | null>(null)
@@ -33,12 +49,14 @@ function PolicyForm({ kind, locale, state }: { kind: PolicyKind; locale: string;
     } catch (error) { if (!abort.signal.aborted) notify(error instanceof Error ? error : new Error('Unable to save the policy.')) }
     finally { lock.current = false; if (!abort.signal.aborted) setPending(false) }
   }
-  return <form className="payment-form" onSubmit={event => { event.preventDefault(); void save('draft', event.currentTarget) }}>
-    <p>{state.published ? `Published version ${state.published.version}` : 'No approved policy is published in this language.'} Draft changes remain private until publication.</p>
-    <label>Policy title<input name="title" defaultValue={state.draft?.title ?? ''} maxLength={120} required disabled={pending}/></label>
-    <label>Approved source text<textarea name="text" defaultValue={state.draft?.text ?? ''} rows={16} maxLength={50000} required disabled={pending}/></label>
-    <label><input name="approved" type="checkbox" disabled={pending}/> I confirm the saved text is approved for publication for this business and language.</label>
-    <div className="profile-actions"><button className="secondary-button" disabled={pending}>{pending ? 'Saving…' : 'Save draft'}</button><button className="primary-button" type="button" disabled={pending || !state.draft} onClick={event => { if (event.currentTarget.form) void save('publish', event.currentTarget.form) }}>Publish saved draft</button></div>
-    <p>Enter approved policy content. This editor does not supply legal advice or generate policy rules.</p>
-  </form>
+  return <Paper component="form" variant="outlined" onSubmit={event => { event.preventDefault(); void save('draft', event.currentTarget) }} sx={{ p: { xs: 2, sm: 3 } }}>
+    <Stack spacing={2}>
+      <Alert severity={state.published ? 'success' : 'info'}>{state.published ? `Published version ${state.published.version}` : 'No approved policy is published in this language.'} Draft changes remain private until publication.</Alert>
+      <TextField name="title" label="Policy title" defaultValue={state.draft?.title ?? ''} slotProps={{ htmlInput: { maxLength: 120 } }} required disabled={pending} />
+      <TextField name="text" label="Approved source text" defaultValue={state.draft?.text ?? ''} multiline minRows={12} slotProps={{ htmlInput: { maxLength: 50000 } }} required disabled={pending} />
+      <FormControlLabel control={<Checkbox name="approved" disabled={pending} />} label="I confirm the saved text is approved for publication for this business and language." />
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button variant="outlined" type="submit" disabled={pending}>{pending ? 'Saving…' : 'Save draft'}</Button><Button variant="contained" type="button" disabled={pending || !state.draft} onClick={event => { if (event.currentTarget.form) void save('publish', event.currentTarget.form) }}>Publish saved draft</Button></Stack>
+      <Typography variant="caption" color="text.secondary">Enter approved policy content. This editor does not supply legal advice or generate policy rules.</Typography>
+    </Stack>
+  </Paper>
 }

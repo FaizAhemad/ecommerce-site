@@ -42,7 +42,7 @@ Reuse `SiteLayout`, `PageContainer`, shared buttons/fields/cards, `FormDialog`, 
 
 ## Release focus
 
-The first release should keep Gadgify-only commerce enabled and external-shop purchasing, commissions and payouts disabled until their business, provider and verification gates are approved. Fix broken login/purchase flows, hidden mobile content, misleading financial states, private-data exposure, inaccessible controls and inconsistent shared primitives before decorative polish.
+Owner update 2026-10-02: seller products may become orderable through Gadgify only after admin content approval and the shop accepts that product's versioned fixed-INR-per-unit or discounted-item-price percentage offer. The actual rate is set per offer, never defaulted. Fee snapshots are prepared; shop fee collection, payouts and settlement remain gated. Fix broken login/purchase flows, hidden mobile content, misleading financial states, private-data exposure, inaccessible controls and inconsistent shared primitives before decorative polish.
 
 ## Evidence boundary
 

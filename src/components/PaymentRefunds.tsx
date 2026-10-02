@@ -4,6 +4,17 @@ import { apiFetch } from '../api/http'
 import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScope'
 import { useNotification } from './NotificationProvider'
 import { FormDialog } from './FormDialog'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Card } from './mui/Card'
+import { Checkbox } from './mui/Checkbox'
+import { Chip } from './mui/Chip'
+import { CircularProgress } from './mui/CircularProgress'
+import { FormControlLabel } from './mui/FormControlLabel'
+import { Paper } from './mui/Paper'
+import { Stack } from './mui/Stack'
+import { TextField } from './mui/TextField'
+import { Typography } from './mui/Typography'
 
 type Payment = { id: string; orderId: string; provider: string; providerPaymentId: string | null; amountMinor: number; status: string; refundStatus: string | null; order: { orderNumber: string; currency: string } }
 export function PaymentRefunds() {
@@ -57,26 +68,31 @@ export function PaymentRefunds() {
       if (!abort.signal.aborted && generation === sessionGeneration()) setBusy(false)
     }
   }
-  return <section aria-label="Payments and refunds">
-    <p>Latest 100 payments. Full INR refunds only. Confirm eligibility and the amount before submitting. Verification never issues another refund. Refunds do not restock products or approve returns.</p>
-    <button className="secondary-button" disabled={busy || query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Refresh payments</button>
-    {query.isPending && <p role="status">Loading payments…</p>}
-    {query.isError && <p role="alert">Payments are unavailable. Refresh to try again.</p>}
-    {outcome && <p role="status">{outcome}</p>}
-    {query.data?.payments.length === 0 && <p>No payment records.</p>}
-    {query.data?.payments.map(payment => <article className="record-card" key={payment.id}>
-      <h3>{payment.order.orderNumber}</h3>
-      <p>{payment.order.currency} {(payment.amountMinor / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })} · {payment.status}</p>
-      {payment.refundStatus && <p>Refund: {payment.refundStatus}</p>}
-      {payment.provider === 'RAZORPAY' && payment.providerPaymentId && payment.status !== 'REFUNDED' && <div className="profile-actions">
-        <button className="secondary-button" disabled={busy} onClick={() => void act(payment, 'reconcile-refund')}>Verify refund status</button>
-        {payment.status === 'CAPTURED' && !payment.refundStatus && <button className="secondary-button" disabled={busy} onClick={() => { setSelected(payment.id); setReason(''); setConfirmed(false) }}>Prepare full refund</button>}
-      </div>}
-      {selected === payment.id && <FormDialog open title={`Refund ${payment.order.orderNumber}`} busy={busy} onClose={() => setSelected(null)}><form className="auth-form" onSubmit={(event: FormEvent) => { event.preventDefault(); if (confirmed && reason.trim().length >= 3) void act(payment, 'initiate-refund') }}>
-        <label>Refund reason<textarea required minLength={3} maxLength={1000} value={reason} disabled={busy} onChange={event => setReason(event.target.value)} /></label>
-        <label className="profile-default"><input type="checkbox" checked={confirmed} disabled={busy} onChange={event => setConfirmed(event.target.checked)} />I approve refunding the full {payment.order.currency} {(payment.amountMinor / 100).toFixed(2)} for this order.</label>
-        <div className="profile-actions"><button className="primary-button" disabled={busy || !confirmed || reason.trim().length < 3}>{busy ? 'Processing…' : 'Issue full refund'}</button><button type="button" className="secondary-button" disabled={busy} onClick={() => setSelected(null)}>Cancel</button></div>
-      </form></FormDialog>}
-    </article>)}
-  </section>
+  return <Stack component="section" aria-label="Payments and refunds" spacing={2}>
+    <Alert severity="info">Latest 100 payments. Full INR refunds only. Confirm eligibility and the amount before submitting. Verification never issues another refund. Refunds do not restock products or approve returns.</Alert>
+    <Button variant="outlined" sx={{ alignSelf: 'flex-start' }} disabled={busy || query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Refresh payments</Button>
+    {query.isPending && <Stack role="status" direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 3 }}><CircularProgress size={20} /><Typography color="text.secondary">Loading payments…</Typography></Stack>}
+    {query.isError && <Alert severity="error" role="alert" action={<Button color="inherit" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry</Button>}>Payments are unavailable.</Alert>}
+    {outcome && <Alert severity={outcome.includes('verified') ? 'success' : 'info'} role="status">{outcome}</Alert>}
+    {query.data?.payments.length === 0 && <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}><Typography variant="h6">No payment records</Typography></Paper>}
+    <Stack spacing={1.5}>{query.data?.payments.map(payment => <Card variant="outlined" component="article" key={payment.id} sx={{ p: { xs: 2, sm: 2.5 } }}>
+      <Stack spacing={1.5}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}>
+          <Typography component="h2" variant="h6">{payment.order.orderNumber}</Typography>
+          <Chip size="small" label={payment.status.replaceAll('_', ' ')} color={payment.status === 'CAPTURED' || payment.status === 'REFUNDED' ? 'success' : payment.status === 'FAILED' ? 'error' : 'default'} />
+        </Stack>
+        <Typography>{payment.order.currency} {(payment.amountMinor / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Typography>
+        {payment.refundStatus && <Typography variant="body2" color="text.secondary">Refund: {payment.refundStatus.replaceAll('_', ' ')}</Typography>}
+        {payment.provider === 'RAZORPAY' && payment.providerPaymentId && payment.status !== 'REFUNDED' && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          <Button variant="outlined" disabled={busy} onClick={() => void act(payment, 'reconcile-refund')}>Verify refund status</Button>
+          {payment.status === 'CAPTURED' && !payment.refundStatus && <Button variant="outlined" disabled={busy} onClick={() => { setSelected(payment.id); setReason(''); setConfirmed(false) }}>Prepare full refund</Button>}
+        </Stack>}
+      </Stack>
+      {selected === payment.id && <FormDialog open title={`Refund ${payment.order.orderNumber}`} busy={busy} onClose={() => setSelected(null)}><Stack component="form" spacing={2} onSubmit={(event: FormEvent) => { event.preventDefault(); if (confirmed && reason.trim().length >= 3) void act(payment, 'initiate-refund') }}>
+        <TextField label="Refund reason" required slotProps={{ htmlInput: { minLength: 3, maxLength: 1000 } }} multiline minRows={3} value={reason} disabled={busy} onChange={event => setReason(event.target.value)} />
+        <FormControlLabel control={<Checkbox checked={confirmed} disabled={busy} onChange={event => setConfirmed(event.target.checked)} />} label={`I approve refunding the full ${payment.order.currency} ${(payment.amountMinor / 100).toFixed(2)} for this order.`} />
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button variant="contained" type="submit" disabled={busy || !confirmed || reason.trim().length < 3}>{busy ? 'Processing…' : 'Issue full refund'}</Button><Button type="button" variant="outlined" disabled={busy} onClick={() => setSelected(null)}>Cancel</Button></Stack>
+      </Stack></FormDialog>}
+    </Card>)}</Stack>
+  </Stack>
 }

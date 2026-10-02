@@ -11,7 +11,7 @@ export async function publishSellerProduct(tx: Prisma.TransactionClient, draft: 
   if (draft.status !== 'APPROVED') {
     if (existing) {
       await tx.product.update({ where: { id }, data: { isActive: false } })
-      await tx.shopProduct.update({ where: { productId: id }, data: { moderationStatus: draft.status === 'REJECTED' ? 'REJECTED' : 'DRAFT' } })
+      await tx.$executeRaw`UPDATE "ShopProduct" SET "moderationStatus"=${draft.status === 'REJECTED' ? 'REJECTED' : 'DRAFT'}, "offerStatus"='NOT_OFFERED', "feeType"=NULL, "feeValue"=NULL, "acceptedOfferVersion"=NULL WHERE "productId"=${id} AND "shopId"=${draft.shopId}`
     }
     return
   }

@@ -128,3 +128,6 @@ E20 connects Orders to private paginated history with stored totals/status. Orde
 
 
 E21/E22 checkpoint adds real order details, cart/address checkout preview, rating/hex controls, routing/connectivity fixes and support requests. Support requires the unapplied migration and server-only SUPPORT_EMAIL; see SUPPORT_REQUESTS.md. E23 adds configured checkout/payment submission; see CHECKOUT_PAYMENTS.md for pending provider and release acceptance.
+
+
+Local WhatsApp vendor intake is a separate Windows tool; see [setup and limitations](tools/whatsapp-intake/README.md). It does not add dependencies to the deployed storefront or publish products.

@@ -3,6 +3,13 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/http'
 import { privateKey, sessionGeneration } from '../api/sessionScope'
 import { useNotification } from './NotificationProvider'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Card } from './mui/Card'
+import { CircularProgress } from './mui/CircularProgress'
+import { Stack } from './mui/Stack'
+import { TextField } from './mui/TextField'
+import { Typography } from './mui/Typography'
 type Reply = { id: string; body: string; fromAdmin: boolean; createdAt: string }
 export function SupportConversation({ ticketId, open }: { ticketId: string; open: boolean }) {
   const [visible, setVisible] = useState(false), [text, setText] = useState(''), [busy, setBusy] = useState(false)
@@ -34,20 +41,20 @@ export function SupportConversation({ ticketId, open }: { ticketId: string; open
     } catch (error) { if (!controller.signal.aborted && generation === sessionGeneration()) notify(error instanceof Error ? error : new Error('Unable to send reply.')) }
     finally { operation.current = null; if (!controller.signal.aborted) setBusy(false) }
   }
-  return <div>
-    <button className="secondary-button" onClick={() => setVisible(!visible)}>{visible ? 'Hide conversation' : 'View conversation'}</button>
+  return <Stack spacing={1.5}>
+    <Button variant="outlined" sx={{ alignSelf: 'flex-start' }} onClick={() => setVisible(!visible)}>{visible ? 'Hide conversation' : 'View conversation'}</Button>
     {visible && <>
-      {query.isPending && <p role="status">Loading replies…</p>}
-      {query.isError && <p role="alert">Replies are unavailable. The support ticket remains saved.</p>}
-      <button className="secondary-button" disabled={query.isFetching || busy} onClick={() => void query.refetch({ cancelRefetch: false })}>Refresh replies</button>
-      {!query.isPending && !query.isError && !query.data?.pages[0].replies.length && <p>No replies yet.</p>}
-      {[...new Map((query.data?.pages.flatMap((page) => page.replies) ?? []).map((reply) => [reply.id, reply])).values()].map((reply) => <article key={reply.id}><strong>{reply.fromAdmin ? 'Support team' : 'Customer'}</strong><p style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{reply.body}</p><small>{new Date(reply.createdAt).toLocaleString()}</small></article>)}
-      {query.hasNextPage && <button className="secondary-button" disabled={query.isFetching} onClick={() => void query.fetchNextPage({ cancelRefetch: false })}>Older replies</button>}
-      {open && <form className="auth-form" onSubmit={(event) => { event.preventDefault(); void send() }}>
-        <label>Reply<textarea required maxLength={4000} rows={3} disabled={busy || !!draft.current} value={text} onChange={(event) => setText(event.target.value)} /></label>
-        <button className="primary-button" disabled={busy || !text.trim()}>{busy ? 'Saving…' : draft.current ? 'Retry same reply' : 'Send reply'}</button>
-        <p>Replies are recorded here. Email delivery is not implied. If interrupted, refresh before retrying.</p>
-      </form>}
+      {query.isPending && <Stack role="status" direction="row" spacing={1.5} sx={{ alignItems: 'center' }}><CircularProgress size={18} /><Typography variant="body2" color="text.secondary">Loading replies…</Typography></Stack>}
+      {query.isError && <Alert severity="error" role="alert">Replies are unavailable. The support ticket remains saved.</Alert>}
+      <Button variant="text" disabled={query.isFetching || busy} onClick={() => void query.refetch({ cancelRefetch: false })}>Refresh replies</Button>
+      {!query.isPending && !query.isError && !query.data?.pages[0].replies.length && <Typography variant="body2" color="text.secondary">No replies yet.</Typography>}
+      {[...new Map((query.data?.pages.flatMap((page) => page.replies) ?? []).map((reply) => [reply.id, reply])).values()].map((reply) => <Card variant="outlined" component="article" key={reply.id} sx={{ p: 1.5 }}><Stack spacing={0.5}><Typography variant="subtitle2">{reply.fromAdmin ? 'Support team' : 'Customer'}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{reply.body}</Typography><Typography variant="caption" color="text.secondary">{new Date(reply.createdAt).toLocaleString()}</Typography></Stack></Card>)}
+      {query.hasNextPage && <Button variant="text" disabled={query.isFetching} onClick={() => void query.fetchNextPage({ cancelRefetch: false })}>Older replies</Button>}
+      {open && <Stack component="form" spacing={1.5} onSubmit={(event) => { event.preventDefault(); void send() }}>
+        <TextField label="Reply" required slotProps={{ htmlInput: { maxLength: 4000 } }} multiline minRows={3} disabled={busy || !!draft.current} value={text} onChange={(event) => setText(event.target.value)} />
+        <Button variant="contained" sx={{ alignSelf: 'flex-start' }} disabled={busy || !text.trim()}>{busy ? 'Saving…' : draft.current ? 'Retry same reply' : 'Send reply'}</Button>
+        <Typography variant="caption" color="text.secondary">Replies are recorded here. Email delivery is not implied. If interrupted, refresh before retrying.</Typography>
+      </Stack>}
     </>}
-  </div>
+  </Stack>
 }

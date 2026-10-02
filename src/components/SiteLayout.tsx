@@ -29,6 +29,7 @@ type SiteLayoutProps = {
   cartCount: number
   wishlistCount: number
   isAuthenticated: boolean
+  isAdmin: boolean
   onLogout: () => Promise<void>
   children: ReactNode
 }
@@ -38,6 +39,7 @@ export function SiteLayout({
   cartCount,
   children,
   isAuthenticated,
+  isAdmin,
   onLogout,
 }: SiteLayoutProps) {
   const notify = useNotification()
@@ -135,6 +137,20 @@ export function SiteLayout({
           >
             {content.navigation.products}
           </a>
+          <a
+            className={currentPath === '/shops' || currentPath.startsWith('/shops/') ? 'is-active' : ''}
+            href="/shops"
+            onClick={navigate('/shops')}
+          >
+            Shops
+          </a>
+          <a
+            className={currentPath === '/seller' || currentPath.startsWith('/seller/') ? 'is-active' : ''}
+            href="/seller"
+            onClick={navigate('/seller')}
+          >
+            {isAuthenticated ? 'Seller workspace' : 'Sell with us'}
+          </a>
           {isAuthenticated && (
             <a
               className={
@@ -153,6 +169,16 @@ export function SiteLayout({
           >
             {content.navigation.support}
           </a>
+          {isAuthenticated && (
+            <a className={currentPath === '/profile' ? 'is-active' : ''} href="/profile" onClick={navigate('/profile')}>
+              Profile
+            </a>
+          )}
+          {isAdmin && (
+            <a className={currentPath.startsWith('/admin') ? 'is-active' : ''} href="/admin" onClick={navigate('/admin')}>
+              Admin
+            </a>
+          )}
         </nav>
         <div className="header-actions" ref={headerActionsRef}>
           <button

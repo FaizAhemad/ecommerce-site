@@ -1,0 +1,6 @@
+{
+  "phoneNumberId": "YOUR_META_PHONE_NUMBER_ID",
+  "vendors": [
+    { "id": "vendor-001", "name": "Example Sports Shop", "sender": "919000000001" }
+  ]
+}

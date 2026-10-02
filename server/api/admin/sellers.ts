@@ -12,7 +12,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       const rows = await db.storeSetting.findMany({ where: { key: { startsWith: 'seller-application.' } }, orderBy: [{ updatedAt: 'desc' }, { key: 'asc' }], skip: Number(page) * 25, take: 26 })
       return response.status(200).json({ applications: rows.slice(0,25).map(row => {
         const a = JSON.parse(row.value) as SellerApplication
-        return { id: a.id, userId: a.userId, name: a.name, city: a.city, description: a.description, status: a.status, reason: a.reason, version: a.version, updatedAt: a.updatedAt }
+        return { id: a.id, userId: a.userId, name: a.name, city: a.city, address: a.address, phone: a.phone, description: a.description, gstRegistered: a.gstRegistered, gstin: a.gstin, gstNotRegisteredReason: a.gstNotRegisteredReason, gstOtherReason: a.gstOtherReason, gstEnrolmentId: a.gstEnrolmentId, gstReviewStatus: a.gstReviewStatus ?? 'PENDING', status: a.status, reason: a.reason, version: a.version, updatedAt: a.updatedAt }
       }), nextPage: rows.length > 25 ? Number(page) + 1 : null, requestId: id })
     }
     if (request.method !== 'PATCH') return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET or PATCH.', id)

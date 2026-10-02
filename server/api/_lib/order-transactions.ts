@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import { purchaseEligibility } from './marketplace-purchases.js'
+import { purchaseEligibility } from './marketplace-purchases.ts'
+import { allocateDiscount, sellerFeeAmount } from './seller-fees.ts'
 import type { PrismaClient, OrderStatus } from '@prisma/client'
 import type { checkoutRules, checkoutTotal } from './checkout.js'
 import type { quoteCoupon, couponUsagePrefix } from './coupons.js'
@@ -112,6 +113,16 @@ export async function createCartOrder(
         'PRICE_CHANGED',
         'Your cart or charges changed. Review the latest total before placing the order.',
       )
+    const discounts = allocateDiscount(cart.items.map(item => ({ productId: item.productId, quantity: item.quantity, unitPriceMinor: item.product.priceMinor })), coupon?.discountMinor ?? 0)
+    const discountByProduct = new Map(cart.items.map((item, index) => [item.productId, discounts[index]]))
+    const feeByProduct = new Map<string, { baseMinor: number; amountMinor: number }>()
+    for (const item of cart.items) {
+      const ownership = item.product.shopOwnership as unknown as { feeType?: string | null; feeValue?: number | null; offerVersion?: number | null }
+      const terms = ownership?.feeType && ownership.feeValue != null && ownership.offerVersion != null
+        ? { type: ownership.feeType as 'FIXED_PER_UNIT' | 'PERCENTAGE', value: ownership.feeValue, version: ownership.offerVersion } : null
+      try { feeByProduct.set(item.productId, sellerFeeAmount(terms, item.quantity, item.product.priceMinor, discountByProduct.get(item.productId) ?? 0)) }
+      catch { throw new OrderActionError(409, 'SELLER_FEE_CONFLICT', 'A fee offer exceeds the discounted item price. Review the offer with the shop before ordering.') }
+    }
     const order = await tx.order.create({
       data: {
         orderNumber: checkout ? `GAD-${checkout.requestId}` : `GAD-${randomUUID().toUpperCase()}`,
@@ -133,6 +144,14 @@ export async function createCartOrder(
       },
       include: { items: true, payment: true },
     })
+    for (const orderItem of order.items) {
+      const discountMinor = discountByProduct.get(orderItem.productId) ?? 0
+      if (!discountMinor) continue
+      const fee = feeByProduct.get(orderItem.productId)
+      if (!fee) throw new OrderActionError(503, 'ORDER_UNAVAILABLE', 'Unable to preserve the order fee snapshot.')
+      await tx.$executeRaw`UPDATE "OrderItem" SET "discountMinor"=${discountMinor} WHERE "id"=${orderItem.id}`
+      await tx.$executeRaw`UPDATE "ShopOrderItem" SET "feeBaseMinor"=${fee.baseMinor}, "feeAmountMinor"=${fee.amountMinor} WHERE "orderItemId"=${orderItem.id}`
+    }
     if (coupon && checkout?.couponUsagePrefix) {
       await tx.storeSetting.create({ data: {
         key: checkout.couponUsagePrefix(coupon.code, userId) + order.id,
@@ -162,6 +181,7 @@ export async function cancelOrder(store: Store, orderId: string, userId?: string
     })
     if (changed.count !== 1)
       throw new OrderActionError(409, 'CONFLICT', 'Order changed. Refresh before trying again.')
+    await tx.$executeRaw`UPDATE "ShopOrderItem" SET "feeStatus"='VOID' WHERE "sellerOrderId" IN (SELECT "id" FROM "SellerOrder" WHERE "orderId"=${order.id}) AND "feeStatus"='PENDING'`
     // Consistent product ordering reduces lock contention across multi-item orders.
     for (const item of [...order.items].sort((a, b) => a.productId.localeCompare(b.productId))) {
       await tx.product.update({

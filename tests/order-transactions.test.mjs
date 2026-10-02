@@ -57,6 +57,7 @@ function storeFixture({
               (!where.userId || order.userId === where.userId),
           ) ?? null
         const tx = {
+          $executeRaw: async () => 0,
           storeSetting: { findUnique: async () => ({ value: JSON.stringify(checkout) }) },
           address: {
             findFirst: async ({ where }) =>

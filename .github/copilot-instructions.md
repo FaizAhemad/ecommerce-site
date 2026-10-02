@@ -2,13 +2,13 @@
 
 Owner rebrand direction (2026-09-30): follow REBRAND_IMPLEMENTATION_PLAN.md and SCHEMA_EVOLUTION_PLAN.md for the planned application-wide MUI redesign, loading/non-blocking interaction work and schema evolution. MUI is the target UI system, superseding historical Tailwind/Radix migration direction. Existing legacy styling stays only until its consumers migrate. The new palette is proposed, not deployed. APPLICATION_BACKLOG.md remains the sole checklist; all identity, financial, marketplace, live-operation and owner acceptance gates remain. This batch is planning/documentation only.
 
-SELLER_WORKSPACE.md governs connected seller catalog/moderation/showcase pages. Keep drafts separate from Product/checkout, scoped private media, explicit public approval and snapshot-only order reads. Do not infer financial marketplace completion; provider/business decisions and deferred acceptance remain pending.
+SELLER_WORKSPACE.md governs connected seller catalog/moderation/showcase pages. Keep drafts separate from Product until explicit admin content approval, scope private media, and preserve order snapshots. Owner update 2026-10-02: each shop product needs exact-version acceptance of an admin-proposed fixed INR/unit or percentage of discounted item price before checkout eligibility. Never default the fee. Fee snapshots are prepared; seller fee collection, payout/settlement and partial-refund reconciliation remain pending.
 
 MP-02 source is present: follow SELLER_ONBOARDING.md for session-owned applications and transactional versioned admin review. Keep seller-application storage reserved and seller permissions separate from ADMIN. Publishing/payment gates remain closed.
 
 MP-01 ownership source/migration is prepared, not applied. Follow MARKETPLACE_MIGRATION.md, preserve platform compatibility and immutable historical shop attribution, and never grant seller access via platform admin routes. Seller publication requires later moderation/checkout gates.
 
-Latest priority override: marketplace MP-01–MP-09 precedes the earlier UI-first instruction. Read MARKETPLACE_REQUIREMENTS.md and begin shop ownership/isolation foundations. Marketplace scope is approved; fee/payout/provider/legal rules remain undecided. Preserve current commerce and owner verification/live-operation restrictions.
+Latest priority override: marketplace MP-01–MP-09 precedes the earlier UI-first instruction. Read MARKETPLACE_REQUIREMENTS.md and preserve shop ownership/isolation. Owner update 2026-10-02 approves per-product fee proposal/acceptance workflow and the discounted-item percentage basis; payout/settlement, partial refunds and legal/provider operational decisions remain gated. Preserve current live-operation restrictions and require owner-applied migrations/Prisma generation before production.
 
 Preserve SESSION_SECURITY.md: server-enforced role-specific idle/absolute expiry, activity-only CSRF renewal and no background-read renewal. Legacy 30-day sessions require fresh login; verification is pending.
 
@@ -100,7 +100,7 @@ E30 current working scope is unverified. Preserve coupon activation approval, se
 
 MP-05 fulfillment: preserve shop-scoped SellerOrder/versioned actions and selected delivery data, existing Gadgify-only workflows, and financial separation. Prepared migration is unapplied. Mixed-shop checkout, allocation, refunds and payouts remain gated; follow SELLER_FULFILLMENT.md. Tests/lint/build/device acceptance remain deferred.
 
-Seller publication: use the transactional catalog projection and central marketplace purchase eligibility. External-shop purchasing stays disabled until approved commercial/provider rules; do not treat content approval as financial authorization. Both marketplace migrations and Prisma generation are rollout prerequisites. See MARKETPLACE_PURCHASING.md; all new work remains unverified under deferred checks.
+Seller publication: use the transactional catalog projection and central marketplace purchase eligibility. Content approval alone is not financial authorization; require the shop's acceptance of the exact offer version. Per-offer fee basis is owner approved, but shop fee collection/settlement/provider acceptance remain incomplete. All marketplace migrations and Prisma generation are rollout prerequisites. See MARKETPLACE_PURCHASING.md; production acceptance remains pending.
 
 Quality inspection (2026-09-24): follow QUALITY_INSPECTION.md. Optional admin-requested external-shop order inspection blocks customer dispatch until PASSED; no universal/central logistics rule is approved. Preserve reserved shop-inspection/inspection-media keys, admin-only writes/call notes, scoped seller evidence and customer status-only DTOs, version/UUID/serializable guards, and seller membership/email checks on notification sends. No automatic calls, refunds or stock changes. Existing migration prerequisites and deferred verification remain.
 

@@ -4,6 +4,14 @@ import { apiFetch } from '../api/http'
 import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScope'
 import { useNotification } from './NotificationProvider'
 import { FormDialog } from './FormDialog'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Card } from './mui/Card'
+import { CircularProgress } from './mui/CircularProgress'
+import { Paper } from './mui/Paper'
+import { Stack } from './mui/Stack'
+import { TextField } from './mui/TextField'
+import { Typography } from './mui/Typography'
 type Message = {
   id: string
   recipientEmail: string
@@ -90,32 +98,23 @@ export function CustomerMessages() {
   }
   return (
     <>
-      <div className="profile-actions">
-        <button type="button" className="primary-button" onClick={() => setComposerOpen(true)}>
+      <Stack direction="row" spacing={1}>
+        <Button type="button" variant="contained" onClick={() => setComposerOpen(true)}>
           {saved ? 'View recorded message' : hasDraft ? 'Continue message draft' : 'Write a customer message'}
-        </button>
-      </div>
+        </Button>
+      </Stack>
       <FormDialog open={composerOpen} title="Customer message" busy={pending} onClose={() => { if (!lock.current) setComposerOpen(false) }}>
-      <form className="admin-form" onChange={() => setHasDraft(true)} onSubmit={(event) => void submit(event)}>
-        <label>
-          Verified customer email
-          <input name="email" type="email" maxLength={254} required disabled={pending || saved} />
-        </label>
-        <label>
-          Subject
-          <input name="subject" maxLength={120} required disabled={pending || saved} />
-        </label>
-        <label className="full">
-          Message
-          <textarea name="body" rows={6} maxLength={4000} required disabled={pending || saved} />
-        </label>
-        <button className="primary-button" disabled={pending || saved}>
+      <Stack component="form" spacing={2} onChange={() => setHasDraft(true)} onSubmit={(event) => void submit(event)}>
+        <TextField name="email" label="Verified customer email" type="email" slotProps={{ htmlInput: { maxLength: 254 } }} required disabled={pending || saved} />
+        <TextField name="subject" label="Subject" slotProps={{ htmlInput: { maxLength: 120 } }} required disabled={pending || saved} />
+        <TextField name="body" label="Message" multiline minRows={6} slotProps={{ htmlInput: { maxLength: 4000 } }} required disabled={pending || saved} />
+        <Button variant="contained" disabled={pending || saved}>
           {pending ? 'Sending…' : saved ? 'Message recorded' : 'Send message'}
-        </button>
+        </Button>
         {saved && (
-          <button
+          <Button
             type="reset"
-            className="secondary-button"
+            variant="outlined"
             onClick={() => {
               attempt.current = null
               setSaved(false)
@@ -125,52 +124,43 @@ export function CustomerMessages() {
             }}
           >
             Write another message
-          </button>
+          </Button>
         )}
-        {sendError && <p className="full" role="alert">{sendError}</p>}
-        {outcome && <p className="full" role="status">{outcome}</p>}
-        <p className="full">
+        {sendError && <Alert severity="error" role="alert">{sendError}</Alert>}
+        {outcome && <Alert severity="info" role="status">{outcome}</Alert>}
+        <Typography variant="body2" color="text.secondary">
           Provider acceptance does not confirm inbox delivery. After an interrupted request, check
           history before sending again.
-        </p>
-        {!saved && <p className="full">Closing this drawer keeps the draft while this panel remains open.</p>}
-      </form>
+        </Typography>
+        {!saved && <Typography variant="caption" color="text.secondary">Closing this drawer keeps the draft while this panel remains open.</Typography>}
+      </Stack>
       </FormDialog>
-      <h3>Message history</h3>
-      <div className="profile-actions">
-        <button className="secondary-button" disabled={pending || query.isFetching || cursors.length === 0} onClick={() => setCursors(values => values.slice(0, -1))}>Newer messages</button>
-        <button className="secondary-button" disabled={pending || query.isFetching || query.isError || !query.data?.nextCursor} onClick={() => { if (query.data?.nextCursor) setCursors(values => [...values, query.data.nextCursor!]) }}>Older messages</button>
-        <button className="secondary-button" disabled={pending || query.isFetching} onClick={() => { setCursors([]); if (!cursors.length) void query.refetch() }}>Refresh latest</button>
-      </div>
+      <Typography component="h2" variant="h6">Message history</Typography>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+        <Button variant="outlined" disabled={pending || query.isFetching || cursors.length === 0} onClick={() => setCursors(values => values.slice(0, -1))}>Newer messages</Button>
+        <Button variant="outlined" disabled={pending || query.isFetching || query.isError || !query.data?.nextCursor} onClick={() => { if (query.data?.nextCursor) setCursors(values => [...values, query.data.nextCursor!]) }}>Older messages</Button>
+        <Button variant="outlined" disabled={pending || query.isFetching} onClick={() => { setCursors([]); if (!cursors.length) void query.refetch() }}>Refresh latest</Button>
+      </Stack>
       {query.isPending ? (
-        <p role="status">Loading messages…</p>
+        <Stack role="status" direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 3 }}><CircularProgress size={20} /><Typography color="text.secondary">Loading messages…</Typography></Stack>
       ) : query.isError ? (
-        <div role="alert">
-          <p>Unable to load history.</p>
-          <button
-            className="secondary-button"
-            disabled={query.isFetching}
-            onClick={() => void query.refetch({ cancelRefetch: false })}
-          >
-            Retry
-          </button>
-        </div>
+        <Alert severity="error" role="alert" action={<Button color="inherit" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry</Button>}>Unable to load history.</Alert>
       ) : !query.data?.messages.length ? (
-        <p>No messages recorded.</p>
+        <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}><Typography variant="h6">No messages recorded</Typography></Paper>
       ) : (
-        query.data.messages.map((message) => (
-          <article className="record-card" key={message.id}>
-            <strong>{message.subject}</strong>
-            <p>{message.recipientEmail}</p>
-            <p>{message.body}</p>
-            <p>
+        <Stack spacing={1.5}>{query.data.messages.map((message) => (
+          <Card variant="outlined" component="article" sx={{ p: 2.5 }} key={message.id}>
+            <Stack spacing={1}><Typography component="h3" variant="h6">{message.subject}</Typography>
+            <Typography variant="body2" color="text.secondary">{message.recipientEmail}</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{message.body}</Typography>
+            <Typography variant="caption" color="text.secondary">
               {['ACCEPTED', 'SENT'].includes(message.status)
                 ? 'Provider accepted (delivery unverified)'
                 : 'Email acceptance unconfirmed'}{' '}
               · {new Date(message.createdAt).toLocaleString()}
-            </p>
-          </article>
-        ))
+            </Typography></Stack>
+          </Card>
+        ))}</Stack>
       )}
     </>
   )

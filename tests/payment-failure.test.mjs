@@ -45,6 +45,7 @@ async function invoke({ orderStatus = 'PENDING', paymentStatus = 'PENDING', prov
         return { count: 1 }
       },
     },
+    $executeRaw: async () => 0,
     $transaction: async (action) => action(db),
   }
   globalThis.paymentFailureTest = { db, fixture }

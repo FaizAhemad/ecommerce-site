@@ -2,6 +2,13 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/http'
 import { privateKey } from '../api/sessionScope'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Card } from './mui/Card'
+import { CircularProgress } from './mui/CircularProgress'
+import { Paper } from './mui/Paper'
+import { Stack } from './mui/Stack'
+import { Typography } from './mui/Typography'
 import { useNotification } from './NotificationProvider'
 
 type Feedback = { rating: number; comment: string; createdAt: string; orderNumber?: string }
@@ -48,8 +55,8 @@ export function PurchaseFeedback() {
 }
 export function AdminFeedback() {
   const query = useQuery({ queryKey: privateKey('admin', 'feedback'), queryFn: ({ signal }) => read<{ feedback: Feedback[] }>('/api/admin/feedback', signal), retry: false })
-  if (query.isPending) return <p role="status">Loading purchase feedback…</p>
-  if (query.isError) return <div role="alert"><p>Unable to load feedback.</p><button className="secondary-button" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry</button></div>
-  if (!query.data?.feedback.length) return <p>No purchase feedback recorded.</p>
-  return <><p>Latest 100 first-purchase responses. This customer feedback is private.</p>{query.data.feedback.map(item => <article className="record-card" key={item.orderNumber}><h3>Order {item.orderNumber}</h3><p>Experience: {item.rating} / 5</p><p>{item.comment || 'No written comment.'}</p><p>{new Date(item.createdAt).toLocaleString()}</p></article>)}</>
+  if (query.isPending) return <Stack role="status" direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 3 }}><CircularProgress size={20} /><Typography color="text.secondary">Loading purchase feedback…</Typography></Stack>
+  if (query.isError) return <Alert severity="error" role="alert" action={<Button color="inherit" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry</Button>}>Unable to load feedback.</Alert>
+  if (!query.data?.feedback.length) return <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}><Typography variant="h6">No purchase feedback recorded</Typography></Paper>
+  return <Stack spacing={2}><Typography color="text.secondary">Latest 100 first-purchase responses. This customer feedback is private.</Typography>{query.data.feedback.map(item => <Card variant="outlined" component="article" key={item.orderNumber} sx={{ p: { xs: 2, sm: 2.5 } }}><Stack spacing={1}><Typography component="h2" variant="h6">Order {item.orderNumber}</Typography><Typography>Experience: {item.rating} / 5</Typography><Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{item.comment || 'No written comment.'}</Typography><Typography variant="caption" color="text.secondary">{new Date(item.createdAt).toLocaleString()}</Typography></Stack></Card>)}</Stack>
 }

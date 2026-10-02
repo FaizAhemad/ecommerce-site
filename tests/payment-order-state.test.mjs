@@ -21,6 +21,7 @@ async function invoke(kind, status, invalidSignature = false, event = 'payment.c
     },
   }
   globalThis.paymentStateFixture = {
+    $executeRaw: async () => 0,
     order: {
       findFirst: async () => ({
         id: 'order',

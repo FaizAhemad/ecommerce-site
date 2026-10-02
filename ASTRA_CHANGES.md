@@ -1,5 +1,9 @@
 # Astra change handoff
 
+## WhatsApp intake handoff - 2026-09-30
+
+Current owner choices are direct WhatsApp Business messages and local Windows folders. tools/whatsapp-intake contains an isolated, offline-tested receiver/queue/export worker. Follow its README for structured message format, configuration and pending live acceptance. Do not activate without confirming Cloud API access and an owner-configured HTTPS tunnel. src/whatsapp-automation.md remains broader future scope, including reviewed AI extraction and ZIP/UI ingestion.
+
 ## Route splitting handoff - 2026-09-30
 
 Preserve module-scope React.lazy page imports and StorefrontRoute Suspense boundary. Do not restore eager page imports or preload private pages for guests. The shared shell and existing route/server authorization remain unchanged. PROJECT_STATUS.md records entry-size evidence and remaining performance acceptance.
@@ -7,6 +11,10 @@ Preserve module-scope React.lazy page imports and StorefrontRoute Suspense bound
 ## Shared MUI handoff - 2026-09-30
 
 Use the refined shared MUI theme and src/components/DataGrid.tsx composition for subsequent migration. shared-grid.stories.tsx demonstrates the application grid; data-grid.stories.tsx is the separate X Community example. Preserve server queries and retained results. See PROJECT_STATUS.md for evidence and pending catalog/device coverage.
+
+## Admin MUI handoff - 2026-10-02
+
+Batch 2 applies shared MUI to the 14-tab `/admin` workspace, admin support, fulfillment, seller review and product moderation, plus their tab-specific shared panels. Preserve transactional business rules and existing server query contracts. `npm run build:offline` passes; this is source/build evidence only. Finish inspection/media sub-surfaces and complete rendered, keyboard and phone/tablet/real-device acceptance before closing RB-07/UI-04.
 
 Owner rebrand direction (2026-09-30): follow REBRAND_IMPLEMENTATION_PLAN.md and SCHEMA_EVOLUTION_PLAN.md for the planned application-wide MUI redesign, loading/non-blocking interaction work and schema evolution. MUI is the target UI system, superseding historical Tailwind/Radix migration direction. Existing legacy styling stays only until its consumers migrate. The new palette is proposed, not deployed. APPLICATION_BACKLOG.md remains the sole checklist; all identity, financial, marketplace, live-operation and owner acceptance gates remain. This batch is planning/documentation only.
 
@@ -61,7 +69,7 @@ Single-card scale refinement (2026-09-25): reduced the deliberate desktop width 
 - Fix a shared cause and then inspect its consumers. Avoid copied page-specific overrides.
 - Preserve auth, customer/shop isolation, CSRF, private cache keys, request budgets, pending guards, failed drafts and five-second snackbars.
 - Use sentence-case, customer-facing wording and explain safe next steps.
-- Do not enable external-shop purchasing, commissions, payouts, mandatory inspection or other undecided business rules.
+- Owner update 2026-10-02: shop purchasing may pass server eligibility only after admin content approval plus acceptance of that exact product's fixed INR/unit or percentage-of-discounted-item-price fee offer. No default rate is allowed. Seller fee snapshots are prepared; automated collection/settlement/payout remains gated by migration/runtime acceptance and unresolved business/provider rules.
 - Keep `APPLICATION_BACKLOG.md` as the only completion checklist. Record evidence and limits in `PROJECT_STATUS.md`; update `PAGE_INVENTORY.md` when route/component behavior changes.
 - Treat source review, owner screenshots, browser inspection and real-device verification as separate evidence. Never claim one as another.
 

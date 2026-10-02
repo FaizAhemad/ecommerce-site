@@ -1,9 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/http'
 import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScope'
 import { useNotification } from './NotificationProvider'
-import './ShopInspection.css'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Card } from './mui/Card'
+import { CircularProgress } from './mui/CircularProgress'
+import { Paper } from './mui/Paper'
+import { Stack } from './mui/Stack'
+import { TextField } from './mui/TextField'
+import { Typography } from './mui/Typography'
 
 export type InspectionView = { status: string; version: number; holdsDispatch: boolean; photoIds: string[]; history: { id: string; action: string; note: string; createdAt: string }[] }
 async function request<T>(url: string, init?: Parameters<typeof apiFetch>[1]): Promise<T> {
@@ -15,9 +22,9 @@ function Photo({ endpoint, orderId, id }: { endpoint: string; orderId: string; i
   const query = useQuery({ queryKey: privateKey('inspection-photo', endpoint, orderId, id), retry: false, gcTime: 0,
     queryFn: ({ signal }) => request<{ data: string }>(`${endpoint}?id=${encodeURIComponent(orderId)}&inspectionPhoto=${encodeURIComponent(id)}`, { signal }),
   })
-  if (query.isPending) return <p role="status">Loading inspection photo…</p>
-  if (query.isError) return <button type="button" className="secondary-button" onClick={() => void query.refetch()}>Retry photo</button>
-  return <img className="inspection-photo" src={query.data.data} alt="Recorded quality inspection evidence" />
+  if (query.isPending) return <Stack role="status" direction="row" spacing={1} sx={{ alignItems: 'center' }}><CircularProgress size={18} /><Typography variant="body2">Loading inspection photo…</Typography></Stack>
+  if (query.isError) return <Button type="button" variant="outlined" onClick={() => void query.refetch()}>Retry photo</Button>
+  return <Paper component="img" variant="outlined" src={query.data.data} alt="Recorded quality inspection evidence" sx={{ display: 'block', maxWidth: '100%', maxHeight: 360, objectFit: 'contain', borderRadius: 2 }} />
 }
 const transitions: Record<string, [string, string][]> = {
   REQUESTED: [['inspection-receive', 'Record items received']],
@@ -65,25 +72,24 @@ export function ShopInspection({ orderId, endpoint, audience, inspection, eligib
     } finally { lock.current = false; if (generation === sessionGeneration()) onBusy(false) }
   }
   if (!inspection && !(audience === 'admin' && eligible)) return null
-  return <section className="shop-inspection" aria-label="Quality inspection">
-    <h3>Gadgify quality inspection</h3>
-    {inspection ? <p>Status: {inspection.status.replaceAll('_', ' ')}. {inspection.holdsDispatch ? 'Customer dispatch is on hold.' : 'Inspection passed.'}</p> : <p>Inspection is optional per shop order. Requesting it holds customer dispatch until Gadgify receives and passes these items.</p>}
-    {audience !== 'customer' && <>
-      {inspection?.history.map(event => <article className="record-card" key={event.id}><strong>{event.action.replace('inspection-', '').replaceAll('-', ' ')}</strong><p className="inspection-note">{event.note}</p><small>{new Date(event.createdAt).toLocaleString()}</small></article>)}
-      {!!inspection?.photoIds.length && <div className="profile-actions">{inspection.photoIds.map((id, index) => <button type="button" className="secondary-button" key={id} disabled={busy} onClick={() => setPhoto(photo === id ? null : id)}>Photo {index + 1}</button>)}</div>}
-      {photo && <Photo endpoint={endpoint} orderId={orderId} id={photo} />}
-    </>}
-    {audience === 'admin' && eligible && <div className="auth-form">
-      <label>Inspection note / return tracking reference<textarea maxLength={1000} minLength={3} value={note} disabled={busy} onChange={event => setNote(event.target.value)} /></label>
-      <p>Decision notes are shared with the shop. Call notes remain visible only to Gadgify staff. Record defects or return tracking clearly; no payment, refund or stock change is implied.</p>
-      <div className="profile-actions">{(inspection ? transitions[inspection.status] ?? [] : [['inspection-request', 'Request inspection and hold dispatch']]).map(([action, label]) => <button type="button" className="secondary-button" disabled={busy || note.trim().length < 3} key={action} onClick={() => void write(action)}>{label}</button>)}
-        {inspection && <button type="button" className="secondary-button" disabled={busy || note.trim().length < 3} onClick={() => void write('inspection-call')}>Save staff call note</button>}
-      </div>
-      {inspection && ['RECEIVED','FAILED'].includes(inspection.status) && inspection.photoIds.length < 3 && <>
-        <label>Optional inspection photo (up to 1 MB, three total)<input key={inputKey} type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} onChange={event => { setFile(event.target.files?.[0] ?? null); photoId.current = '' }} /></label>
-        <button type="button" className="secondary-button" disabled={busy || !file} onClick={() => void write('inspection-photo')}>Save inspection photo</button>
+  return <Paper component="section" aria-label="Quality inspection" variant="outlined" sx={{ p: { xs: 2, sm: 2.5 } }}>
+    <Stack spacing={1.5}>
+      <Typography component="h3" variant="h6">Gadgify quality inspection</Typography>
+      {inspection ? <Alert severity={inspection.holdsDispatch ? 'warning' : 'success'}>Status: {inspection.status.replaceAll('_', ' ')}. {inspection.holdsDispatch ? 'Customer dispatch is on hold.' : 'Inspection passed.'}</Alert> : <Alert severity="info">Inspection is optional per shop order. Requesting it holds customer dispatch until Gadgify receives and passes these items.</Alert>}
+      {audience !== 'customer' && <>
+        <Stack spacing={1}>{inspection?.history.map(event => <Card variant="outlined" component="article" key={event.id} sx={{ p: 1.5 }}><Stack spacing={0.5}><Typography variant="subtitle2">{event.action.replace('inspection-', '').replaceAll('-', ' ')}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{event.note}</Typography><Typography variant="caption" color="text.secondary">{new Date(event.createdAt).toLocaleString()}</Typography></Stack></Card>)}</Stack>
+        {!!inspection?.photoIds.length && <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>{inspection.photoIds.map((id, index) => <Button type="button" variant="outlined" key={id} disabled={busy} onClick={() => setPhoto(photo === id ? null : id)}>Photo {index + 1}</Button>)}</Stack>}
+        {photo && <Photo endpoint={endpoint} orderId={orderId} id={photo} />}
       </>}
-      {error && <p role="alert">{error}</p>}
-    </div>}
-  </section>
+      {audience === 'admin' && eligible && <Stack spacing={1.5}>
+        <TextField label="Inspection note or return tracking reference" slotProps={{ htmlInput: { maxLength: 1000, minLength: 3 } }} multiline minRows={3} value={note} disabled={busy} onChange={event => setNote(event.target.value)} />
+        <Typography variant="body2" color="text.secondary">Decision notes are shared with the shop. Call notes remain visible only to Gadgify staff. Record defects or return tracking clearly; no payment, refund or stock change is implied.</Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>{(inspection ? transitions[inspection.status] ?? [] : [['inspection-request', 'Request inspection and hold dispatch']]).map(([action, label]) => <Button type="button" variant="outlined" disabled={busy || note.trim().length < 3} key={action} onClick={() => void write(action)}>{label}</Button>)}
+          {inspection && <Button type="button" variant="outlined" disabled={busy || note.trim().length < 3} onClick={() => void write('inspection-call')}>Save staff call note</Button>}
+        </Stack>
+        {inspection && ['RECEIVED','FAILED'].includes(inspection.status) && inspection.photoIds.length < 3 && <Stack spacing={1}><TextField label="Optional inspection photo" helperText="Up to 1 MB; three photos total." type="file" key={inputKey} slotProps={{ htmlInput: { accept: 'image/jpeg,image/png,image/webp,image/gif', onChange: (event: ChangeEvent<HTMLInputElement>) => { setFile(event.target.files?.[0] ?? null); photoId.current = '' } }, inputLabel: { shrink: true } }} disabled={busy} /><Button type="button" variant="outlined" disabled={busy || !file} onClick={() => void write('inspection-photo')}>Save inspection photo</Button></Stack>}
+        {error && <Alert severity="error" role="alert">{error}</Alert>}
+      </Stack>}
+    </Stack>
+  </Paper>
 }

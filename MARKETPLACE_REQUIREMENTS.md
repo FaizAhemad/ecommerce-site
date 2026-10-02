@@ -12,7 +12,7 @@ MP-02 application and review source is now present; see SELLER_ONBOARDING.md. Th
 
 Implementation note: MP-01 models, access helpers and a migration are prepared in source; see MARKETPLACE_MIGRATION.md. Nothing has been migrated or enabled for sellers. Subsequent moderation/checkout gates are required before seller products can be offered.
 
-Allow multiple independent shops to sell through the same Gadgify application. A shop is a seller/vendor; the buying account remains a customer. Gadgify operates the marketplace and may charge sellers a fee or sales commission. India/INR remains the current market. The charging model, amounts and percentage are not approved yet. Commission per successful sale is a proposal, not an enabled business rule.
+Allow multiple independent shops to sell through the same Gadgify application. A shop is a seller/vendor; the buying account remains a customer. Gadgify operates the marketplace and is the customer payment merchant. On 2026-10-02 the owner approved per-product fee proposals: fixed INR per unit sold or a percentage of the discounted item price. Admin proposes actual values and the shop must accept the exact version before the product is orderable. No default amount or percentage is invented.
 
 ## Delivery order and scope
 
@@ -40,10 +40,11 @@ Do not assume the existing single-store payment/refund flow is marketplace-ready
 
 | Decision | Current status |
 | --- | --- |
-| Listing fee, commission, subscription or combination | Undecided; no charges enabled by default |
-| Fee rate/basis, tax treatment, rounding and discount funding | Undecided; do not invent defaults |
-| Who collects payment, provider marketplace capability and seller onboarding | Requires owner/provider approval |
-| Settlement schedule, holds, refunds, disputes and failed payouts | Undecided |
+| Per-product fee basis | Owner approved fixed INR per unit sold or percent of discounted item price; amount/rate negotiated by product and accepted by seller |
+| Fee rate/amount | Admin enters each proposal; no default is applied |
+| Discount basis | Percentage uses discounted item price; delivery and tax excluded. Coupon discount allocation is deterministic. |
+| Customer payment collection | Gadgify receives customer payment through existing checkout; enabled only after owner configures checkout and applies prepared migrations |
+| Settlement schedule, holds, refunds, disputes and seller payments | Manual/unimplemented; settlement schedule and legal terms remain undecided |
 | Delivery responsibility | Confirmed: each shop handles its own delivery/returns; Gadgify handles its own products and retains oversight |
 | Mixed-shop delivery charges, cancellation/refund allocation and return eligibility | Undecided; new fulfillment pages do not enable financial rules |
 | Seller agreement, privacy disclosures, invoicing and legal requirements | Requires approved content and appropriate review |

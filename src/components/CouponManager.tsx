@@ -5,6 +5,21 @@ import { privateKey } from '../api/sessionScope'
 import { queryClient } from '../api/queryClient'
 import { useNotification } from './NotificationProvider'
 import { FormDialog } from './FormDialog'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Card } from './mui/Card'
+import { Checkbox } from './mui/Checkbox'
+import { Chip } from './mui/Chip'
+import { CircularProgress } from './mui/CircularProgress'
+import { FormControl } from './mui/FormControl'
+import { FormControlLabel } from './mui/FormControlLabel'
+import { InputLabel } from './mui/InputLabel'
+import { MenuItem } from './mui/MenuItem'
+import { Paper } from './mui/Paper'
+import { Select } from './mui/Select'
+import { Stack } from './mui/Stack'
+import { TextField } from './mui/TextField'
+import { Typography } from './mui/Typography'
 
 function localDate(value?: string) {
   if (!value) return ''
@@ -71,15 +86,14 @@ export function CouponManager() {
     }
   }
   return (
-    <>
-      <p>
+    <Stack spacing={2}>
+      <Alert severity="info">
         Configure coupons for India / INR. Only explicitly activated coupons can be used.
         One coupon applies to items per order; delivery is not discounted. Orders consume a use
         when recorded, including unpaid, cancelled and refunded orders. Discounted orders must
         retain a payable total of at least ₹1. Choose the approved tax treatment before activation.
-      </p>
-      <button
-        className="secondary-button"
+      </Alert>
+      <Button variant="contained" sx={{ alignSelf: 'flex-start' }}
         disabled={busy}
         onClick={() => {
           setSelected(null)
@@ -89,7 +103,7 @@ export function CouponManager() {
         }}
       >
         New coupon
-      </button>
+      </Button>
       <FormDialog open={formOpen} title={selected ? `Edit ${selected.code}` : 'Create coupon'} busy={busy} onClose={() => setFormOpen(false)}>
       <CouponForm
         key={selected ? `${selected.code}:${selected.version}` : `new:${newDraft}`}
@@ -98,45 +112,36 @@ export function CouponManager() {
         save={(input) => void mutate(input)}
       />
       </FormDialog>
-      <h3>Saved coupons</h3>
-      {query.isPending && <p role="status">Loading coupons…</p>}
+      <Typography component="h2" variant="h6">Saved coupons</Typography>
+      {query.isPending && <Stack role="status" direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 2 }}><CircularProgress size={20} /><Typography color="text.secondary">Loading coupons…</Typography></Stack>}
       {query.isError && (
-        <div role="alert">
-          <p>Unable to load {coupons.length ? 'more coupons' : 'coupons'}.</p>
-          <button
-            className="secondary-button"
-            disabled={query.isFetching}
-            onClick={() => void query.refetch({ cancelRefetch: false })}
-          >
-            Reload coupons
-          </button>
-        </div>
+        <Alert severity="error" role="alert" action={<Button color="inherit" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Reload coupons</Button>}>Unable to load {coupons.length ? 'more coupons' : 'coupons'}.</Alert>
       )}
-      {!query.isPending && !query.isError && !coupons.length && <p>No coupon drafts recorded.</p>}
+      {!query.isPending && !query.isError && !coupons.length && <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}><Typography variant="h6">No coupon drafts recorded</Typography></Paper>}
       {coupons.map((coupon) => (
-        <article className="record-card" key={coupon.code}>
-          <h4>
-            {coupon.code} · {coupon.status === 'ARCHIVED' ? 'Archived' : coupon.status === 'ACTIVE' ? 'Active' : 'Draft'}
-          </h4>
-          <p>
+        <Card variant="outlined" component="article" key={coupon.code} sx={{ p: { xs: 2, sm: 2.5 } }}><Stack spacing={1.25}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}>
+            <Typography component="h3" variant="h6">{coupon.code}</Typography>
+            <Chip size="small" label={coupon.status === 'ARCHIVED' ? 'Archived' : coupon.status === 'ACTIVE' ? 'Active' : 'Draft'} color={coupon.status === 'ACTIVE' ? 'success' : coupon.status === 'ARCHIVED' ? 'default' : 'warning'} />
+          </Stack>
+          <Typography>
             {coupon.type === 'PERCENT'
               ? `${coupon.value / 100}% off, capped at ₹${coupon.maxDiscountMinor / 100}`
               : `₹${coupon.value / 100} off`}{' '}
             · Minimum items subtotal ₹{coupon.minSubtotalMinor / 100}
-          </p>
-          <p>
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
             {new Date(coupon.startsAt).toLocaleString()} –{' '}
             {new Date(coupon.endsAt).toLocaleString()}
-          </p>
-          <p>
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
             Configured limits: {coupon.usageLimit} total, {coupon.perCustomerLimit} per customer.
             Version {coupon.version}.
             {' '}Recorded uses: {coupon.used ?? 0}.
-          </p>
+          </Typography>
           {coupon.status !== 'ARCHIVED' && (
-            <div className="profile-actions">
-              <button
-                className="secondary-button"
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button variant="outlined"
                 disabled={busy}
                 onClick={() => {
                   setSelected(coupon)
@@ -145,50 +150,46 @@ export function CouponManager() {
                 }}
               >
                 Edit
-              </button>
+              </Button>
               {archiveCode === coupon.code ? (
                 <>
-                  <span>Archive this code? It cannot be reused.</span>
-                  <button
-                    className="secondary-button"
+                  <Alert severity="warning">Archive this code? It cannot be reused.</Alert>
+                  <Button variant="outlined"
                     disabled={busy}
                     onClick={() =>
                       void mutate({ code: coupon.code, expectedVersion: coupon.version }, true)
                     }
                   >
                     Confirm archive
-                  </button>
-                  <button
-                    className="secondary-button"
+                  </Button>
+                  <Button variant="outlined"
                     disabled={busy}
                     onClick={() => setArchiveCode(null)}
                   >
                     Keep coupon
-                  </button>
+                  </Button>
                 </>
               ) : (
-                <button
-                  className="secondary-button"
+                <Button variant="outlined"
                   disabled={busy}
                   onClick={() => setArchiveCode(coupon.code)}
                 >
                   Archive
-                </button>
+                </Button>
               )}
-            </div>
+            </Stack>
           )}
-        </article>
+        </Stack></Card>
       ))}
       {query.hasNextPage && (
-        <button
-          className="secondary-button"
+        <Button variant="outlined" sx={{ alignSelf: 'flex-start' }}
           disabled={query.isFetching}
           onClick={() => void query.fetchNextPage({ cancelRefetch: false })}
         >
           {query.isFetchingNextPage ? 'Loading…' : 'Load more coupons'}
-        </button>
+        </Button>
       )}
-    </>
+    </Stack>
   )
 }
 function CouponForm({
@@ -234,130 +235,22 @@ function CouponForm({
     }
   }
   return (
-    <form className="admin-form" onSubmit={submit}>
-      <label>
-        Coupon code
-        <input
-          name="code"
-          defaultValue={initial?.code ?? ''}
-          required
-          minLength={3}
-          maxLength={32}
-          pattern={'[A-Za-z0-9][A-Za-z0-9_\\-]{2,31}'}
-          disabled={busy || Boolean(initial)}
-        />
-      </label>
-      <label>
-        Discount type
-        <select
-          value={type}
-          disabled={busy}
-          onChange={(event) => setType(event.target.value as 'FIXED' | 'PERCENT')}
-        >
-          <option value="FIXED">Fixed amount (₹)</option>
-          <option value="PERCENT">Percentage</option>
-        </select>
-      </label>
-      <label>
-        {type === 'PERCENT' ? 'Discount (%)' : 'Discount (₹)'}
-        <input
-          name="value"
-          type="number"
-          min="0.01"
-          max={type === 'PERCENT' ? 100 : 100000}
-          step="0.01"
-          defaultValue={initial ? initial.value / 100 : ''}
-          required
-          disabled={busy}
-        />
-      </label>
-      <label>
-        Minimum items subtotal (₹)
-        <input
-          name="minimum"
-          type="number"
-          min="0"
-          max="1000000"
-          step="0.01"
-          defaultValue={initial ? initial.minSubtotalMinor / 100 : ''}
-          required
-          disabled={busy}
-        />
-      </label>
-      {type === 'PERCENT' && (
-        <label>
-          Maximum discount (₹)
-          <input
-            name="cap"
-            type="number"
-            min="0.01"
-            max="100000"
-            step="0.01"
-            defaultValue={initial ? initial.maxDiscountMinor / 100 : ''}
-            required
-            disabled={busy}
-          />
-        </label>
-      )}
-      <label>
-        Starts (your local time)
-        <input
-          name="startsAt"
-          type="datetime-local"
-          defaultValue={localDate(initial?.startsAt)}
-          required
-          disabled={busy}
-        />
-      </label>
-      <label>
-        Ends (your local time)
-        <input
-          name="endsAt"
-          type="datetime-local"
-          defaultValue={localDate(initial?.endsAt)}
-          required
-          disabled={busy}
-        />
-      </label>
-      <label>
-        Total usage limit
-        <input
-          name="totalUses"
-          type="number"
-          min="1"
-          max="1000000"
-          step="1"
-          defaultValue={initial?.usageLimit ?? ''}
-          required
-          disabled={busy}
-        />
-      </label>
-      <label>
-        Per-customer limit
-        <input
-          name="customerUses"
-          type="number"
-          min="1"
-          max="1000000"
-          step="1"
-          defaultValue={initial?.perCustomerLimit ?? ''}
-          required
-          disabled={busy}
-        />
-      </label>
-      <label>
-        Tax treatment
-        <select name="taxTreatment" defaultValue={initial?.taxTreatment ?? ''} disabled={busy}>
-          <option value="">Choose before activating</option>
-          <option value="BEFORE_TAX">Calculate configured tax after discount</option>
-          <option value="AFTER_TAX">Keep tax on original items subtotal</option>
-        </select>
-      </label>
-      <label><input type="checkbox" name="active" defaultChecked={initial?.status === 'ACTIVE'} disabled={busy} /> Activate within these dates</label>
-      <label><input type="checkbox" name="approved" disabled={busy} /> I approve these amounts, tax treatment and usage terms for this store.</label>
-      <button className="primary-button" disabled={busy}>
+    <Stack component="form" spacing={2} onSubmit={submit}>
+      <TextField name="code" label="Coupon code" defaultValue={initial?.code ?? ''} required slotProps={{ htmlInput: { minLength: 3, maxLength: 32, pattern: '[A-Za-z0-9][A-Za-z0-9_\\-]{2,31}' } }} disabled={busy || Boolean(initial)} />
+      <FormControl fullWidth disabled={busy}><InputLabel id="coupon-type-label">Discount type</InputLabel><Select labelId="coupon-type-label" label="Discount type" value={type} onChange={(event) => setType(event.target.value as 'FIXED' | 'PERCENT')}><MenuItem value="FIXED">Fixed amount (₹)</MenuItem><MenuItem value="PERCENT">Percentage</MenuItem></Select></FormControl>
+      <TextField name="value" label={type === 'PERCENT' ? 'Discount (%)' : 'Discount (₹)'} type="number" slotProps={{ htmlInput: { min: 0.01, max: type === 'PERCENT' ? 100 : 100000, step: 0.01 } }} defaultValue={initial ? initial.value / 100 : ''} required disabled={busy} />
+      <TextField name="minimum" label="Minimum items subtotal (₹)" type="number" slotProps={{ htmlInput: { min: 0, max: 1000000, step: 0.01 } }} defaultValue={initial ? initial.minSubtotalMinor / 100 : ''} required disabled={busy} />
+      {type === 'PERCENT' && <TextField name="cap" label="Maximum discount (₹)" type="number" slotProps={{ htmlInput: { min: 0.01, max: 100000, step: 0.01 } }} defaultValue={initial ? initial.maxDiscountMinor / 100 : ''} required disabled={busy} />}
+      <TextField name="startsAt" label="Starts (your local time)" type="datetime-local" defaultValue={localDate(initial?.startsAt)} required disabled={busy} slotProps={{ inputLabel: { shrink: true } }} />
+      <TextField name="endsAt" label="Ends (your local time)" type="datetime-local" defaultValue={localDate(initial?.endsAt)} required disabled={busy} slotProps={{ inputLabel: { shrink: true } }} />
+      <TextField name="totalUses" label="Total usage limit" type="number" slotProps={{ htmlInput: { min: 1, max: 1000000, step: 1 } }} defaultValue={initial?.usageLimit ?? ''} required disabled={busy} />
+      <TextField name="customerUses" label="Per-customer limit" type="number" slotProps={{ htmlInput: { min: 1, max: 1000000, step: 1 } }} defaultValue={initial?.perCustomerLimit ?? ''} required disabled={busy} />
+      <FormControl fullWidth disabled={busy}><InputLabel id="coupon-tax-label">Tax treatment</InputLabel><Select name="taxTreatment" labelId="coupon-tax-label" label="Tax treatment" defaultValue={initial?.taxTreatment ?? ''}><MenuItem value="">Choose before activating</MenuItem><MenuItem value="BEFORE_TAX">Calculate configured tax after discount</MenuItem><MenuItem value="AFTER_TAX">Keep tax on original items subtotal</MenuItem></Select></FormControl>
+      <FormControlLabel control={<Checkbox name="active" defaultChecked={initial?.status === 'ACTIVE'} disabled={busy} />} label="Activate within these dates" />
+      <FormControlLabel control={<Checkbox name="approved" disabled={busy} />} label="I approve these amounts, tax treatment and usage terms for this store." />
+      <Button type="submit" variant="contained" disabled={busy}>
         {busy ? 'Saving…' : 'Save coupon'}
-      </button>
-    </form>
+      </Button>
+    </Stack>
   )
 }

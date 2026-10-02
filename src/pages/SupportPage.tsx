@@ -7,6 +7,12 @@ import { SupportAttachments } from '../components/SupportAttachments'
 import { useNotification } from '../components/NotificationProvider'
 import { ArrowUpRight, ChevronDown, ClipboardList, MessageCircle, PackageSearch, Truck } from 'lucide-react'
 import type { StorefrontApiResponse } from '../api/storefront'
+import { Alert } from '../components/mui/Alert'
+import { Button } from '../components/mui/Button'
+import { Container } from '../components/mui/Container'
+import { Paper } from '../components/mui/Paper'
+import { Stack } from '../components/mui/Stack'
+import { Typography } from '../components/mui/Typography'
 export function SupportPage({
   storefront,
   isAuthenticated = false,
@@ -206,6 +212,39 @@ export function SupportPage({
         </div>
       </section>
       </div>
+    )
+  }
+  if (admin) {
+    return (
+      <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 5 } }}>
+        <Stack spacing={3} component="section" aria-labelledby="support-title">
+          <Stack spacing={1}>
+            <Typography variant="overline" color="text.secondary">{storefront.identity.businessName} · Admin workspace</Typography>
+            <Typography id="support-title" component="h1" variant="h3">Support inbox</Typography>
+            <Typography color="text.secondary">Review customer requests, messages, and resolution status.</Typography>
+          </Stack>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <Button component="a" href="/admin" variant="outlined" onClick={onNavigate?.('/admin')}>Back to admin</Button>
+            <Button component="a" href="/support" variant="text" onClick={onNavigate?.('/support')}>Customer support page</Button>
+          </Stack>
+          {error && <Alert severity="error" role="alert">{error}</Alert>}
+          {!isAuthenticated ? (
+            <Alert severity="warning">Sign in with an administrator account to view support requests.</Alert>
+          ) : (
+            <>
+              {query.isPending && <Paper variant="outlined" role="status" sx={{ p: 3 }}><Typography color="text.secondary">Loading support requests…</Typography></Paper>}
+              {query.isError && <Alert severity="error" action={<Button color="inherit" size="small" disabled={query.isFetching} onClick={() => void (query.isFetchNextPageError ? query.fetchNextPage({ cancelRefetch: false }) : query.refetch({ cancelRefetch: false }))}>Retry</Button>}>Unable to load support requests. Try again.</Alert>}
+              {query.isSuccess && !query.data.pages.some(page => page.tickets.length) && <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}><Typography variant="h6">No support requests yet</Typography><Typography color="text.secondary">New customer requests will appear here.</Typography></Paper>}
+              <Stack spacing={2}>
+                {query.data?.pages.flatMap(page => page.tickets).map(ticket => (
+                  <SupportTicketCard key={ticket.id} ticket={ticket} admin pending={pending} update={write} />
+                ))}
+              </Stack>
+              {query.hasNextPage && <Button variant="outlined" disabled={query.isFetching} onClick={() => void query.fetchNextPage({ cancelRefetch: false })}>{query.isFetching ? 'Loading requests…' : 'Load more requests'}</Button>}
+            </>
+          )}
+        </Stack>
+      </Container>
     )
   }
   return (

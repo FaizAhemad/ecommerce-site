@@ -3,6 +3,15 @@ import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/http'
 import { privateKey } from '../api/sessionScope'
 import { useNotification } from './NotificationProvider'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Checkbox } from './mui/Checkbox'
+import { CircularProgress } from './mui/CircularProgress'
+import { FormControlLabel } from './mui/FormControlLabel'
+import { Paper } from './mui/Paper'
+import { Stack } from './mui/Stack'
+import { TextField } from './mui/TextField'
+import { Typography } from './mui/Typography'
 type Rules = { enabled: boolean; shippingMinor: number; taxBps: number }
 export function CheckoutSettings() {
   const query = useQuery({
@@ -14,19 +23,10 @@ export function CheckoutSettings() {
     },
     retry: false,
   })
-  if (query.isPending) return <p role="status">Loading checkout settings…</p>
+  if (query.isPending) return <Stack role="status" direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 3 }}><CircularProgress size={20} /><Typography color="text.secondary">Loading checkout settings…</Typography></Stack>
   if (query.isError)
     return (
-      <div role="alert">
-        <p>Unable to load settings.</p>
-        <button
-          className="secondary-button"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch({ cancelRefetch: false })}
-        >
-          Retry
-        </button>
-      </div>
+      <Alert severity="error" role="alert" action={<Button color="inherit" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry</Button>}>Unable to load checkout settings.</Alert>
     )
   const value = query.data?.settings.find((setting) => setting.key === 'checkout')?.value
   let rules: Rules | undefined
@@ -89,37 +89,20 @@ function CheckoutSettingsForm({ initial, saved }: { initial?: Rules; saved: () =
     }
   }
   return (
-    <form className="payment-form" onSubmit={(event) => void submit(event)}>
-      <h3>Online checkout — India / INR</h3>
-      <p>
+    <Paper component="form" variant="outlined" onSubmit={(event) => void submit(event)} sx={{ p: { xs: 2, sm: 3 }, maxWidth: 720 }}>
+      <Stack spacing={2}>
+      <Typography component="h2" variant="h6">Online checkout · India / INR</Typography>
+      <Typography color="text.secondary">
         Delivery is free at launch. Tax is optional and defaults to 0%. Regional delivery quotes
         will remain disabled until dispatch coverage and carrier rates are configured.
-      </p>
-      <p>No per-item or order-level delivery fee is charged currently. Delivery will be quoted once per shipment after regional rates are configured.</p>
-      <label>
-        Tax (%) <span>(optional)</span>
-        <input
-          name="tax"
-          type="number"
-          min="0"
-          max="100"
-          step="0.01"
-          defaultValue={initial ? initial.taxBps / 100 : ''}
-          disabled={pending}
-        />
-      </label>
-      <label>
-        <input
-          type="checkbox"
-          name="enabled"
-          defaultChecked={initial?.enabled ?? false}
-          disabled={pending}
-        />{' '}
-        Enable checkout after charges, policies and Razorpay configuration are approved
-      </label>
-      <button className="primary-button" disabled={pending}>
+      </Typography>
+      <Alert severity="info">No per-item or order-level delivery fee is charged currently. Delivery will be quoted once per shipment after regional rates are configured.</Alert>
+      <TextField name="tax" label="Tax (%) · optional" type="number" slotProps={{ htmlInput: { min: 0, max: 100, step: 0.01 } }} defaultValue={initial ? initial.taxBps / 100 : ''} disabled={pending} sx={{ maxWidth: 320 }} />
+      <FormControlLabel control={<Checkbox name="enabled" defaultChecked={initial?.enabled ?? false} disabled={pending} />} label="Enable checkout after charges, policies and Razorpay configuration are approved" />
+      <Button type="submit" variant="contained" disabled={pending} sx={{ alignSelf: 'flex-start' }}>
         {pending ? 'Saving…' : 'Save checkout settings'}
-      </button>
-    </form>
+      </Button>
+      </Stack>
+    </Paper>
   )
 }

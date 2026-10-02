@@ -34,6 +34,8 @@ export async function saveShipment(store: Pick<PrismaClient, '$transaction'>, ac
     const orderStatus = status === 'DELIVERED' ? 'DELIVERED' : status === 'PENDING' ? order.status : 'SHIPPED'
     const changed = await tx.order.updateMany({ where: { id: orderId, status: order.status }, data: { status: orderStatus } })
     if (changed.count !== 1) throw new ShipmentError(409, 'Order changed. Reload before saving.')
+    if (status === 'DELIVERED' && order.payment?.provider === 'COD')
+      await tx.$executeRaw`UPDATE "ShopOrderItem" SET "feeStatus"='DUE' WHERE "sellerOrderId" IN (SELECT "id" FROM "SellerOrder" WHERE "orderId"=${orderId}) AND "feeStatus"='PENDING'`
     const event = await tx.trackingEvent.create({ data: { shipmentId: shipment.id, status, description, occurredAt: updatedAt } })
     await tx.storeSetting.create({ data: { key: `audit.shipment.${event.id}`, value: JSON.stringify({ action: 'shipment.updated', actorId, resource: orderId, version: updatedAt.getTime(), createdAt: updatedAt.toISOString(), eventId: event.id }) } })
     if (enqueue && (status === 'IN_TRANSIT' || status === 'DELIVERED'))

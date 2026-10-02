@@ -2,7 +2,8 @@ import { db } from '../_lib/db.js'
 import { publishSellerProduct } from '../_lib/publish-seller-product.js'
 import { requireUser, requireAdmin } from '../_lib/auth.js'
 import { approvedShop, ShopAccessError } from '../_lib/shop-access.js'
-import { draftInput, draftKey, mediaKey, validId, CatalogError, type SellerDraft } from '../_lib/seller-catalog.js'
+import { draftInput, draftKey, mediaKey, validId, proposeSellerOffer, respondToSellerOffer, CatalogError, type SellerDraft } from '../_lib/seller-catalog.js'
+import { sellerProductId } from '../_lib/marketplace-purchases.js'
 import { bodyRecord, requestId, sendError, type VercelRequest, type VercelResponse } from '../_lib/http.js'
 
 export function catalogHandler(admin: boolean) {
@@ -33,13 +34,25 @@ export function catalogHandler(admin: boolean) {
         const previous = row ? JSON.parse(row.value) as SellerDraft : null
         if (!Number.isSafeInteger(body.expectedVersion) || body.expectedVersion !== (previous?.version ?? 0)) throw new CatalogError(409, 'Product changed. Refresh before saving; your draft is preserved.')
         let next: SellerDraft
+        let offerResponse: 'ACCEPTED' | 'REJECTED' | null = null
         if (admin) {
           const reason = typeof body.reason === 'string' ? body.reason.trim() : ''
-          if (!previous || previous.status !== 'PENDING' || !['APPROVED','REJECTED'].includes(String(body.status)) || reason.length < 3 || reason.length > 1000)
-            throw new CatalogError(409, 'Review a pending product with a reason (3–1000 characters).')
+          const revisingOffer = previous?.status === 'APPROVED' && (!previous.offer || previous.offer.status === 'REJECTED')
+          if (!previous || !(previous.status === 'PENDING' || revisingOffer) || !['APPROVED','REJECTED'].includes(String(body.status)) || reason.length < 3 || reason.length > 1000)
+            throw new CatalogError(409, 'Review a pending product or revise a declined fee offer with a reason (3–1000 characters).')
           const available = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Shop" WHERE "id"=${shopId} AND "status"='APPROVED' AND "isPlatform"=FALSE`
           if (!available.length) throw new CatalogError(409, 'The shop is not approved.')
-          next = { ...previous, status: body.status as SellerDraft['status'], reason }
+          if (body.status === 'APPROVED') {
+            const offer = proposeSellerOffer(previous.offer, body.feeType, body.feeValue, new Date().toISOString(), previous.offerVersion ?? 0)
+            if (offer.type === 'FIXED_PER_UNIT' && offer.value > previous.priceMinor) throw new CatalogError(400, 'The fixed fee per unit cannot exceed the product price.')
+            next = { ...previous, status: 'APPROVED', reason, offer }
+          } else next = { ...previous, status: 'REJECTED', reason, offerVersion: previous.offer?.version ?? previous.offerVersion ?? 0, offer: undefined }
+        } else if (body.action === 'offer_accept' || body.action === 'offer_reject') {
+          await approvedShop(tx, user.id, shopId)
+          offerResponse = body.action === 'offer_accept' ? 'ACCEPTED' : 'REJECTED'
+          if (!previous || previous.status !== 'APPROVED') throw new CatalogError(409, 'This product is no longer awaiting a shop decision.')
+          const offer = respondToSellerOffer(previous.offer, body.offerVersion, offerResponse, new Date().toISOString())
+          next = { ...previous, offer, offerVersion: offer.version }
         } else if (body.action === 'archive') {
           if (!previous || previous.status === 'ARCHIVED') throw new CatalogError(409, 'Refresh this product before archiving.')
           next = { ...previous, status: 'ARCHIVED' }
@@ -52,18 +65,28 @@ export function catalogHandler(admin: boolean) {
           }
           if (body.action === 'submit' && !input.mediaIds.length) throw new CatalogError(400, 'Add product media before submitting for review.')
           if (!['save','submit'].includes(String(body.action))) throw new CatalogError(400, 'Choose save or submit.')
-          next = { ...input, shopName: shop!.name, status: body.action === 'submit' ? 'PENDING' : 'DRAFT', reason: '', version: 0, updatedAt: '' }
+          next = { ...input, shopName: shop!.name, status: body.action === 'submit' ? 'PENDING' : 'DRAFT', reason: '', offerVersion: previous?.offer?.version ?? previous?.offerVersion ?? 0, version: 0, updatedAt: '' }
         }
         next.version = (previous?.version ?? 0) + 1
         next.updatedAt = new Date().toISOString()
         next.publishedStock = previous?.publishedStock
-        await publishSellerProduct(tx, next)
+        const offerOnlyReview = admin && body.action === 'review' && previous?.status === 'APPROVED' && next.status === 'APPROVED'
+        if (!offerResponse && !offerOnlyReview) await publishSellerProduct(tx, next)
+        if (admin && body.action === 'review' && next.status === 'APPROVED' && next.offer) {
+          const updated = await tx.$queryRaw<{ offerVersion: number }[]>`UPDATE "ShopProduct" SET "offerStatus"='PROPOSED', "feeType"=${next.offer.type}, "feeValue"=${next.offer.value}, "offerVersion"="offerVersion"+1, "acceptedOfferVersion"=NULL WHERE "productId"=${sellerProductId(shopId, productId)} AND "shopId"=${shopId} AND "moderationStatus"='APPROVED' AND "offerVersion"=${next.offer.version - 1} RETURNING "offerVersion"`
+          if (updated.length !== 1) throw new CatalogError(409, 'Product offer changed. Refresh before sending new terms.')
+          next.offer.version = updated[0].offerVersion
+          next.offerVersion = updated[0].offerVersion
+        } else if (offerResponse) {
+          const updated = await tx.$executeRaw`UPDATE "ShopProduct" SET "offerStatus"=${offerResponse}, "acceptedOfferVersion"=${offerResponse === 'ACCEPTED' ? next.offer?.version ?? null : null} WHERE "productId"=${sellerProductId(shopId, productId)} AND "shopId"=${shopId} AND "moderationStatus"='APPROVED' AND "offerStatus"='PROPOSED' AND "offerVersion"=${next.offer?.version ?? 0}`
+          if (updated !== 1) throw new CatalogError(409, 'Fee offer changed. Refresh and try again.')
+        }
         if (next.status === 'APPROVED') next.publishedStock = next.stock
         if (row) {
           const changed = await tx.storeSetting.updateMany({ where: { key, value: row.value }, data: { value: JSON.stringify(next) } })
           if (changed.count !== 1) throw new CatalogError(409, 'Product changed. Refresh before saving.')
         } else await tx.storeSetting.create({ data: { key, value: JSON.stringify(next) } })
-        await tx.storeSetting.create({ data: { key: `audit.seller-product.${shopId}.${productId}.${next.version}`, value: JSON.stringify({ actorId: user.id, shopId, productId, status: next.status, reason: next.reason, version: next.version }) } })
+        await tx.storeSetting.create({ data: { key: `audit.seller-product.${shopId}.${productId}.${next.version}`, value: JSON.stringify({ actorId: user.id, shopId, productId, status: next.status, reason: next.reason, version: next.version, offer: next.offer ? { status: next.offer.status, type: next.offer.type, value: next.offer.value, version: next.offer.version } : null }) } })
         return next
       }, { isolationLevel: 'Serializable', maxWait: 5000, timeout: 10000 })
       return response.status(200).json({ product, requestId: id })

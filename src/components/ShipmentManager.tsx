@@ -4,6 +4,17 @@ import { apiFetch } from '../api/http'
 import { privateKey, sessionGeneration, assertCurrentSession } from '../api/sessionScope'
 import { queryClient } from '../api/queryClient'
 import { useNotification } from './NotificationProvider'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { CircularProgress } from './mui/CircularProgress'
+import { FormControl } from './mui/FormControl'
+import { InputLabel } from './mui/InputLabel'
+import { MenuItem } from './mui/MenuItem'
+import { Paper } from './mui/Paper'
+import { Select } from './mui/Select'
+import { Stack } from './mui/Stack'
+import { TextField } from './mui/TextField'
+import { Typography } from './mui/Typography'
 type ShipmentOrder = { id: string; orderNumber: string; status: string; shipment: null | {
   carrier: string | null; trackingCode: string | null; status: string; updatedAt: string
 } }
@@ -51,25 +62,25 @@ export function ShipmentManager() {
       if (!abort.signal.aborted && generation === sessionGeneration()) notify(error instanceof Error ? error : new Error('Unable to update shipment.'))
     } finally { lock.current = false; if (!abort.signal.aborted) setBusy(false) }
   }
-  return <>
-    <p>Record updates from your delivery process. These are manual records, not live carrier confirmation. Do not include private customer information in tracking notes.</p>
-    <form className="admin-form" onSubmit={(event) => { event.preventDefault(); if (!busy) setLookup(draftLookup.trim()) }}>
-      <label>Order number or ID<input required maxLength={128} value={draftLookup} disabled={busy} onChange={(event) => setDraftLookup(event.target.value)} /></label>
-      <button className="secondary-button" disabled={busy || query.isFetching}>Find order</button>
-    </form>
-    {lookup && query.isPending && <p role="status">Loading shipment…</p>}
-    {query.isError && <p role="alert">{query.error.message}</p>}
-    {lookup && <button className="secondary-button" disabled={busy || query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Reload shipment</button>}
-    {query.data && <form key={query.data.id + (query.data.shipment?.updatedAt ?? query.data.status)} className="admin-form" onSubmit={(event) => void save(event, query.data!)}>
-      <h3>{query.data.orderNumber} · {query.data.status}</h3>
-      <label>Carrier or delivery service<input name="carrier" required maxLength={100} defaultValue={query.data.shipment?.carrier ?? ''} disabled={busy} /></label>
-      <label>Tracking reference<input name="trackingCode" maxLength={150} defaultValue={query.data.shipment?.trackingCode ?? ''} disabled={busy} /></label>
-      <label>Shipment status<select name="status" defaultValue={query.data.shipment?.status ?? 'PENDING'} disabled={busy}>
-        {['PENDING', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED', 'EXCEPTION'].map((status) => <option key={status} value={status}>{status.replaceAll('_', ' ')}</option>)}
-      </select></label>
-      <label>Customer-visible tracking update<textarea name="description" required rows={3} maxLength={1000} disabled={busy} /></label>
-      <p>Dispatch requires a tracking reference. Status cannot move backwards after delivery. A failed or interrupted save must be checked using Reload shipment before retrying.</p>
-      <button className="primary-button" disabled={busy || query.isFetching}>{busy ? 'Saving shipment…' : 'Save shipment update'}</button>
-    </form>}
-  </>
+  return <Stack spacing={2.5}>
+    <Alert severity="info">Record updates from your delivery process. These are manual records, not live carrier confirmation. Do not include private customer information in tracking notes.</Alert>
+    <Stack component="form" direction={{ xs: 'column', sm: 'row' }} spacing={1.5} onSubmit={(event) => { event.preventDefault(); if (!busy) setLookup(draftLookup.trim()) }}>
+      <TextField label="Order number or ID" required slotProps={{ htmlInput: { maxLength: 128 } }} value={draftLookup} disabled={busy} onChange={(event) => setDraftLookup(event.target.value)} fullWidth />
+      <Button type="submit" variant="outlined" disabled={busy || query.isFetching}>Find order</Button>
+    </Stack>
+    {lookup && query.isPending && <Stack role="status" direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 2 }}><CircularProgress size={20} /><Typography color="text.secondary">Loading shipment…</Typography></Stack>}
+    {query.isError && <Alert severity="error" role="alert">{query.error.message}</Alert>}
+    {lookup && <Button variant="outlined" sx={{ alignSelf: 'flex-start' }} disabled={busy || query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Reload shipment</Button>}
+    {query.data && <Paper component="form" variant="outlined" key={query.data.id + (query.data.shipment?.updatedAt ?? query.data.status)} onSubmit={(event) => void save(event, query.data!)} sx={{ p: { xs: 2, sm: 3 } }}>
+      <Stack spacing={2}>
+        <Typography component="h2" variant="h6">{query.data.orderNumber} · {query.data.status}</Typography>
+        <TextField name="carrier" label="Carrier or delivery service" required slotProps={{ htmlInput: { maxLength: 100 } }} defaultValue={query.data.shipment?.carrier ?? ''} disabled={busy} />
+        <TextField name="trackingCode" label="Tracking reference" slotProps={{ htmlInput: { maxLength: 150 } }} defaultValue={query.data.shipment?.trackingCode ?? ''} disabled={busy} />
+        <FormControl fullWidth disabled={busy}><InputLabel id="shipment-status-label">Shipment status</InputLabel><Select name="status" labelId="shipment-status-label" label="Shipment status" defaultValue={query.data.shipment?.status ?? 'PENDING'}>{['PENDING', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED', 'EXCEPTION'].map(status => <MenuItem key={status} value={status}>{status.replaceAll('_', ' ')}</MenuItem>)}</Select></FormControl>
+        <TextField name="description" label="Customer-visible tracking update" required multiline minRows={3} slotProps={{ htmlInput: { maxLength: 1000 } }} disabled={busy} />
+        <Typography variant="body2" color="text.secondary">Dispatch requires a tracking reference. Status cannot move backwards after delivery. A failed or interrupted save must be checked using Reload shipment before retrying.</Typography>
+        <Button type="submit" variant="contained" disabled={busy || query.isFetching}>{busy ? 'Saving shipment…' : 'Save shipment update'}</Button>
+      </Stack>
+    </Paper>}
+  </Stack>
 }

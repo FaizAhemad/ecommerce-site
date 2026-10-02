@@ -23,7 +23,7 @@ export function ShopsPage({ slug }: { slug?: string }) {
     return await response.json() as { shops?: { name: string; slug: string }[]; shop?: { name: string; slug: string }; products?: Product[]; nextPage: number | null }
   } })
   return <section className="page-section"><p className="eyebrow">Gadgify marketplace</p><h1>{query.data?.shop?.name ?? (slug ? 'Shop showcase' : 'Discover shops')}</h1>
-    <p>Explore approved shop content. These marketplace products are not available for purchase yet.</p>
+    <p>Explore approved shop products. Products become orderable through Gadgify after the shop accepts its fee offer.</p>
     <div className="profile-actions"><a className="secondary-button" href="/shops">All shops</a><a className="secondary-button" href="/seller">Sell with us</a><button className="secondary-button" disabled={query.isFetching} onClick={() => void query.refetch()}>Refresh</button></div>
     {query.isPending && <p role="status">Loading…</p>}{query.isError && <p role="alert">{query.error.message}</p>}
     {!query.isError && query.data?.shops?.map(shop => <article className="record-card" key={shop.slug}><h2>{shop.name}</h2><a href={`/shops/${encodeURIComponent(shop.slug)}`}>Visit shop</a></article>)}

@@ -135,6 +135,19 @@ test('capture records atomically and cannot overwrite refunded or differently-bo
     { status: { in: ['PENDING', 'AUTHORIZED', 'FAILED'] } },
   ])
 })
+test('seller fee accrues only when capture confirms a still-pending order', async () => {
+  let feeStatusWrites = 0
+  const store = { $transaction: async action => action({
+    payment: { updateMany: async () => ({ count: 1 }) },
+    order: { updateMany: async () => ({ count: 1 }) },
+    $executeRaw: async () => { feeStatusWrites++; return 1 },
+  }) }
+  assert.equal(await recordCapturedPayment(store, 'o', 'provider-o', 'p'), true)
+  assert.equal(feeStatusWrites, 1)
+  const lateStore = { $transaction: async action => action({ payment: { updateMany: async () => ({ count: 1 }) }, order: { updateMany: async () => ({ count: 0 }) }, $executeRaw: async () => { feeStatusWrites++; return 1 } }) }
+  assert.equal(await recordCapturedPayment(lateStore, 'o', 'provider-o', 'p'), true)
+  assert.equal(feeStatusWrites, 1)
+})
 test('verified late failure cannot replace an already authorized payment', async () => {
   let updateWhere
   const store = {

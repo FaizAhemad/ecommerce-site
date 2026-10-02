@@ -79,14 +79,15 @@ export function fulfillmentHandler(audience: 'seller' | 'admin' | 'customer') {
         }
         const returns = await tx.$queryRaw<Return[]>`SELECT "id","status","reason","resolution","version" FROM "SellerReturn" WHERE "sellerOrderId"=${order.id}`
         if (request.method === 'GET') {
-          const items = await tx.$queryRaw<{ id: string; productName: string; quantity: number; unitPriceMinor: number }[]>`
-            SELECT oi."id",oi."productName",oi."quantity",oi."unitPriceMinor" FROM "OrderItem" oi JOIN "ShopOrderItem" si ON si."orderItemId"=oi."id"
+          const items = await tx.$queryRaw<{ id: string; productName: string; quantity: number; unitPriceMinor: number; discountMinor: number; feeType: string | null; feeValue: number | null; offerVersion: number | null; feeBaseMinor: number; feeAmountMinor: number; feeStatus: string }[]>`
+            SELECT oi."id",oi."productName",oi."quantity",oi."unitPriceMinor",oi."discountMinor",si."feeType",si."feeValue",si."offerVersion",si."feeBaseMinor",si."feeAmountMinor",si."feeStatus" FROM "OrderItem" oi JOIN "ShopOrderItem" si ON si."orderItemId"=oi."id"
             WHERE si."sellerOrderId"=${order.id} AND si."shopId"=${order.shopId} ORDER BY oi."id"
           `
           const events = await tx.$queryRaw<{ id: string; status: string; reason: string; createdAt: Date }[]>`SELECT "id","status","reason","createdAt" FROM "SellerOrderEvent" WHERE "sellerOrderId"=${order.id} ORDER BY "createdAt" DESC,"id" DESC LIMIT 50`
           const ready = !['PENDING','CANCELLED','REFUNDED'].includes(order.orderStatus) && (order.paymentStatus === 'CAPTURED' || order.provider === 'COD')
           const address = order.shippingAddressId && (audience !== 'seller' || (ready && ['PENDING','PACKING','SHIPPED'].includes(order.status))) ? await tx.address.findUnique({ where: { id: order.shippingAddressId }, select: { name: true, line1: true, line2: true, city: true, state: true, postalCode: true, country: true, phone: true } }) : null
-          return { order: { ...selected(order), canFulfill: ready && canManageScopedFulfillment(order, audience) }, items, events, address, returnRequest: returns[0] ?? null, dispute: publicDispute(dispute), inspection: inspectionDto(inspection, audience) }
+          const visibleItems = audience === 'customer' ? items.map(({ feeType, feeValue, offerVersion, feeBaseMinor, feeAmountMinor, feeStatus, ...item }) => item) : items
+          return { order: { ...selected(order), canFulfill: ready && canManageScopedFulfillment(order, audience) }, items: visibleItems, events, address, returnRequest: returns[0] ?? null, dispute: publicDispute(dispute), inspection: inspectionDto(inspection, audience) }
         }
         const reason = typeof body.reason === 'string' ? body.reason.trim() : ''
         if (reason.length < 3 || reason.length > 1000) throw new FulfillmentError(400, 'Provide a reason of 3–1000 characters.')

@@ -30,7 +30,7 @@ Shop fulfillment APIs (2026-09-23): GET/POST seller/fulfillment, admin/fulfillme
 
 Marketplace page batch adds seller/catalog GET/POST, seller/media GET/POST, seller/orders GET, admin/seller-products GET/POST and shops GET through the sole dispatcher. Membership/version/ownership guards apply to private operations; public showcase exposes only approved selected content. Drafts cannot become live Product records. SELLER_WORKSPACE.md records unverified behavior and remaining scope.
 
-MP-02: seller/application GET/POST and admin/sellers GET/PATCH use the sole dispatcher. Session-owned verified-email applications, versioned transactional decisions, membership changes and audit are implemented. No seller catalog or payout API is enabled. See SELLER_ONBOARDING.md.
+MP-02: seller/application GET/POST and admin/sellers GET/PATCH use the sole dispatcher. Session-owned applications, versioned transactional decisions, membership changes and audit are implemented. Owner override (2026-10-02) temporarily removes email-verification gates from seller submission/approval without marking the account email verified. No seller catalog purchasing or payout API is enabled. See SELLER_ONBOARDING.md.
 
 MP-01 adds internal approvedShop/ownedShopProduct helpers in server/api/_lib/shop-access.ts. Session-derived user identity, active membership, approved non-platform shop and product ownership are checked with parameterized queries. No seller route is registered yet. Future mutations must recheck scope transactionally; generic admin APIs are not seller APIs. See MARKETPLACE_MIGRATION.md.
 

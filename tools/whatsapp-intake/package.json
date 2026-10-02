@@ -1,0 +1,9 @@
+{
+  "name": "gadgify-whatsapp-intake",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24.0.0" },
+  "scripts": { "start": "node run.mjs", "test": "node --test intake.test.mjs" },
+  "dependencies": { "exceljs": "4.4.0" },
+  "overrides": { "uuid": "11.1.1" }
+}

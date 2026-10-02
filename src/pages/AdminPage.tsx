@@ -11,7 +11,7 @@ import { NotificationHistory } from '../components/NotificationHistory'
 import { PaymentRefunds } from '../components/PaymentRefunds'
 import { FormDialog } from '../components/FormDialog'
 import { DataGrid, type DataGridQuery } from '../components/DataGrid'
-import { Archive, ChevronDown, Image as ImageIcon, Pencil, Upload } from 'lucide-react'
+import { Archive, Image as ImageIcon, Pencil, Upload } from 'lucide-react'
 import { apiFetch as fetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
 import { csrfToken } from '../api/csrf'
 import { queryClient } from '../api/queryClient'
@@ -25,6 +25,13 @@ import { Stack } from '../components/mui/Stack'
 import { TextField } from '../components/mui/TextField'
 import { Typography } from '../components/mui/Typography'
 import { Chip } from '../components/mui/Chip'
+import { FormControl } from '../components/mui/FormControl'
+import { InputAdornment } from '../components/mui/InputAdornment'
+import { InputLabel } from '../components/mui/InputLabel'
+import { MenuItem } from '../components/mui/MenuItem'
+import { Select } from '../components/mui/Select'
+import { Alert } from '../components/mui/Alert'
+import { CircularProgress } from '../components/mui/CircularProgress'
 type Props = {
   storefront: StorefrontApiResponse
   onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void
@@ -413,20 +420,17 @@ export function AdminPage({ storefront, onNavigate }: Props) {
     value: number | null | undefined,
     nullable = false,
   ) => (
-    <div className="relative w-32">
-      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--muted)]" aria-hidden="true">₹</span>
-      <input
+    <TextField
+        size="small"
         key={`${product.id}-${field}-${value ?? 'unset'}`}
         aria-label={`${label} for ${product.name}`}
-        className="min-h-11 w-full rounded-lg border border-[var(--line)] bg-[var(--paper)] py-2 pl-7 pr-2 text-sm tabular-nums text-[var(--ink)] focus-visible:border-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:opacity-60"
         type="number"
-        min="0"
-        max={21474836.47}
-        step="0.01"
+        slotProps={{ htmlInput: { min: 0, max: 21474836.47, step: 0.01 }, input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> } }}
         required={!nullable}
         placeholder={nullable ? 'Not set' : '0.00'}
         defaultValue={value == null ? '' : (value / 100).toFixed(2)}
         disabled={busy}
+        sx={{ width: 132 }}
         onBlur={(event) => {
           const input = event.currentTarget
           if (!input.checkValidity()) {
@@ -439,7 +443,6 @@ export function AdminPage({ storefront, onNavigate }: Props) {
           void patch(`/api/admin/products/${product.id}`, { [field]: nextValue }, `${label} updated.`)
         }}
       />
-    </div>
   )
   const analytics = data.analytics ?? {}
   const products = data.products?.products ?? []
@@ -487,19 +490,10 @@ export function AdminPage({ storefront, onNavigate }: Props) {
       </Stack>
       <Box sx={{ minWidth: 0 }} aria-busy={loadStates[activeKey] === 'loading'}>
           {loadStates[activeKey] === 'loading' && !['products', 'orders', 'customers'].includes(activeKey) && (
-            <div className="flex min-h-32 items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-5 py-6 text-sm text-[var(--muted)]" role="status" aria-live="polite">
-              <span className="size-5 animate-spin rounded-full border-2 border-[var(--line)] border-t-[var(--ink)] motion-reduce:animate-none" aria-hidden="true" />
-              <span>Loading {section === 'overview' ? 'overview' : section}…</span>
-            </div>
+            <Stack role="status" aria-live="polite" direction="row" spacing={1.5} sx={{ minHeight: 128, alignItems: 'center', px: 3, py: 2 }}><CircularProgress size={22} /><Typography color="text.secondary">Loading {section === 'overview' ? 'overview' : section}…</Typography></Stack>
           )}
           {loadStates[activeKey] === 'error' && (
-            <div role="alert" className="flex flex-col gap-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-              <div>
-                <h2 className="m-0 text-base font-semibold text-[var(--ink)]">This section could not be loaded</h2>
-                <p className="mb-0 mt-1 text-sm leading-6 text-[var(--muted)]">Check your connection and try again. Your changes have not been submitted.</p>
-              </div>
-              <button
-                className="secondary-button"
+            <Alert severity="error" role="alert" action={<Button
                 type="button"
                 onClick={() => {
                   const gridKey = activeKey as keyof typeof gridUrls.current
@@ -507,8 +501,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                 }}
               >
                 Try again
-              </button>
-            </div>
+              </Button>}><Typography component="span" sx={{ fontWeight: 650 }}>This section could not be loaded. </Typography>Check your connection and try again. Your changes have not been submitted.</Alert>
           )}
           <div
             hidden={
@@ -546,114 +539,39 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                       {categoryBusy ? 'Adding…' : 'Add category'}
                     </Button>
                 </Stack>
-                <form
+                <Stack
+                  component="form"
+                  spacing={2}
                   key={editing?.id ?? 'new'}
                   ref={productFormRef}
-                  className="admin-form"
                   onSubmit={saveProduct}
                   onReset={() => {
                     selectedMedia.current.clear()
                     setNotice('')
                   }}
                 >
-                  <label>
-                    Product name
-                    <input
-                      disabled={busy}
-                      name="name"
-                      defaultValue={editing?.name ?? ''}
-                      required
-                    />
-                  </label>
-                  <label>
-                    Category
-                    <select
-                      disabled={busy}
-                      name="category"
-                      defaultValue={editing?.category ?? ''}
-                      required
-                    >
-                      <option value="">Select a category</option>
-                      {categories.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Price (₹)
-                    <input
-                      disabled={busy}
-                      name="price"
-                      defaultValue={editing ? editing.priceMinor / 100 : ''}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      required
-                    />
-                  </label>
-                  
-                  <label>
-                    Original price (optional)
-                    <input
-                      disabled={busy}
-                      name="compareAtPrice"
-                      defaultValue={editing?.compareAtPriceMinor ? editing.compareAtPriceMinor / 100 : ''}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                    />
-                    <small>Shown crossed out when higher than the selling price.</small>
-                  </label>
-                  <label>
-                    Stock
-                    <input
-                      disabled={busy}
-                      name="stock"
-                      defaultValue={editing?.stock ?? ''}
-                      type="number"
-                      min="0"
-                      required
-                    />
-                  </label>
-                  <label className="full">
-                    Description
-                    <textarea
-                      disabled={busy}
-                      name="description"
-                      defaultValue={editing?.description ?? ''}
-                      rows={4}
-                    />
-                  </label>
-                  <label className="full">
-                    Colors
-                    <textarea
-                      disabled={busy}
-                      name="colors"
-                      defaultValue={
-                        editing?.colors?.map((color) => `${color.name}|${color.hex}`).join('\n') ??
-                        ''
-                      }
-                      rows={3}
-                      placeholder={'Black|#111111\nNatural|#d8c29d'}
-                    />
-                    <small>
-                      One per line: Red or Red|#ff0000. Custom shades require a hex value.
-                    </small>
-                  </label>
+                  <TextField disabled={busy} name="name" label="Product name" defaultValue={editing?.name ?? ''} required />
+                  <FormControl fullWidth required disabled={busy}><InputLabel id="admin-product-category">Category</InputLabel><Select labelId="admin-product-category" label="Category" name="category" defaultValue={editing?.category ?? ''}>
+                    <MenuItem value="">Select a category</MenuItem>{categories.map(category => <MenuItem key={category} value={category}>{category}</MenuItem>)}
+                  </Select></FormControl>
+                  <TextField disabled={busy} name="price" label="Price (₹)" defaultValue={editing ? editing.priceMinor / 100 : ''} type="number" slotProps={{ htmlInput: { min: 0, step: 0.01 } }} required />
+                  <TextField disabled={busy} name="compareAtPrice" label="Original price (optional)" helperText="Shown crossed out when higher than the selling price." defaultValue={editing?.compareAtPriceMinor ? editing.compareAtPriceMinor / 100 : ''} type="number" slotProps={{ htmlInput: { min: 0, step: 0.01 } }} />
+                  <TextField disabled={busy} name="stock" label="Stock" defaultValue={editing?.stock ?? ''} type="number" slotProps={{ htmlInput: { min: 0, step: 1 } }} required />
+                  <TextField disabled={busy} name="description" label="Description" defaultValue={editing?.description ?? ''} multiline minRows={4} />
+                  <TextField disabled={busy} name="colors" label="Colors" helperText="One per line: Red or Red|#ff0000. Custom shades require a hex value." defaultValue={editing?.colors?.map((color) => `${color.name}|${color.hex}`).join('\n') ?? ''} multiline minRows={3} placeholder={'Black|#111111\nNatural|#d8c29d'} />
                   {editing && (
                     <div className="full admin-existing-media">
                       <h3>Current photos and videos</h3>
-                      <p>
+                      <Typography variant="body2" color="text.secondary">
                         Kept photos come first, followed by new uploads. Choose the primary image
                         number from that order.
-                      </p>
+                      </Typography>
                       {keptImages.map((image, index) => (
                         <div key={image.url}>
                           <img src={image.url} alt={`Image ${index + 1}`} />
                           <span>Image {index + 1}</span>
-                          <button
+                          <Button
+                            variant="outlined"
                             type="button"
                             disabled={busy}
                             onClick={() =>
@@ -661,13 +579,14 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                             }
                           >
                             Remove image
-                          </button>
+                          </Button>
                         </div>
                       ))}
                       {keptVideos.map((video, index) => (
                         <div key={video.url}>
                           <video src={video.url} controls preload="metadata" />
-                          <button
+                          <Button
+                            variant="outlined"
                             type="button"
                             disabled={busy}
                             onClick={() =>
@@ -675,58 +594,28 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                             }
                           >
                             Remove video
-                          </button>
+                          </Button>
                         </div>
                       ))}
                     </div>
                   )}
-                  <label className="full">
-                    Product images
-                    <input
-                      disabled={busy}
-                      name="imageFiles"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                    />
-                    <small>Multiple files supported. The primary image is selected below.</small>
-                  </label>
-                  <label>
-                    Primary image number
-                    <input
-                      disabled={busy}
-                      name="primaryImage"
-                      type="number"
-                      min="1"
-                      defaultValue="1"
-                    />
-                    <small>1 = first selected image</small>
-                  </label>
-                  <label className="full">
-                    Product videos
-                    <input
-                      disabled={busy}
-                      name="videoFiles"
-                      type="file"
-                      accept="video/mp4,video/webm"
-                      multiple
-                    />
-                    <small>MP4 or WebM, up to 10 MB per video. Images support up to 6 MB each.</small>
-                  </label>
-                  <button className="primary-button" type="submit" disabled={busy}>
+                  <TextField disabled={busy} name="imageFiles" label="Product images" type="file" slotProps={{ htmlInput: { accept: 'image/*', multiple: true }, inputLabel: { shrink: true } }} helperText="Multiple files supported. The primary image is selected below." />
+                  <TextField disabled={busy} name="primaryImage" label="Primary image number" type="number" slotProps={{ htmlInput: { min: 1 }, inputLabel: { shrink: true } }} defaultValue="1" helperText="1 = first selected image" />
+                  <TextField disabled={busy} name="videoFiles" label="Product videos" type="file" slotProps={{ htmlInput: { accept: 'video/mp4,video/webm', multiple: true }, inputLabel: { shrink: true } }} helperText="MP4 or WebM, up to 10 MB per video. Images support up to 6 MB each." />
+                  <Button variant="contained" type="submit" disabled={busy}>
                     {busy ? saveStage : editing ? 'Save changes' : 'Save product'}
-                  </button>
+                  </Button>
                   {editing && (
-                    <button
+                    <Button
                       type="button"
-                      className="secondary-button"
+                      variant="outlined"
                       disabled={busy}
                       onClick={() => beginEdit(null)}
                     >
                       Cancel editing
-                    </button>
+                    </Button>
                   )}
-                </form>
+                </Stack>
                 </FormDialog>
                 <DataGrid
                   rows={products as AdminProduct[]}
@@ -779,7 +668,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                       getFilterValue: (product) => product.stock,
                       getSortValue: (product) => product.stock,
                       filterType: 'number', filterStep: 1, minWidthClass: 'min-w-28',
-                      cell: (product) => <input key={product.stock} aria-label={`Stock for ${product.name}`} disabled={busy} className="admin-inline-input min-h-11 w-24 rounded-lg border border-[var(--line)] bg-[var(--paper)] px-3 text-base text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]" type="number" min="0" defaultValue={product.stock} onBlur={(event) => {
+                      cell: (product) => <TextField size="small" key={product.stock} aria-label={`Stock for ${product.name}`} disabled={busy} sx={{ width: 112 }} type="number" slotProps={{ htmlInput: { min: 0, step: 1 } }} defaultValue={product.stock} onBlur={(event) => {
                         if (Number(event.target.value) !== product.stock) void patch(`/api/admin/products/${product.id}`, { stock: Number(event.target.value) }, 'Stock updated.')
                       }} />,
                     },
@@ -790,14 +679,14 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                       getFilterValue: (product) => product.isActive ? 'published' : 'archived',
                       filterOptions: [{ value: 'published', label: 'Published' }, { value: 'archived', label: 'Archived' }],
                       getSortValue: (product) => product.isActive ? 'Published' : 'Archived',
-                      cell: (product) => <div className="relative w-32"><select key={`${product.id}-${product.isActive}`} aria-label={`Visibility for ${product.name}`} className="min-h-11 w-full appearance-none rounded-lg border border-[var(--line)] bg-[var(--paper)] px-3 pr-8 text-sm font-medium text-[var(--ink)] focus-visible:border-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:opacity-60" defaultValue={product.isActive ? 'published' : 'archived'} disabled={busy} onChange={(event) => patch(`/api/admin/products/${product.id}`, { isActive: event.target.value === 'published' }, 'Visibility updated.')}><option value="published">Published</option><option value="archived">Archived</option></select><ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]" aria-hidden="true" /></div>,
+                      cell: (product) => <FormControl size="small" sx={{ minWidth: 126 }}><Select key={`${product.id}-${product.isActive}`} aria-label={`Visibility for ${product.name}`} defaultValue={product.isActive ? 'published' : 'archived'} disabled={busy} onChange={(event) => patch(`/api/admin/products/${product.id}`, { isActive: event.target.value === 'published' }, 'Visibility updated.')}><MenuItem value="published">Published</MenuItem><MenuItem value="archived">Archived</MenuItem></Select></FormControl>,
                     },
                     {
                       id: 'actions',
                       header: 'Actions',
                       filterable: false,
                       minWidthClass: 'min-w-28',
-                      cell: (product) => <div className="flex items-center gap-2"><button className="inline-flex size-10 appearance-none items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--surface-raised)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:opacity-50" aria-label={`Edit ${product.name}`} title="Edit product" disabled={busy} onClick={() => { beginEdit(product); setProductOpen(true) }}><Pencil className="size-4" aria-hidden="true" /></button><button className="inline-flex size-10 appearance-none items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--surface-raised)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:opacity-50" aria-label={`${product.isActive ? 'Archive' : 'Publish'} ${product.name}`} title={product.isActive ? 'Archive product' : 'Publish product'} disabled={busy} onClick={() => patch(`/api/admin/products/${product.id}`, { isActive: !product.isActive }, 'Visibility updated.')}>{product.isActive ? <Archive className="size-4" aria-hidden="true" /> : <Upload className="size-4" aria-hidden="true" />}</button></div>,
+                      cell: (product) => <Stack direction="row" spacing={0.5}><Button variant="outlined" size="small" aria-label={`Edit ${product.name}`} title="Edit product" disabled={busy} onClick={() => { beginEdit(product); setProductOpen(true) }}><Pencil size={16} aria-hidden="true" /></Button><Button variant="outlined" size="small" aria-label={`${product.isActive ? 'Archive' : 'Publish'} ${product.name}`} title={product.isActive ? 'Archive product' : 'Publish product'} disabled={busy} onClick={() => patch(`/api/admin/products/${product.id}`, { isActive: !product.isActive }, 'Visibility updated.')}>{product.isActive ? <Archive size={16} aria-hidden="true" /> : <Upload size={16} aria-hidden="true" />}</Button></Stack>,
                     },
                   ]}
                 />
@@ -823,11 +712,11 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                       getFilterValue: (order: any) => order.status,
                       filterOptions: ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'].map((status) => ({ value: status, label: status })),
                       getSortValue: (order: any) => order.status,
-                      cell: (order: any) => <div className="relative w-fit"><select aria-label={`Status for order ${order.orderNumber}`} className="min-h-11 appearance-none rounded-lg border border-[var(--line)] bg-[var(--paper)] py-2 pl-3 pr-9 text-sm text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:cursor-not-allowed disabled:opacity-60" disabled={busy || ['CANCELLED', 'REFUNDED', 'SHIPPED', 'DELIVERED'].includes(order.status)} value={order.status} onChange={(event) => patch('/api/admin/orders', { orderId: order.id, status: event.target.value }, 'Order updated.')}>
-                        <option>PENDING</option><option>CONFIRMED</option><option>PROCESSING</option><option disabled>SHIPPED</option><option disabled>DELIVERED</option><option disabled={order.status !== 'PENDING' && order.status !== 'CONFIRMED'}>CANCELLED</option><option disabled>REFUNDED</option>
-                      </select><ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]" aria-hidden="true" /></div>,
+                      cell: (order: any) => <FormControl size="small" sx={{ minWidth: 148 }}><Select aria-label={`Status for order ${order.orderNumber}`} disabled={busy || ['CANCELLED', 'REFUNDED', 'SHIPPED', 'DELIVERED'].includes(order.status)} value={order.status} onChange={(event) => patch('/api/admin/orders', { orderId: order.id, status: event.target.value }, 'Order updated.')}>
+                        <MenuItem value="PENDING">Pending</MenuItem><MenuItem value="CONFIRMED">Confirmed</MenuItem><MenuItem value="PROCESSING">Processing</MenuItem><MenuItem value="SHIPPED" disabled>Shipped</MenuItem><MenuItem value="DELIVERED" disabled>Delivered</MenuItem><MenuItem value="CANCELLED" disabled={order.status !== 'PENDING' && order.status !== 'CONFIRMED'}>Cancelled</MenuItem><MenuItem value="REFUNDED" disabled>Refunded</MenuItem>
+                      </Select></FormControl>,
                     },
-                    { id: 'actions', header: 'Actions', filterable: false, cell: () => <button className="secondary-button min-h-11" type="button" onClick={() => setSection('shipments')}>Manage shipment</button> },
+                    { id: 'actions', header: 'Actions', filterable: false, cell: () => <Button variant="outlined" size="small" type="button" onClick={() => setSection('shipments')}>Manage shipment</Button> },
                   ]}
                 />
               </>

@@ -41,6 +41,7 @@ export async function recordFullRefund(
         data: { status: 'REFUNDED' },
       })
       if (order.count !== 1) throw new Error('Order amount changed')
+      await tx.$executeRaw`UPDATE "ShopOrderItem" SET "feeStatus"='REVERSED' WHERE "sellerOrderId" IN (SELECT "id" FROM "SellerOrder" WHERE "orderId"=${orderId}) AND "feeStatus"='DUE'`
       return true
     },
     { isolationLevel: 'Serializable', maxWait: 5000, timeout: 10000 },
@@ -178,10 +179,12 @@ export async function recordCapturedPayment(
         data: { providerPaymentId: paymentId, status: 'CAPTURED' },
       })
       if (result.count !== 1) return false
-      await tx.order.updateMany({
+      const confirmed = await tx.order.updateMany({
         where: { id: orderId, status: 'PENDING' },
         data: { status: 'CONFIRMED' },
       })
+      if (confirmed.count === 1)
+        await tx.$executeRaw`UPDATE "ShopOrderItem" SET "feeStatus"='DUE' WHERE "sellerOrderId" IN (SELECT "id" FROM "SellerOrder" WHERE "orderId"=${orderId}) AND "feeStatus"='PENDING'`
       return true
     },
     { isolationLevel: 'Serializable', maxWait: 5000, timeout: 10000 },

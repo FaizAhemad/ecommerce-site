@@ -1,10 +1,15 @@
+import { Button } from './mui/Button'
+import { Stack } from './mui/Stack'
+
 export function SellerNavigation({ admin = false }: { admin?: boolean }) {
-  return <nav className="profile-actions" aria-label="Marketplace navigation">
-    <a className="secondary-button" href={admin ? '/admin/sellers' : '/seller'}>{admin ? 'Seller applications' : 'My application'}</a>
-    <a className="secondary-button" href={admin ? '/admin/seller-products' : '/seller/products'}>{admin ? 'Product moderation' : 'My products'}</a>
-    {!admin && <a className="secondary-button" href="/seller/orders">Shop order records</a>}
-    {admin && <a className="secondary-button" href="/admin/fulfillment">Fulfillment oversight</a>}
-    <a className="secondary-button" href="/shops">Browse shops</a>
-    <a className="secondary-button" href="/support">Support</a>
-  </nav>
+  const links = [
+    [admin ? '/admin/sellers' : '/seller', admin ? 'Seller applications' : 'My application'],
+    [admin ? '/admin/seller-products' : '/seller/products', admin ? 'Product moderation' : 'My products'],
+    ...(!admin ? [['/seller/orders', 'Shop order records']] : [['/admin/fulfillment', 'Fulfillment oversight']]),
+    ['/shops', 'Browse shops'],
+    ['/support', 'Support'],
+  ] as const
+  return <Stack component="nav" aria-label={admin ? 'Admin marketplace tools' : 'Marketplace navigation'} direction="row" spacing={1} sx={{ flexWrap: 'wrap', py: 1 }}>
+    {links.map(([href, label]) => <Button key={href} component="a" href={href} variant="outlined" size="small">{label}</Button>)}
+  </Stack>
 }
