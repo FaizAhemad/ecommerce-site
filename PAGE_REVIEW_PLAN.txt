@@ -23,7 +23,9 @@ Review order
 01. Home: / — startup into the landing page, hero, navigation, categories, featured/new products,
     product cards, add-to-cart feedback and newsletter validation/confirmation states.
 02. Products: /products — search, filters, sorting, server paging/loading, product availability,
-    mobile filter drawer, cards and query state in the URL.
+    mobile filter drawer, cards and query state in the URL. Specific mobile loading checkpoint:
+    capture the delayed initial-load skeleton and verify it stays two columns at 320/360/390/430px,
+    matching loaded product cards; compare loading and loaded screenshots before moving on.
 03. Product details: /product/:id — media gallery, options/stock, price, reviews, cart controls,
     private review actions and unavailable/error states.
 04. Support: /support, /support-requests — guest help, ticket create/list/detail, validation,
