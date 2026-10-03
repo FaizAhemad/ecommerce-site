@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from './mui/Button'
 import { IconButton } from './mui/IconButton'
 import { TextField } from './mui/TextField'
+import { Box, Container, Divider, Link, Stack, Typography } from './mui'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/http'
 import { privateKey } from '../api/sessionScope'
@@ -128,6 +129,17 @@ export function SiteLayout({
     window.dispatchEvent(new PopStateEvent('popstate'))
     setSearchOpen(false)
   }
+  const footerLinkSx = {
+    display: 'block',
+    width: 'fit-content',
+    maxWidth: '100%',
+    color: 'text.secondary',
+    fontSize: 14,
+    lineHeight: 1.55,
+    overflowWrap: 'anywhere',
+    '&:hover': { color: 'primary.main' },
+  }
+  const footerHeadingSx = { fontWeight: 750, letterSpacing: '.08em', mb: 1.5 }
 
   return (
     <div className="site-shell">
@@ -340,65 +352,56 @@ export function SiteLayout({
         </div>
         {children}
       </PageContainer>
-      <SocialLinks storefront={storefront} placement="rail" />
-      <footer className="site-footer" id="footer">
-        <div>
-          <span className="brand-mark">{identity.mark}</span>
-          <p>
-            {identity.businessName}
-            <br />
-            {identity.tagline}
-          </p>
-          <SocialLinks storefront={storefront} placement="footer" />
-        </div>
-        <div>
-          <p className="footer-label">{content.footer.customerCareLabel}</p>
-          <a href="/support" onClick={navigate('/support')}>
-            Contact support
-          </a>
-          <p>{storefront.contact.supportEmail}</p>
-        </div>
-        <div>
-          <p className="footer-label">{content.footer.policiesLabel}</p>
-          <a href="/privacy" onClick={navigate('/privacy')}>
-            {content.footer.privacyLabel}
-          </a>
-          <a href="/returns" onClick={navigate('/returns')}>
-            {content.footer.returnsLabel}
-          </a>
-          <a href="/refund-policy" onClick={navigate('/refund-policy')}>
-            Refund Policy
-          </a>
-          <a href="/terms" onClick={navigate('/terms')}>
-            Terms &amp; Conditions
-          </a>
-          <a href="/shipping" onClick={navigate('/shipping')}>Shipping</a>
-          <a href="/cancellation" onClick={navigate('/cancellation')}>Cancellation</a>
-          <a href="/cookies" onClick={navigate('/cookies')}>Cookies</a>
-        </div>
-        <div>
-          <p className="footer-label">Explore</p>
-          <a href="/" onClick={navigate('/')}>
-            {content.ui.homeLabel}
-          </a>
-          <a href="/products" onClick={navigate('/products')}>
-            {content.navigation.products}
-          </a>
-          <a href="/support" onClick={navigate('/support')}>
-            {content.navigation.support}
-          </a>
-          {isAuthenticated && <a href="/orders" onClick={navigate('/orders')}>Orders</a>}
-          <a href="/track-order" onClick={navigate('/track-order')}>
-            Track order
-          </a>
-          <a href="/cart" onClick={navigate('/cart')}>
-            {t('common:cart')}
-          </a>
-        </div>
-        <p className="copyright">
-          {content.ui.copyrightPrefix} {content.footer.copyrightYear} {identity.businessName}
-        </p>
-      </footer>
+      <Box component="footer" id="footer" sx={{ mt: { xs: 6, md: 8 }, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.paper', color: 'text.primary' }}>
+        <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, lg: 4 }, pt: { xs: 4, sm: 5, md: 6 }, pb: 2.5 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'minmax(220px, 1.35fr) repeat(4, minmax(0, 1fr))' }, gridTemplateAreas: { xs: '"brand brand" "care care" "explore policies" "delivery delivery"', md: '"brand care explore policies delivery"' }, gap: { xs: 3.5, md: 4 } }}>
+            <Stack sx={{ gridArea: 'brand', minWidth: 0 }} spacing={1.5}>
+              <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
+                <Box component="span" className="brand-mark" sx={{ flexShrink: 0, mb: 0 }}>{identity.mark}</Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 750, letterSpacing: '.12em' }}>{identity.businessName}</Typography>
+              </Stack>
+              <Typography color="text.secondary" variant="body2" sx={{ maxWidth: 280 }}>{identity.tagline}</Typography>
+              <SocialLinks storefront={storefront} />
+            </Stack>
+
+            <Stack component="section" aria-labelledby="footer-care" sx={{ gridArea: 'care', minWidth: 0 }} spacing={1}>
+              <Typography id="footer-care" component="h2" variant="overline" sx={footerHeadingSx}>{content.footer.customerCareLabel}</Typography>
+              <Link component="a" href="/support" onClick={navigate('/support')} underline="hover" sx={footerLinkSx}>Contact support</Link>
+              <Link component="a" href={`mailto:${storefront.contact.supportEmail}`} underline="hover" sx={footerLinkSx}>{storefront.contact.supportEmail}</Link>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>We’re here to help with your orders and account.</Typography>
+            </Stack>
+
+            <Stack component="nav" aria-labelledby="footer-explore" sx={{ gridArea: 'explore', minWidth: 0 }} spacing={1}>
+              <Typography id="footer-explore" component="h2" variant="overline" sx={footerHeadingSx}>Explore</Typography>
+              <Link component="a" href="/" onClick={navigate('/')} underline="hover" sx={footerLinkSx}>{content.ui.homeLabel}</Link>
+              <Link component="a" href="/products" onClick={navigate('/products')} underline="hover" sx={footerLinkSx}>{content.navigation.products}</Link>
+              <Link component="a" href="/track-order" onClick={navigate('/track-order')} underline="hover" sx={footerLinkSx}>Track order</Link>
+              {isAuthenticated && <Link component="a" href="/orders" onClick={navigate('/orders')} underline="hover" sx={footerLinkSx}>Orders</Link>}
+              <Link component="a" href="/cart" onClick={navigate('/cart')} underline="hover" sx={footerLinkSx}>{t('common:cart')}</Link>
+            </Stack>
+
+            <Stack component="nav" aria-labelledby="footer-policies" sx={{ gridArea: 'policies', minWidth: 0 }} spacing={1}>
+              <Typography id="footer-policies" component="h2" variant="overline" sx={footerHeadingSx}>{content.footer.policiesLabel}</Typography>
+              <Link component="a" href="/privacy" onClick={navigate('/privacy')} underline="hover" sx={footerLinkSx}>{content.footer.privacyLabel}</Link>
+              <Link component="a" href="/returns" onClick={navigate('/returns')} underline="hover" sx={footerLinkSx}>{content.footer.returnsLabel}</Link>
+              <Link component="a" href="/refund-policy" onClick={navigate('/refund-policy')} underline="hover" sx={footerLinkSx}>Refund policy</Link>
+              <Link component="a" href="/terms" onClick={navigate('/terms')} underline="hover" sx={footerLinkSx}>Terms &amp; conditions</Link>
+            </Stack>
+
+            <Stack component="nav" aria-labelledby="footer-delivery" sx={{ gridArea: 'delivery', minWidth: 0 }} spacing={1}>
+              <Typography id="footer-delivery" component="h2" variant="overline" sx={footerHeadingSx}>Help &amp; information</Typography>
+              <Link component="a" href="/shipping" onClick={navigate('/shipping')} underline="hover" sx={footerLinkSx}>Shipping</Link>
+              <Link component="a" href="/cancellation" onClick={navigate('/cancellation')} underline="hover" sx={footerLinkSx}>Cancellation</Link>
+              <Link component="a" href="/cookies" onClick={navigate('/cookies')} underline="hover" sx={footerLinkSx}>Cookies</Link>
+            </Stack>
+          </Box>
+          <Divider sx={{ my: { xs: 3, sm: 4 } }} />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
+            <Typography variant="caption" color="text.secondary">{content.ui.copyrightPrefix} {content.footer.copyrightYear} {identity.businessName}</Typography>
+            <Link href="#top" underline="hover" color="text.secondary" variant="caption" onClick={(event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Back to top ↑</Link>
+          </Stack>
+        </Container>
+      </Box>
       {showBackToTop && (
         <IconButton
           className="back-to-top"

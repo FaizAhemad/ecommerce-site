@@ -123,6 +123,9 @@ test.describe('Home page', () => {
     await expect(primaryNav.getByRole('link', { name: 'Shops' })).toHaveCount(0)
     for (const label of ['Orders', 'Profile', 'Admin']) await expect(primaryNav.getByRole('link', { name: label })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Shop by category' })).toBeVisible()
+    const socialNav = page.getByRole('navigation', { name: 'Social media links' })
+    await expect(socialNav.locator('svg')).toHaveAttribute('stroke', '#FFFFFF')
+    await expect(socialNav.locator('svg')).toHaveAttribute('color', '#FFFFFF')
     await expect(page.getByRole('heading', { name: 'A few good finds' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'More useful finds' })).toBeVisible()
     await expect(page.getByLabel('Email address')).toBeVisible()
@@ -216,6 +219,21 @@ test.describe('Home page', () => {
     await expect(page.getByRole('status')).toContainText('Our collection is being refreshed')
     await expect(page.getByRole('heading', { name: 'More useful finds' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Add to cart' })).toHaveCount(0)
+  })
+
+  test('shows a responsive featured-collections carousel with manual navigation and a catalog action', async ({ page }) => {
+    await installHomeMocks(page)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/')
+
+    const carousel = page.getByRole('region', { name: 'Featured collections' })
+    await expect(carousel).toBeVisible()
+    await expect(carousel.getByRole('heading', { name: 'Small helpers, everyday ease.' })).toBeVisible()
+    await carousel.getByRole('button', { name: 'Show collection 2' }).click()
+    await expect(carousel.getByRole('heading', { name: 'Handy upgrades for every day.' })).toBeVisible()
+    await carousel.getByRole('link', { name: 'Explore the collection' }).click()
+    await expect.poll(() => new URL(page.url()).pathname).toBe('/products')
+    await expect(page.locator('#collection-title')).toBeVisible()
   })
 
   test('rejects malformed newsletter email in the browser without sending a request', async ({ page }) => {

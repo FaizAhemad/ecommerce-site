@@ -60,7 +60,7 @@ export function ShopPage({ storefront, onAdd, onOpenProduct }: Props) {
   const clear = () => { setSearch(''); setCategory(''); window.history.replaceState(window.history.state, '', '/products'); setSort('newest'); setSelectedColors([]); setSelectedRatings([]) }
   const initialLoading = loading && catalog.length === 0
   return <Box component="section" aria-labelledby="collection-title" sx={{ width: '100%', maxWidth: '90rem', mx: 'auto', borderTop: 1, borderColor: 'divider', px: { xs: 2, md: 4 }, pt: { xs: 3, md: 5 }, pb: 0 }}>
-    {!hasSearch && <PromoCarousel promos={storefront.content.promotions} previousLabel={collection.carouselPreviousLabel} nextLabel={collection.carouselNextLabel} />}
+    {!hasSearch && <Box sx={{ mb: { xs: 5, md: 6.5 } }}><PromoCarousel promos={storefront.content.promotions} previousLabel={collection.carouselPreviousLabel} nextLabel={collection.carouselNextLabel} /></Box>}
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 2, sm: 4 }} sx={{ alignItems: { xs: 'stretch', sm: 'flex-end' }, justifyContent: 'space-between', mb: { xs: 4, sm: 6 } }}>
       <Box sx={{ minWidth: 0 }}><Typography variant="overline" color="primary.main" sx={{ fontWeight: 700 }}>{collection.eyebrow}</Typography><Typography component="h1" id="collection-title" variant="h2" sx={{ maxWidth: 760, mt: 0.5, fontSize: { xs: '2rem', sm: '2.5rem', md: '3.25rem' }, lineHeight: 1.05 }}>{hasSearch ? `Search results for “${search}”` : collection.title}</Typography></Box>
       <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 320, textAlign: { xs: 'left', sm: 'right' } }}>{collection.description}</Typography>

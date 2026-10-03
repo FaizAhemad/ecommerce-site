@@ -1,6 +1,15 @@
 import type { StorefrontApiResponse } from '../api/storefront'
+import { IconButton, Stack } from './mui'
 
-type SocialLinksProps = { storefront: StorefrontApiResponse; placement: 'rail' | 'footer' }
+type SocialName = keyof StorefrontApiResponse['contact']['social']
+type SocialLinksProps = { storefront: StorefrontApiResponse }
+const brandColors: Record<SocialName, string> = {
+  instagram: '#E4405F',
+  youtube: '#FF0000',
+  whatsapp: '#168A4A',
+  twitter: '#111111',
+  facebook: '#1877F2',
+}
 const icons = {
   instagram: (
     <>
@@ -44,26 +53,37 @@ const extraIcons = {
   ),
 }
 
-export function SocialLinks({ storefront, placement }: SocialLinksProps) {
+export function SocialLinks({ storefront }: SocialLinksProps) {
   const links = storefront.contact.social
+  const names = (Object.keys(links) as SocialName[]).filter((name) => /^https:\/\//i.test(links[name]))
+  if (!names.length) return null
   return (
-    <div className={`social-links social-links-${placement}`} aria-label="Social media links">
-      {(Object.keys(links) as Array<keyof typeof links>).map((name) => (
-        <a
-          className={`social-link social-${name}`}
+    <Stack component="nav" aria-label="Social media links" direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
+      {names.map((name) => (
+        <IconButton
+          component="a"
           href={links[name]}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           key={name}
-          aria-label={name}
+          aria-label={`${name} (opens in a new tab)`}
+          sx={{
+            width: 44,
+            height: 44,
+            color: '#FFFFFF !important',
+            bgcolor: brandColors[name],
+            boxShadow: '0 3px 10px rgba(23,43,58,.14)',
+            '&:hover': { bgcolor: brandColors[name], color: '#FFFFFF !important', filter: 'brightness(.9)', transform: 'translateY(-1px)' },
+            '&.Mui-focusVisible': { outline: '3px solid', outlineColor: 'secondary.dark', outlineOffset: 2 },
+          }}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#FFFFFF" strokeWidth="1.8" color="#FFFFFF" aria-hidden="true">
             {name in extraIcons
               ? extraIcons[name as keyof typeof extraIcons]
               : icons[name as keyof typeof icons]}
           </svg>
-        </a>
+        </IconButton>
       ))}
-    </div>
+    </Stack>
   )
 }

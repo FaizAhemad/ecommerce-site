@@ -1,6 +1,7 @@
 import type { MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 import { ArrowIcon } from '../components/ArrowIcon'
+import { PromoCarousel } from '../components/PromoCarousel'
 import { ProductGrid } from '../components/ProductGrid'
 import { SubscribeSection } from '../components/SubscribeSection'
 import { Box } from '../components/mui/Box'
@@ -224,6 +225,18 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
               )
             })}
           </Box>
+        </Box>
+      )}
+
+      {storefront.content.promotions.length > 0 && (
+        <Box sx={pageSx}>
+          <PromoCarousel
+            promos={storefront.content.promotions}
+            previousLabel={collection.carouselPreviousLabel}
+            nextLabel={collection.carouselNextLabel}
+            exploreLabel={hero.actionLabel}
+            onExplore={onNavigate('/products')}
+          />
         </Box>
       )}
 
