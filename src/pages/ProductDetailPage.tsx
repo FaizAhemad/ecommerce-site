@@ -861,9 +861,8 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
             },
           }}
         >
-          <IconButton aria-label="Close product gallery" onClick={() => setLightboxIndex(null)} sx={{ position: 'absolute', zIndex: 2, top: 12, right: 12, width: 44, height: 44, bgcolor: 'background.paper' }}>{'\u00d7'}</IconButton>
           <DialogContent sx={{ p: 0, height: '100%', overflow: 'hidden' }}>
-            <Box sx={{ display: 'grid', height: '100%', gridTemplateColumns: { xs: 'minmax(0,1fr)', md: 'minmax(0,1fr) 320px' }, gridTemplateRows: { xs: 'minmax(0,1fr) auto', md: 'minmax(0,1fr)' }, minHeight: 0 }}>
+            <Box sx={{ display: 'grid', height: '100%', gridTemplateColumns: { xs: 'minmax(0,1fr)', md: 'minmax(0,1fr) minmax(340px, 380px)' }, gridTemplateRows: { xs: 'minmax(0,1fr) auto', md: 'minmax(0,1fr)' }, minHeight: 0 }}>
               <Box sx={{ display: 'flex', minWidth: 0, minHeight: 0, flexDirection: 'column', p: { xs: 2, sm: 3, md: 4 }, pr: { md: 3 }, gap: 2, overflowY: 'auto' }}>
                 <Box sx={{ display: 'grid', flex: '1 1 auto', minHeight: { xs: 240, md: 360 }, placeItems: 'center', overflow: 'hidden', borderRadius: 2, bgcolor: '#17191b' }}>
                   {availableMediaItems[lightboxIndex].type === 'video' ? (
@@ -878,15 +877,21 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
                 </Stack>
               </Box>
               <Box sx={{ display: 'flex', minHeight: 0, flexDirection: 'column', borderLeft: { md: '1px solid' }, borderTop: { xs: '1px solid', md: 0 }, borderColor: 'divider', bgcolor: 'action.hover' }}>
-                <Stack direction="row" sx={{ pl: 2, pr: 8, py: 1.5, alignItems: 'baseline', justifyContent: 'space-between' }}>
-                  <Typography component="h3" sx={{ m: 0, fontSize: 15, fontWeight: 750 }}>Product media</Typography>
-                  <Typography variant="caption" color="text.secondary">{lightboxIndex + 1} / {availableMediaItems.length}</Typography>
+                <Stack direction="row" sx={{ px: 2, py: 1, alignItems: 'center', justifyContent: 'space-between', gap: 1, borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography component="h3" sx={{ m: 0, fontSize: 15, fontWeight: 750 }}>Product media</Typography>
+                    <Typography variant="caption" color="text.secondary">{lightboxIndex + 1} of {availableMediaItems.length} selected</Typography>
+                  </Box>
+                  <IconButton aria-label="Close product gallery" onClick={() => setLightboxIndex(null)} sx={{ flex: '0 0 44px', width: 44, height: 44, bgcolor: 'background.paper' }}>{'\u00d7'}</IconButton>
                 </Stack>
-                <Stack role="list" aria-label="Product images and videos" spacing={1} sx={{ minHeight: 0, overflowY: { xs: 'hidden', md: 'auto' }, overflowX: { xs: 'auto', md: 'hidden' }, p: 1.5, pt: 0, flexDirection: { xs: 'row', md: 'column' } }}>
+                <Stack role="list" aria-label="Product images and videos" spacing={1} sx={{ minHeight: 0, overflowY: { xs: 'hidden', md: 'auto' }, overflowX: { xs: 'auto', md: 'hidden' }, p: 1.5, flexDirection: { xs: 'row', md: 'column' } }}>
                   {availableMediaItems.map((item, index) => (
-                    <Button key={item.id} role="listitem" variant={index === lightboxIndex ? 'contained' : 'text'} onClick={() => setLightboxIndex(index)} aria-label={`Show ${item.type === 'video' ? 'video' : 'image'} ${index + 1}: ${item.alt || product.name}`} aria-current={index === lightboxIndex ? 'true' : undefined} sx={{ display: 'grid', flex: { xs: '0 0 112px', md: '0 0 auto' }, gridTemplateColumns: { xs: '1fr', md: '104px minmax(0,1fr)' }, gap: 1.25, alignItems: 'center', minWidth: { xs: 112, md: 0 }, minHeight: { xs: 100, md: 84 }, p: 1, textAlign: 'left', justifyContent: 'stretch', color: 'text.primary', bgcolor: index === lightboxIndex ? 'action.selected' : 'background.paper', border: '1px solid', borderColor: index === lightboxIndex ? 'primary.main' : 'divider' }}>
+                    <Button key={item.id} role="listitem" variant={index === lightboxIndex ? 'contained' : 'text'} onClick={() => setLightboxIndex(index)} aria-label={`Show ${item.type === 'video' ? 'video' : 'image'} ${index + 1}: ${item.alt || product.name}`} aria-current={index === lightboxIndex ? 'true' : undefined} sx={{ display: 'grid', flex: { xs: '0 0 160px', md: '0 0 auto' }, gridTemplateColumns: { xs: '1fr', md: '104px minmax(0,1fr)' }, gap: 1.25, alignItems: 'center', minWidth: { xs: 160, md: 0 }, minHeight: { xs: 116, md: 96 }, p: 1, textAlign: 'left', justifyContent: 'stretch', color: 'text.primary', bgcolor: index === lightboxIndex ? 'action.selected' : 'background.paper', border: '1px solid', borderColor: index === lightboxIndex ? 'primary.main' : 'divider' }}>
                       {item.type === 'video' ? <video src={item.url} poster={item.posterUrl} muted playsInline preload="metadata" style={{ width: '100%', height: 64, objectFit: 'cover', borderRadius: 6, background: '#17191b' }} /> : <img src={item.url} alt="" loading="lazy" style={{ width: '100%', height: 64, objectFit: 'cover', borderRadius: 6, background: '#f3f0e9' }} />}
-                      <Typography component="span" variant="caption" sx={{ display: { xs: 'none', md: 'block' }, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: index === lightboxIndex ? 700 : 500 }}>{item.type === 'video' ? 'Video' : 'Image'} {index + 1} / {item.alt || product.name}</Typography>
+                      <Stack spacing={0.25} sx={{ minWidth: 0, display: { xs: 'flex', md: 'flex' } }}>
+                        <Typography component="span" variant="overline" sx={{ fontSize: 10, lineHeight: 1.2, color: 'text.secondary' }}>{item.type === 'video' ? 'Video' : 'Image'} {index + 1}</Typography>
+                        <Typography component="span" variant="caption" title={item.alt || product.name} sx={{ display: '-webkit-box', overflow: 'hidden', WebkitBoxOrient: 'vertical', WebkitLineClamp: { xs: 1, md: 2 }, whiteSpace: 'normal', lineHeight: 1.35, fontWeight: index === lightboxIndex ? 700 : 500 }}>{item.alt || product.name}</Typography>
+                      </Stack>
                     </Button>
                   ))}
                 </Stack>

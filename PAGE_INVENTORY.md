@@ -374,3 +374,5 @@ Cart review update (2026-10-03): migrated route loading/empty/fatal-error/retry,
 2026-10-03 Product Details gallery interaction: product media now opens in a responsive MUI dialog with product copy, active image/video and accessible thumbnail selection; keyboard arrows continue through media and Escape closes the view. Mocked screenshot/interaction coverage is authored; rendered desktop/mobile acceptance remains pending.
 
 2026-10-03 Product Details review/media/footer polish: rating distribution uses the shared MUI stars instead of a broken star-character label; review labels/status text are encoding-safe. The media viewer reserves space for its close button and sizes portrait video without stretching. Footer retains one accessible Back to top text link and no floating duplicate. Browser visuals remain unverified.
+
+2026-10-03 Product Details media rail follow-up: desktop gallery rail widened for readable media labels; header now keeps close separate from the selected count; mobile thumbnail cards expose their media type and title while remaining horizontally scrollable. Rendered phone/tablet/desktop checks remain pending.

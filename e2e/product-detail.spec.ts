@@ -71,7 +71,7 @@ test('Product Details matches catalog facts and links into related products', as
   await expect(gallery.getByRole('heading', { name: mainProduct.name })).toBeVisible()
   await expect(gallery.getByText(mainProduct.description)).toBeVisible()
   const closeBounds = await gallery.getByRole('button', { name: 'Close product gallery' }).boundingBox()
-  const countBounds = await gallery.getByText('1 / 2').boundingBox()
+  const countBounds = await gallery.getByText('1 of 2 selected').boundingBox()
   expect(closeBounds).not.toBeNull()
   expect(countBounds).not.toBeNull()
   expect(closeBounds!.x).toBeGreaterThanOrEqual(countBounds!.x + countBounds!.width)
