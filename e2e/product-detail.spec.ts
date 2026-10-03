@@ -19,7 +19,7 @@ const mainProduct = {
   seller: { isPlatform: true },
   colors: ['Sage'],
   colorValues: { Sage: '#86a578' },
-  media: { images: [{ id: 'pdp-main-image', url: '/images/gadgify-home-kitchen.jpg', alt: 'Green kitchen towels', isPrimary: true }], videos: [] },
+  media: { images: [{ id: 'pdp-main-image', url: '/images/gadgify-home-kitchen.jpg', alt: 'Green kitchen towels', isPrimary: true }, { id: 'pdp-main-image-2', url: '/images/gadgify-home-kitchen.jpg', alt: 'Side view of kitchen towels', isPrimary: false }], videos: [] },
 }
 
 const relatedProduct = {
@@ -63,9 +63,27 @@ test('Product Details matches catalog facts and links into related products', as
   await expect(page.getByText(mainProduct.description)).toBeVisible()
   await expect(page.getByText('38% off')).toBeVisible()
   await expect(page.getByText('Available')).toBeVisible()
+  await expect(page.getByRole('img', { name: '5 stars' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'More from Home & Kitchen' })).toBeVisible()
+  await page.getByRole('button', { name: /View larger image/ }).click()
+  const gallery = page.getByRole('dialog', { name: mainProduct.name })
+  await expect(gallery).toBeVisible()
+  await expect(gallery.getByRole('heading', { name: mainProduct.name })).toBeVisible()
+  await expect(gallery.getByText(mainProduct.description)).toBeVisible()
+  const closeBounds = await gallery.getByRole('button', { name: 'Close product gallery' }).boundingBox()
+  const countBounds = await gallery.getByText('1 / 2').boundingBox()
+  expect(closeBounds).not.toBeNull()
+  expect(countBounds).not.toBeNull()
+  expect(closeBounds!.x).toBeGreaterThanOrEqual(countBounds!.x + countBounds!.width)
+  await gallery.getByRole('button', { name: /Show image 2/ }).click()
+  await page.screenshot({ path: 'artifacts/page-review/product-gallery-phone.png', fullPage: true, animations: 'disabled' })
+  await page.keyboard.press('Escape')
   await page.screenshot({ path: 'artifacts/page-review/product-detail-phone.png', fullPage: true, animations: 'disabled' })
   await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.getByRole('button', { name: /View larger image/ }).click()
+  await expect(page.getByRole('dialog', { name: mainProduct.name })).toBeVisible()
+  await page.screenshot({ path: 'artifacts/page-review/product-gallery-desktop.png', fullPage: true, animations: 'disabled' })
+  await page.getByRole('button', { name: 'Close product gallery' }).click()
   await page.screenshot({ path: 'artifacts/page-review/product-detail-desktop.png', fullPage: true, animations: 'disabled' })
   await page.getByRole('heading', { name: relatedProduct.name }).click()
   await expect.poll(() => new URL(page.url()).pathname).toBe('/product/pdp-related')

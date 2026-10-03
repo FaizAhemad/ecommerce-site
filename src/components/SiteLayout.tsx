@@ -67,7 +67,6 @@ export function SiteLayout({
   })
   const canBrowseShops = isAdmin || shopAccess.data?.allowed === true
   const [showHeaderShadow, setShowHeaderShadow] = useState(false)
-  const [showBackToTop, setShowBackToTop] = useState(false)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
   const [tourActive, setTourActive] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -77,7 +76,6 @@ export function SiteLayout({
   useEffect(() => {
     const onScroll = () => {
       setShowHeaderShadow(window.scrollY > 8)
-      setShowBackToTop(window.scrollY > 600)
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     const onRouteChange = () => setCurrentPath(window.location.pathname)
@@ -398,20 +396,11 @@ export function SiteLayout({
           <Divider sx={{ my: { xs: 3, sm: 4 } }} />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
             <Typography variant="caption" color="text.secondary">{content.ui.copyrightPrefix} {content.footer.copyrightYear} {identity.businessName}</Typography>
-            <Link href="#top" underline="hover" color="text.secondary" variant="caption" onClick={(event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Back to top ↑</Link>
+            <Link href="#top" underline="hover" color="text.secondary" variant="caption" onClick={(event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Back to top</Link>
           </Stack>
         </Container>
       </Box>
-      {showBackToTop && (
-        <IconButton
-          className="back-to-top"
-          type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          aria-label="Back to top"
-        >
-          <span aria-hidden="true">↑</span>
-        </IconButton>
-      )}
+
     </div>
   )
 }

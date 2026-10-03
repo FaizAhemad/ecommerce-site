@@ -1,12 +1,26 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { checkoutRules, checkoutTotal } from '../server/api/_lib/checkout.ts'
-import {
-  createCartOrder,
-  cancelOrder,
-  updateOrderStatus,
-  isTransactionConflict,
-} from '../server/api/_lib/order-transactions.ts'
+import { readFileSync } from 'node:fs'
+import ts from 'typescript'
+
+// Test the TypeScript source while mapping production .js imports to their source modules.
+const orderTransactionsSource = readFileSync(
+  new URL('../server/api/_lib/order-transactions.ts', import.meta.url),
+  'utf8',
+).replace(
+  "'./marketplace-purchases.js'",
+  JSON.stringify(new URL('../server/api/_lib/marketplace-purchases.ts', import.meta.url).href),
+)
+const orderTransactionsModule = ts.transpileModule(orderTransactionsSource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext },
+}).outputText.replace(
+  "'./seller-fees.ts'",
+  JSON.stringify(new URL('../server/api/_lib/seller-fees.ts', import.meta.url).href),
+)
+const orderTransactionsUrl = `data:text/javascript;base64,${Buffer.from(orderTransactionsModule).toString('base64')}`
+const { createCartOrder, cancelOrder, updateOrderStatus, isTransactionConflict } =
+  await import(orderTransactionsUrl)
 
 // Deterministic serialized transaction double with rollback. Live PostgreSQL validation is user-owned.
 function storeFixture({

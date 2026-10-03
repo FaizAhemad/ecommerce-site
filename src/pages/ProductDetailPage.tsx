@@ -1,4 +1,4 @@
-﻿import {
+import {
   privateKey,
   sessionUser,
   sessionGeneration,
@@ -23,6 +23,9 @@ import { ProductGrid } from '../components/ProductGrid'
 import { Box } from '../components/mui/Box'
 import { Stack } from '../components/mui/Stack'
 import { Typography } from '../components/mui/Typography'
+import { Dialog } from '../components/mui/Dialog'
+import { DialogContent } from '../components/mui/DialogContent'
+import { IconButton } from '../components/mui/IconButton'
 
 type ReviewMedia = { id: string; url: string }
 
@@ -197,11 +200,8 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
         setLightboxIndex((current) => (current === null ? null : (current + 1) % availableMediaItems.length))
     }
     document.addEventListener('keydown', onKeyDown)
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = previousOverflow
     }
   }, [lightboxIndex, availableMediaItems.length])
 
@@ -461,7 +461,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
               )}
               {selectedImage && !failedImageIds.has(selectedImage.id) && (
                 <span className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-[var(--surface)]/90 px-3 py-1.5 text-xs font-medium text-[var(--ink)] shadow-sm">
-                  <span className="hidden md:inline">Hover to zoom Â· Click to view</span>
+                  <span className="hidden md:inline">Hover to zoom | Click to view</span>
                   <span className="md:hidden">Tap to enlarge</span>
                 </span>
               )}
@@ -613,12 +613,12 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
           </div>
           <div className="grid content-center gap-3" aria-label="Review rating distribution">
             {reviewsQuery.isLoading ? (
-              <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading rating breakdownâ€¦</p>
+              <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading rating breakdown...</p>
             ) : reviewsQuery.isError ? (
               <p className="m-0 text-sm text-[var(--muted)]">Rating breakdown unavailable.</p>
             ) : distribution.map(({ rating, count }) => (
               <div className="grid grid-cols-[4.5rem_1fr_2rem] items-center gap-3 text-sm text-[var(--muted)]" key={rating}>
-                <span>{rating} â˜…</span>
+                <RatingStars rating={rating} size="small" label={`${rating} stars`} />
                 <div className="h-2 overflow-hidden rounded-full bg-[var(--line)]" aria-hidden="true">
                   <i className="block h-full rounded-full bg-[var(--yellow)]" style={{ width: `${count ? Math.max((count / total) * 100, 8) : 0}%` }} />
                 </div>
@@ -636,7 +636,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
               </Button>
             )}
           </div>
-          {reviewsQuery.isLoading && <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading reviewsâ€¦</p>}
+          {reviewsQuery.isLoading && <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading reviews...</p>}
           {reviewsQuery.isError && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4" role="alert">
               <p className="m-0 text-sm text-[var(--muted)]">Reviews could not be loaded.</p>
@@ -650,7 +650,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
               <div className="flex flex-wrap items-center gap-3">
                 <RatingStars rating={review.rating} label={`${review.rating} out of 5 stars`} />
                 <span className="text-sm text-[var(--muted)]">
-                  {review.author} Â· {review.date}
+                  {review.author} | {review.date}
                 </span>
               </div>
               <p className="mb-0 mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed text-[var(--ink)]">{review.text}</p>
@@ -701,7 +701,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
               onClick={() => setShowAll(false)}
               aria-label="Close reviews"
             >
-              Ã—
+              {'\u00d7'}
             </Button>
             <h2 className="mb-5 text-3xl text-[var(--ink)]" id="all-reviews-title">All reviews</h2>
             {reviews.slice(0, limit).map((review) => (
@@ -709,7 +709,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
                 <div className="flex flex-wrap items-center gap-3">
                   <RatingStars rating={review.rating} label={`${review.rating} out of 5 stars`} />
                   <span className="text-sm text-[var(--muted)]">
-                    {review.author} Â· {review.date}
+                    {review.author} | {review.date}
                   </span>
                 </div>
                 <p className="mb-0 mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed text-[var(--ink)]">{review.text}</p>
@@ -806,8 +806,8 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
           >
             {reviewSaving
               ? editingReviewId
-                ? 'Updatingâ€¦'
-                : 'Savingâ€¦'
+                ? 'Updating...'
+                : 'Saving...'
               : editingReviewId
                 ? 'Update review'
                 : storefront.content.reviews.submitLabel}
@@ -842,65 +842,58 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
         </Box>
       )}
       {lightboxIndex !== null && availableMediaItems[lightboxIndex] && (
-        <div
-          className="media-lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Product media preview"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setLightboxIndex(null)
+        <Dialog
+          open
+          onClose={() => setLightboxIndex(null)}
+          maxWidth="xl"
+          fullWidth
+          aria-labelledby="product-media-title"
+          sx={{
+            '& .MuiDialog-paper': {
+              width: 'min(1320px, calc(100% - 48px))',
+              maxWidth: '1320px',
+              height: 'min(900px, calc(100% - 48px))',
+              maxHeight: '900px',
+              overflow: 'hidden',
+              '@media (max-width: 600px)': {
+                width: '100%', maxWidth: '100%', height: '100dvh', maxHeight: '100dvh', margin: 0, borderRadius: 0,
+              },
+            },
           }}
         >
-          <Button
-            variant="outlined"
-            className="media-lightbox-close"
-            type="button"
-            onClick={() => setLightboxIndex(null)}
-            aria-label="Close media preview"
-          >
-            Ã—
-          </Button>
-          <Button
-            variant="outlined"
-            className="media-lightbox-arrow media-lightbox-prev"
-            type="button"
-            onClick={() =>
-              setLightboxIndex((lightboxIndex - 1 + availableMediaItems.length) % availableMediaItems.length)
-            }
-            aria-label="Previous media"
-          >
-            â€¹
-          </Button>
-          <div className="media-lightbox-content">
-            {availableMediaItems[lightboxIndex].type === 'video' ? (
-              <video
-                src={availableMediaItems[lightboxIndex].url}
-                poster={availableMediaItems[lightboxIndex].posterUrl}
-                controls
-                autoPlay
-                playsInline
-              />
-            ) : (
-              <img
-                src={availableMediaItems[lightboxIndex].url}
-                alt={availableMediaItems[lightboxIndex].alt}
-                onError={() => markImageFailed(availableMediaItems[lightboxIndex].id)}
-              />
-            )}
-            <p>
-              {lightboxIndex + 1} / {availableMediaItems.length}
-            </p>
-          </div>
-          <Button
-            variant="outlined"
-            className="media-lightbox-arrow media-lightbox-next"
-            type="button"
-            onClick={() => setLightboxIndex((lightboxIndex + 1) % availableMediaItems.length)}
-            aria-label="Next media"
-          >
-            â€º
-          </Button>
-        </div>
+          <IconButton aria-label="Close product gallery" onClick={() => setLightboxIndex(null)} sx={{ position: 'absolute', zIndex: 2, top: 12, right: 12, width: 44, height: 44, bgcolor: 'background.paper' }}>{'\u00d7'}</IconButton>
+          <DialogContent sx={{ p: 0, height: '100%', overflow: 'hidden' }}>
+            <Box sx={{ display: 'grid', height: '100%', gridTemplateColumns: { xs: 'minmax(0,1fr)', md: 'minmax(0,1fr) 320px' }, gridTemplateRows: { xs: 'minmax(0,1fr) auto', md: 'minmax(0,1fr)' }, minHeight: 0 }}>
+              <Box sx={{ display: 'flex', minWidth: 0, minHeight: 0, flexDirection: 'column', p: { xs: 2, sm: 3, md: 4 }, pr: { md: 3 }, gap: 2, overflowY: 'auto' }}>
+                <Box sx={{ display: 'grid', flex: '1 1 auto', minHeight: { xs: 240, md: 360 }, placeItems: 'center', overflow: 'hidden', borderRadius: 2, bgcolor: '#17191b' }}>
+                  {availableMediaItems[lightboxIndex].type === 'video' ? (
+                    <video src={availableMediaItems[lightboxIndex].url} poster={availableMediaItems[lightboxIndex].posterUrl} controls autoPlay playsInline style={{ display: 'block', width: 'auto', height: 'min(62vh, 680px)', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                  ) : (
+                    <img src={availableMediaItems[lightboxIndex].url} alt={availableMediaItems[lightboxIndex].alt} onError={() => markImageFailed(availableMediaItems[lightboxIndex].id)} style={{ display: 'block', width: '100%', height: '100%', maxHeight: 'min(62vh, 680px)', objectFit: 'contain' }} />
+                  )}
+                </Box>
+                <Stack spacing={1} sx={{ pr: { xs: 5, md: 0 } }}>
+                  <Typography id="product-media-title" component="h2" sx={{ m: 0, fontSize: { xs: 20, md: 25 }, fontWeight: 700, lineHeight: 1.25 }}>{product.name}</Typography>
+                  {product.description?.trim() && <Typography color="text.secondary" sx={{ m: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{product.description.trim()}</Typography>}
+                </Stack>
+              </Box>
+              <Box sx={{ display: 'flex', minHeight: 0, flexDirection: 'column', borderLeft: { md: '1px solid' }, borderTop: { xs: '1px solid', md: 0 }, borderColor: 'divider', bgcolor: 'action.hover' }}>
+                <Stack direction="row" sx={{ pl: 2, pr: 8, py: 1.5, alignItems: 'baseline', justifyContent: 'space-between' }}>
+                  <Typography component="h3" sx={{ m: 0, fontSize: 15, fontWeight: 750 }}>Product media</Typography>
+                  <Typography variant="caption" color="text.secondary">{lightboxIndex + 1} / {availableMediaItems.length}</Typography>
+                </Stack>
+                <Stack role="list" aria-label="Product images and videos" spacing={1} sx={{ minHeight: 0, overflowY: { xs: 'hidden', md: 'auto' }, overflowX: { xs: 'auto', md: 'hidden' }, p: 1.5, pt: 0, flexDirection: { xs: 'row', md: 'column' } }}>
+                  {availableMediaItems.map((item, index) => (
+                    <Button key={item.id} role="listitem" variant={index === lightboxIndex ? 'contained' : 'text'} onClick={() => setLightboxIndex(index)} aria-label={`Show ${item.type === 'video' ? 'video' : 'image'} ${index + 1}: ${item.alt || product.name}`} aria-current={index === lightboxIndex ? 'true' : undefined} sx={{ display: 'grid', flex: { xs: '0 0 112px', md: '0 0 auto' }, gridTemplateColumns: { xs: '1fr', md: '104px minmax(0,1fr)' }, gap: 1.25, alignItems: 'center', minWidth: { xs: 112, md: 0 }, minHeight: { xs: 100, md: 84 }, p: 1, textAlign: 'left', justifyContent: 'stretch', color: 'text.primary', bgcolor: index === lightboxIndex ? 'action.selected' : 'background.paper', border: '1px solid', borderColor: index === lightboxIndex ? 'primary.main' : 'divider' }}>
+                      {item.type === 'video' ? <video src={item.url} poster={item.posterUrl} muted playsInline preload="metadata" style={{ width: '100%', height: 64, objectFit: 'cover', borderRadius: 6, background: '#17191b' }} /> : <img src={item.url} alt="" loading="lazy" style={{ width: '100%', height: 64, objectFit: 'cover', borderRadius: 6, background: '#f3f0e9' }} />}
+                      <Typography component="span" variant="caption" sx={{ display: { xs: 'none', md: 'block' }, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: index === lightboxIndex ? 700 : 500 }}>{item.type === 'video' ? 'Video' : 'Image'} {index + 1} / {item.alt || product.name}</Typography>
+                    </Button>
+                  ))}
+                </Stack>
+              </Box>
+            </Box>
+          </DialogContent>
+        </Dialog>
       )}
     </Box>
   )

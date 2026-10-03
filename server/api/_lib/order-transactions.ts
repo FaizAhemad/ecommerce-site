@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { purchaseEligibility } from './marketplace-purchases.ts'
+import { purchaseEligibility } from './marketplace-purchases.js'
 import { allocateDiscount, sellerFeeAmount } from './seller-fees.ts'
 import type { PrismaClient, OrderStatus } from '@prisma/client'
 import type { checkoutRules, checkoutTotal } from './checkout.js'

@@ -14,6 +14,22 @@ import {
 } from '../src/api/wishlistState.ts'
 import { sendError, setCacheControl } from '../server/api/_lib/http.ts'
 
+// Map the production JavaScript import to its TypeScript source inside this Node-strip-types test.
+const orderTransactionsSource = readFileSync(
+  new URL('../server/api/_lib/order-transactions.ts', import.meta.url),
+  'utf8',
+).replace(
+  "'./marketplace-purchases.js'",
+  JSON.stringify(new URL('../server/api/_lib/marketplace-purchases.ts', import.meta.url).href),
+)
+const orderTransactionsModule = ts.transpileModule(orderTransactionsSource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext },
+}).outputText.replace(
+  "'./seller-fees.ts'",
+  JSON.stringify(new URL('../server/api/_lib/seller-fees.ts', import.meta.url).href),
+)
+const orderTransactionsModuleUrl = `data:text/javascript;base64,${Buffer.from(orderTransactionsModule).toString('base64')}`
+
 // Execute the actual order handler with synthetic auth/store boundaries; no customer DB is used.
 const source = readFileSync(new URL('../server/api/orders/index.ts', import.meta.url), 'utf8')
   .replaceAll(
@@ -25,13 +41,16 @@ const source = readFileSync(new URL('../server/api/orders/index.ts', import.meta
     "import { requireUser } from '../_lib/auth.js'",
     'const requireUser = async () => globalThis.orderFixture.user',
   )
+  .replace("import { notifyOrder } from '../_lib/order-notifications.js'", 'const notifyOrder = async () => "SAVED"')
+  .replace("import { enqueueOrderNotification } from '../_lib/notification-queue.js'", 'const enqueueOrderNotification = async () => {}')
+  .replace("import { sendTransactionalEmail } from '../_lib/email.js'", 'const sendTransactionalEmail = async () => {}')
   .replaceAll(
     "'../_lib/http.js'",
     JSON.stringify(new URL('../server/api/_lib/http.ts', import.meta.url).href),
   )
   .replaceAll(
     "'../_lib/order-transactions.js'",
-    JSON.stringify(new URL('../server/api/_lib/order-transactions.ts', import.meta.url).href),
+    JSON.stringify(orderTransactionsModuleUrl),
   )
   .replaceAll(
     "'../_lib/order-address.js'",
@@ -57,7 +76,19 @@ async function orderRequest(addressId) {
           return {
             id: 'cart-a',
             items: [
-              { productId: 'p', quantity: 1, product: { name: 'Test', priceMinor: 100, stock: 2 } },
+              {
+                productId: 'p',
+                quantity: 1,
+                product: {
+                  name: 'Test',
+                  priceMinor: 100,
+                  stock: 2,
+                  shopOwnership: {
+                    moderationStatus: 'APPROVED',
+                    shop: { id: 'platform', name: 'Gadgify', slug: 'gadgify', isPlatform: true, status: 'APPROVED' },
+                  },
+                },
+              },
             ],
           }
         },
@@ -69,7 +100,11 @@ async function orderRequest(addressId) {
           order: {
             create: async ({ data }) => {
               writes++
-              return data
+              return {
+                ...data,
+                id: 'order-a',
+                items: data.items.create.map((item, index) => ({ ...item, id: `order-item-${index}` })),
+              }
             },
           },
           product: {

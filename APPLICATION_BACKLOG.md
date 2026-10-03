@@ -400,3 +400,9 @@ RB-04 Product Details content update (2026-10-03): detail summary now mirrors ca
 UI-06 Product Details review width (2026-10-03): expanded the final review-form section to align with the ratings/latest-reviews content width by removing its nested max-width cap. Offline build passes; rendered responsive confirmation remains pending.
 
 UI-06 Product Details media field fix (2026-10-03): the MUI file-upload label now stays floated above the native picker, avoiding overlapping label/button text. Offline build passes; browser rendering remains pending.
+
+UI-06 Product Details gallery update (2026-10-03): rebuilt the media preview as a responsive MUI dialog with the active media and product information at left and selectable image/video thumbnails at right on desktop; mobile places the media rail below the player. Added mocked Playwright assertions and screenshot captures for phone/desktop gallery states. Offline build passes; browser/device visual acceptance remains pending.
+
+UI-06 Product Details gallery update (2026-10-03): the gallery preview is now a responsive MUI dialog with a large image/video player, product title and description, plus a selectable image/video rail on desktop; mobile moves the rail below the viewer. Mocked Playwright assertions and screenshot capture are authored. Offline build and Playwright test discovery pass; browser/device visual acceptance remains pending.
+
+UI-06/Runtime follow-up (2026-10-03): corrected PDP review-star glyphs using shared RatingStars, kept footer back-to-top as a single text link, and separated the gallery counter from its close action while improving portrait video fit. Fixed the Vercel Node runtime import from `marketplace-purchases.ts` to `.js`; focused order tests pass 19/19 and customer-isolation tests 14/14. Offline build passes. Keep browser screenshots/device acceptance and production redeploy verification pending.
