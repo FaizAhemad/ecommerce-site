@@ -43,6 +43,14 @@ const sectionTitleSx = {
   letterSpacing: '-0.04em',
 }
 
+const categoryCardTones = [
+  { background: '#F0F6EC', border: '#D9E6D0', hover: '#E9F1E2' },
+  { background: '#EDF4FA', border: '#D4E2EF', hover: '#E5EFF8' },
+  { background: '#F3F0F8', border: '#E0D9EC', hover: '#ECE7F4' },
+  { background: '#FFF4E8', border: '#F1E0C9', hover: '#FCEBD8' },
+  { background: '#FBEFF0', border: '#EED9DC', hover: '#F7E6E8' },
+]
+
 export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomePageProps) {
   const { hero, collection, story } = storefront.content
   const currency = new Intl.NumberFormat(storefront.localization.locale, {
@@ -187,6 +195,7 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
           >
             {categories.map((category, index) => {
               const path = `/products?category=${encodeURIComponent(category)}`
+              const tone = categoryCardTones[index % categoryCardTones.length]
               return (
                 <Card
                   component="a"
@@ -198,9 +207,11 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
                     display: 'flex',
                     minHeight: { xs: 132, sm: 148 },
                     color: 'text.primary',
+                    backgroundColor: tone.background,
+                    borderColor: tone.border,
                     textDecoration: 'none',
                     transition: 'border-color 160ms ease, background-color 160ms ease, transform 160ms ease',
-                    '&:hover': { borderColor: 'secondary.dark', backgroundColor: '#fbfaf6', transform: 'translateY(-2px)' },
+                    '&:hover': { borderColor: 'secondary.dark', backgroundColor: tone.hover, transform: 'translateY(-2px)' },
                     '&:focus-visible': { outline: '3px solid', outlineColor: 'secondary.dark', outlineOffset: 2 },
                     '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:hover': { transform: 'none' } },
                   }}

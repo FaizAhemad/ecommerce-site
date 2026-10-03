@@ -884,3 +884,5 @@ Help/tour automation source update (2026-10-03): two mocked Playwright cases now
 2026-10-03 Product Details gallery polish: widened the media rail, added an independent close control and selected-media count row, and replaced single-line clipped labels with type/title hierarchy and responsive clamping. E2E geometry assertion updated. Source-only; browser/device acceptance remains pending.
 
 2026-10-03 Vercel ESM import follow-up: audited server/api runtime imports and replaced .ts suffixes in order transactions, seller applications, and seller catalog with emitted .js specifiers. No business behavior changed. Focused tests/build are being rerun; production runtime verification remains pending owner deployment.
+
+2026-10-03 Home category-card color pass: added five soft coordinated card tones (sage, blue, lavender, amber, rose) and matching border/hover colors in the shared MUI card styles. Offline build and source checks pending; visual contrast/device acceptance not yet performed.

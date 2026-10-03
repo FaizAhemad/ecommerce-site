@@ -410,3 +410,5 @@ UI-06/Runtime follow-up (2026-10-03): corrected PDP review-star glyphs using sha
 UI-06 Product media rail (2026-10-03): widened the desktop gallery rail, moved close into a dedicated header beside a descriptive selected-item count, and made thumbnails show media type plus a readable clamped title on desktop and phones. Updated the mocked e2e geometry assertion; browser/device acceptance is still pending.
 
 Runtime follow-up (2026-10-03): changed remaining server/API runtime imports of TypeScript source files (seller-fees and shared validation patterns) to emitted .js specifiers. Tests and offline build are being rerun; production redeploy/runtime verification remains owner-controlled.
+
+UI-01 Home category cards (2026-10-03): added a repeating set of low-saturation green, blue, lavender, amber and rose backgrounds with matching borders and coordinated hover tints. Color/contrast and responsive browser review remain pending.
