@@ -17,6 +17,8 @@
     "build:offline": "tsc -b && tsc -p tsconfig.api.json --pretty false && node scripts/build-offline.mjs",
     "test": "node --experimental-strip-types --test tests/http-timeout.test.mjs tests/media-upload.test.mjs tests/rate-limit.test.mjs tests/customer-isolation.test.mjs tests/wishlist-optimistic.test.mjs tests/vercel-routing.test.mjs tests/order-transactions.test.mjs tests/payment-order-state.test.mjs tests/payment-failure.test.mjs tests/csrf.test.mjs tests/api-errors.test.mjs tests/password-recovery.test.mjs tests/email-verification.test.mjs tests/profile.test.mjs tests/order-history.test.mjs tests/backlog-batch.test.mjs tests/support.test.mjs tests/payment-integrity.test.mjs tests/returns.test.mjs tests/feedback.test.mjs tests/policies.test.mjs",
     "test:components": "vitest run --config vitest.config.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:home": "playwright test e2e/home.spec.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "rate-limits:cleanup": "node scripts/cleanup-rate-limits.mjs",
@@ -48,6 +50,7 @@
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@storybook/addon-docs": "^10.6.0",
     "@storybook/react-vite": "^10.6.0",
     "@tailwindcss/vite": "^4.3.3",

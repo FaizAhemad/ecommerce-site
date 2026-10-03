@@ -107,19 +107,19 @@ function RouteContent({
   switch (normalizedPath) {
     case '/shops': return <ShopsPage key="directory" />
     case '/seller/products':
-      return isAuthenticated ? <SellerCatalogPage key="seller-catalog" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+      return isAuthenticated ? <SellerCatalogPage key="seller-catalog" onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/seller/orders':
-      return isAuthenticated ? <FulfillmentPage key="seller-fulfillment" audience="seller" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+      return isAuthenticated ? <FulfillmentPage key="seller-fulfillment" audience="seller" onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/orders/shipments':
-      return isAuthenticated ? <FulfillmentPage key="customer-fulfillment" audience="customer" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+      return isAuthenticated ? <FulfillmentPage key="customer-fulfillment" audience="customer" onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/admin/fulfillment':
-      return isAdmin ? <FulfillmentPage key="admin-fulfillment" audience="admin" /> : <AdminAccessRequired isAuthenticated={isAuthenticated} onNavigate={navigate} />
+      return isAdmin ? <FulfillmentPage key="admin-fulfillment" audience="admin" onNavigate={navigate} /> : <AdminAccessRequired isAuthenticated={isAuthenticated} onNavigate={navigate} />
     case '/admin/seller-products':
-      return isAdmin ? <SellerCatalogPage key="admin-catalog" admin /> : <AdminAccessRequired isAuthenticated={isAuthenticated} onNavigate={navigate} />
+      return isAdmin ? <SellerCatalogPage key="admin-catalog" admin onNavigate={navigate} /> : <AdminAccessRequired isAuthenticated={isAuthenticated} onNavigate={navigate} />
     case '/seller':
-      return isAuthenticated ? <SellerPage key="seller" /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
+      return isAuthenticated ? <SellerPage key="seller" onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/admin/sellers':
-      return isAdmin ? <SellerPage key="seller-review" admin /> : <AdminAccessRequired isAuthenticated={isAuthenticated} onNavigate={navigate} />
+      return isAdmin ? <SellerPage key="seller-review" admin onNavigate={navigate} /> : <AdminAccessRequired isAuthenticated={isAuthenticated} onNavigate={navigate} />
     case '/profile':
       return isAuthenticated ? (
         <ProfilePage onNavigate={navigate} />

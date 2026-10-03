@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/http'
 import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScope'
@@ -16,7 +16,7 @@ import { Typography } from '../components/mui/Typography'
 type Application = { id: string; userId?: string; name: string; city: string; address: string; phone: string; description: string; gstRegistered?: boolean; gstin?: string; gstNotRegisteredReason?: string; gstOtherReason?: string; gstEnrolmentId?: string; gstReviewStatus?: string; status: string; reason: string; version: number; updatedAt: string }
 type Result = { application?: Application | null; applications?: Application[]; nextPage?: number | null }
 const gstReasonLabel: Record<string, string> = { BELOW_THRESHOLD: 'Turnover believed below registration threshold', EXEMPT_SUPPLIES: 'Only exempt goods', REGISTRATION_IN_PROGRESS: 'Registration or enrolment in progress', OTHER: 'Other reason' }
-export function SellerPage({ admin = false }: { admin?: boolean }) {
+export function SellerPage({ admin = false, onNavigate }: { admin?: boolean; onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void }) {
   const notify = useNotification()
   const [page, setPage] = useState(0)
   const [open, setOpen] = useState(false), [selected, setSelected] = useState<Application | null>(null)
@@ -97,7 +97,7 @@ export function SellerPage({ admin = false }: { admin?: boolean }) {
       <Typography color="text.secondary">{admin ? 'Review shop applications and manage access. Shop approval is separate from each product’s content and fee approval.' : 'Tell us about your shop, business address and contact mobile. Applications are reviewed before seller access is granted.'}</Typography>
       <Typography variant="body2" color="text.secondary">For each product, Gadgify reviews the content and proposes either a fixed fee per unit sold or a percentage of the discounted item price. The product becomes orderable only after the shop accepts that exact offer.</Typography>
     </Stack>
-    <SellerNavigation admin={admin} />
+    <SellerNavigation admin={admin} onNavigate={onNavigate} />
     <Button variant="outlined" sx={{ alignSelf: 'flex-start' }} disabled={busy || query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Refresh applications</Button>
     {query.isPending && <Paper variant="outlined" role="status" sx={{ p: 3 }}><Typography color="text.secondary">Loading applications…</Typography></Paper>}
     {query.isError && <Alert severity="error" role="alert" action={<Button color="inherit" size="small" disabled={busy || query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry</Button>}>Unable to load applications.</Alert>}

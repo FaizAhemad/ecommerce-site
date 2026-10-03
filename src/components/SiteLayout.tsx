@@ -125,10 +125,20 @@ export function SiteLayout({
           <span>{identity.businessName}</span>
         </a>
         <nav aria-label="Primary navigation">
-          <a className={currentPath === '/' ? 'is-active' : ''} href="/" onClick={navigate('/')}>
+          <a
+            aria-current={currentPath === '/' ? 'page' : undefined}
+            className={currentPath === '/' ? 'is-active' : ''}
+            href="/"
+            onClick={navigate('/')}
+          >
             {content.ui.homeLabel}
           </a>
           <a
+            aria-current={
+              currentPath === '/products' || currentPath.startsWith('/product/')
+                ? 'page'
+                : undefined
+            }
             className={
               currentPath === '/products' || currentPath.startsWith('/product/') ? 'is-active' : ''
             }
@@ -138,14 +148,24 @@ export function SiteLayout({
             {content.navigation.products}
           </a>
           <a
-            className={currentPath === '/shops' || currentPath.startsWith('/shops/') ? 'is-active' : ''}
+            aria-current={
+              currentPath === '/shops' || currentPath.startsWith('/shops/') ? 'page' : undefined
+            }
+            className={
+              currentPath === '/shops' || currentPath.startsWith('/shops/') ? 'is-active' : ''
+            }
             href="/shops"
             onClick={navigate('/shops')}
           >
             Shops
           </a>
           <a
-            className={currentPath === '/seller' || currentPath.startsWith('/seller/') ? 'is-active' : ''}
+            aria-current={
+              currentPath === '/seller' || currentPath.startsWith('/seller/') ? 'page' : undefined
+            }
+            className={
+              currentPath === '/seller' || currentPath.startsWith('/seller/') ? 'is-active' : ''
+            }
             href="/seller"
             onClick={navigate('/seller')}
           >
@@ -153,6 +173,11 @@ export function SiteLayout({
           </a>
           {isAuthenticated && (
             <a
+              aria-current={
+                currentPath === '/orders' || currentPath.startsWith('/orders/')
+                  ? 'page'
+                  : undefined
+              }
               className={
                 currentPath === '/orders' || currentPath.startsWith('/orders/') ? 'is-active' : ''
               }
@@ -163,19 +188,34 @@ export function SiteLayout({
             </a>
           )}
           <a
-            className={currentPath === '/support' ? 'is-active' : ''}
+            aria-current={
+              currentPath === '/support' || currentPath === '/support-requests' ? 'page' : undefined
+            }
+            className={
+              currentPath === '/support' || currentPath === '/support-requests' ? 'is-active' : ''
+            }
             href="/support"
             onClick={navigate('/support')}
           >
             {content.navigation.support}
           </a>
           {isAuthenticated && (
-            <a className={currentPath === '/profile' ? 'is-active' : ''} href="/profile" onClick={navigate('/profile')}>
+            <a
+              aria-current={currentPath === '/profile' ? 'page' : undefined}
+              className={currentPath === '/profile' ? 'is-active' : ''}
+              href="/profile"
+              onClick={navigate('/profile')}
+            >
               Profile
             </a>
           )}
           {isAdmin && (
-            <a className={currentPath.startsWith('/admin') ? 'is-active' : ''} href="/admin" onClick={navigate('/admin')}>
+            <a
+              aria-current={currentPath.startsWith('/admin') ? 'page' : undefined}
+              className={currentPath.startsWith('/admin') ? 'is-active' : ''}
+              href="/admin"
+              onClick={navigate('/admin')}
+            >
               Admin
             </a>
           )}

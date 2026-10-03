@@ -50,7 +50,8 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
     maximumFractionDigits: 0,
   })
   const featured = storefront.products.slice(0, 8)
-  const trending = storefront.products.slice(8, 16)
+  const moreProducts = storefront.products.slice(8, 16)
+  const hasProducts = storefront.products.length > 0
   const categoryPriority = ['Home & Kitchen', 'Electronics', 'Accessories', 'Toys', 'Clothing']
   const categories = [
     ...categoryPriority.filter((category) => storefront.facets.categories.includes(category)),
@@ -229,25 +230,38 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
       <Box component="section" aria-labelledby="featured-products-title" sx={pageSx}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ alignItems: { md: 'flex-end' }, justifyContent: 'space-between', mb: 2.5 }}>
           <Box>
-            <Typography component="p" sx={{ ...overlineSx, color: 'success.main' }}>Featured edit</Typography>
-            <Typography component="h2" id="featured-products-title" sx={sectionTitleSx}>Trending now</Typography>
+            <Typography component="p" sx={{ ...overlineSx, color: 'success.main' }}>Everyday essentials</Typography>
+            <Typography component="h2" id="featured-products-title" sx={sectionTitleSx}>A few good finds</Typography>
           </Box>
           <Typography sx={{ maxWidth: 420, color: 'text.secondary', fontSize: 14 }}>
-            A considered selection of customer favorites and new arrivals.
+            Useful pieces to make everyday tasks a little easier.
           </Typography>
         </Stack>
-        <ProductGrid
-          products={featured}
-          currency={currency}
-          addToCartLabel={collection.addToCartLabel}
-          ratingLabel={collection.ratingLabel}
-          reviewsLabel={collection.reviewsLabel}
-          onAdd={onAdd}
-          onOpenProduct={onOpenProduct}
-        />
-        <Button component="a" href="/products" onClick={onNavigate('/products')} variant="contained" endIcon={<ArrowIcon direction="right" />} sx={{ mt: 3, minHeight: 48 }}>
-          Explore all products
-        </Button>
+        {hasProducts ? (
+          <>
+            <ProductGrid
+              products={featured}
+              currency={currency}
+              addToCartLabel={collection.addToCartLabel}
+              ratingLabel={collection.ratingLabel}
+              reviewsLabel={collection.reviewsLabel}
+              onAdd={onAdd}
+              onOpenProduct={onOpenProduct}
+            />
+            <Button component="a" href="/products" onClick={onNavigate('/products')} variant="contained" endIcon={<ArrowIcon direction="right" />} sx={{ mt: 3, minHeight: 48 }}>
+              Explore all products
+            </Button>
+          </>
+        ) : (
+          <Card variant="outlined" role="status" sx={{ p: { xs: 2.5, md: 4 }, textAlign: 'center', backgroundColor: 'background.paper' }}>
+            <Typography component="h3" sx={{ mb: 0.75, fontSize: 18, fontWeight: 650 }}>
+              Our collection is being refreshed
+            </Typography>
+            <Typography sx={{ color: 'text.secondary' }}>
+              There are no products to browse right now. Please check back soon.
+            </Typography>
+          </Card>
+        )}
       </Box>
 
       <Card
@@ -273,24 +287,26 @@ export function HomePage({ storefront, onNavigate, onAdd, onOpenProduct }: HomeP
         </Typography>
       </Card>
 
-      <Box component="section" aria-labelledby="latest-products-title" sx={pageSx}>
-        <Box sx={{ mb: 2.5 }}>
-          <Typography component="p" sx={{ ...overlineSx, color: 'success.main' }}>Latest arrivals</Typography>
-          <Typography component="h2" id="latest-products-title" sx={sectionTitleSx}>Fresh for the everyday</Typography>
+      {hasProducts && moreProducts.length > 0 && (
+        <Box component="section" aria-labelledby="more-products-title" sx={pageSx}>
+          <Box sx={{ mb: 2.5 }}>
+            <Typography component="p" sx={{ ...overlineSx, color: 'success.main' }}>More to explore</Typography>
+            <Typography component="h2" id="more-products-title" sx={sectionTitleSx}>More useful finds</Typography>
+          </Box>
+          <ProductGrid
+            products={moreProducts}
+            currency={currency}
+            addToCartLabel={collection.addToCartLabel}
+            ratingLabel={collection.ratingLabel}
+            reviewsLabel={collection.reviewsLabel}
+            onAdd={onAdd}
+            onOpenProduct={onOpenProduct}
+          />
+          <Button component="a" href="/products" onClick={onNavigate('/products')} variant="contained" endIcon={<ArrowIcon direction="right" />} sx={{ mt: 3, minHeight: 48 }}>
+            View the full collection
+          </Button>
         </Box>
-        <ProductGrid
-          products={trending}
-          currency={currency}
-          addToCartLabel={collection.addToCartLabel}
-          ratingLabel={collection.ratingLabel}
-          reviewsLabel={collection.reviewsLabel}
-          onAdd={onAdd}
-          onOpenProduct={onOpenProduct}
-        />
-        <Button component="a" href="/products" onClick={onNavigate('/products')} variant="contained" endIcon={<ArrowIcon direction="right" />} sx={{ mt: 3, minHeight: 48 }}>
-          View the full collection
-        </Button>
-      </Box>
+      )}
 
       <Box sx={pageSx}><SubscribeSection /></Box>
     </Stack>

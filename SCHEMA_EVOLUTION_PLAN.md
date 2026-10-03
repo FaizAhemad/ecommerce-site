@@ -4,6 +4,8 @@ Source review: 2026-09-30. Read with REBRAND_IMPLEMENTATION_PLAN.md, PRODUCT_VAR
 
 ## Current foundation and review scope
 
+Owner-reported drift evidence (2026-10-03): Prisma Migrate reports 12 migrations up to date, while `migrate diff` reports missing `Shop.gstReviewStatus` plus `PurchaseFeedback` foreign-key update-action differences. Prepared `20261003120000_repair_shop_gst_review_status` as a forward-only repair for the column; it is not applied. The foreign-key discrepancy is separate and remains under review. See PROJECT_STATUS.md; do not infer physical schema integrity from migration-history status alone.
+
 Reviewed the complete `prisma/schema.prisma`, migration names/DDL constraints, cart coordinator and order creation, plus existing refund and notification persistence. The project declares Prisma/client `^6.12.0`; examples from newer major versions must not be applied without a separate upgrade decision.
 
 The schema already covers users, hashed sessions and verification tokens, addresses, categories, products/media/colors/reviews, cart/wishlist, order/item snapshots, one payment and shipment per order, returns, support conversations/media, newsletter and marketplace ownership/fulfillment. PostgreSQL migrations also contain constraints absent from Prisma's model display: marketplace status checks, one platform shop, purchase-feedback bounds and compare-at-price checks. Inspect migration SQL before declaring a constraint missing.

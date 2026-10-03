@@ -13,12 +13,15 @@ Specifications: [REBRAND_IMPLEMENTATION_PLAN.md](REBRAND_IMPLEMENTATION_PLAN.md)
 - [ ] RB-02: Route-level lazy loading and persistent-shell Suspense implemented (2026-09-30); migrate shell/navigation/footer, separate public/private startup states and verify production/device performance.
 - [ ] RB-03: Improve cart response using existing optimistic state, eliminate redundant product reads, and implement revision-aware quantity coordination/reconciliation.
 - [ ] RB-04: Rebrand Home, Products, product cards and Product Details with real content and mobile purchase controls.
+RB-04 page review started 2026-10-03: added the route/admin-tab review index in `PAGE_REVIEW_PLAN.txt` and local Playwright scaffolding. Home's eleven mocked-API Chromium checks pass, including SPA navigation across seller links/admin tabs and desktop/phone screenshot capture. Playwright also generated desktop/phone snapshots for the route inventory and all admin tabs. Owner page revalidation, real devices and remaining route/state coverage remain pending in PROJECT_STATUS.md. Continue one page at a time after owner revalidation.
+Home source review (2026-10-03): desktop/390px snapshots and source review found merchandising labels that implied popularity or recency even though the API only sorts by creation time; corrected the labels to neutral descriptions. Added a truthful empty-catalog state and coverage for it. The snapshots use synthetic, repetitive product fixtures and do not establish real-catalog quality. Test/build execution is deferred by current owner instructions; keyboard/screen-reader, zoom, image failure, real-device and owner revalidation remain pending. See PROJECT_STATUS.md and PAGE_INVENTORY.md.
 - [ ] RB-05: Migrate Cart, Checkout, Orders/Detail/tracking/returns while preserving financial truth.
 - [ ] RB-06: Migrate auth/profile/support/policies, dialogs and notifications with complete interaction states.
 - [ ] RB-07: Finish shared grid/cell editor design and all 14 admin tabs plus standalone admin routes.
 - [ ] RB-08: Migrate shops and seller onboarding/catalog/media/fulfillment with scoped permissions.
 - [ ] RB-09: Remove unused legacy styling/dependencies after consumer audit; complete performance/accessibility/regression and owner device acceptance.
 - [ ] SE-01: Reconcile Prisma/SQL/reserved-setting contracts and design cart revision/receipt plus historical snapshot integrity.
+SE-01 drift finding (2026-10-03): owner-reported `migrate status` is up to date, but `migrate diff` finds missing `Shop.gstReviewStatus`; a forward-only repair migration is prepared and not applied. The same diff reports separate PurchaseFeedback FK update-action drift. See PROJECT_STATUS.md; owner application and post-migration product/payment/order verification remain pending.
 - [ ] SE-02: Prepare structured catalog content and SKU/option schema with simple-product compatibility.
 - [ ] SE-03: Integrate SKU-aware cart/order snapshots, inventory authority and admin/seller authoring transactionally.
 - [ ] SE-04: Add payment-attempt history and immutable order address/adjustment snapshots without financial replay.
@@ -98,6 +101,8 @@ UI-09 loader update (2026-09-28): replaced the startup spinner and moving progre
 UI-09 loader copy/layout refinement (2026-09-28): broadened the art arrangement, added a short brand line, and replaced technical account-check copy with “Getting your Gadgify ready…”. Reduced-motion and rendered/mobile acceptance remain pending.
 
 UI-09 interactive loader pass (2026-09-29): staggered product-card entrance, pointer-following parallax on mouse, a subtle brand pulse and animated status dots make the wait feel alive without fake progress or added delay. Pointer motion, all animations and transitions stop for reduced-motion preference. Offline build and component suite pass; browser/mobile acceptance is separate.
+
+UI-09 mobile loader source adjustment (2026-10-03): the scene now scales to phone viewport height, keeps all four art tiles, compacts on short screens, and accounts for safe-area insets. No rendered/browser/device verification was run under the current owner restrictions; acceptance remains pending. Evidence: PROJECT_STATUS.md.
 
 Owner requests continuous implementation without per-item permission pauses; visual polish review follows functionality. Confirmed business: Gadgify household products, India/INR, primarily Maharashtra. Rewards/policies/AI provider/medicines still need decisions.
 
@@ -184,7 +189,7 @@ Owner: Codex for implementation and offline regression evidence; product owner f
 
 ## Release gates: security and resilience
 
-- [ ] UI testing foundation: set up Playwright Test and @axe-core/playwright, preserve Node.js suites, and add route/state/mobile/validation/visual coverage per UI_UX_REVIEW_GUIDE.md. Setup/execution remain deferred; Vitest is optional later. Record browser, provider test-mode and real-device evidence separately.
+- [ ] UI testing foundation: Playwright Test 1.63, local-only Chromium configuration and the first Home spec are implemented; seven Home checks pass against mocked APIs. Add route/state/mobile/validation/visual coverage and automated accessibility checks per UI_UX_REVIEW_GUIDE.md, preserve Node.js suites, and record browser, provider test-mode and real-device evidence separately. Home owner revalidation is pending before the next page batch; see PAGE_REVIEW_PLAN.txt and PROJECT_STATUS.md.
 
 These must be addressed before calling the application stable or production-ready:
 

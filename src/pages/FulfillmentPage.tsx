@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/http'
 import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScope'
@@ -30,7 +30,7 @@ async function read<T>(path: string, init?: Parameters<typeof apiFetch>[1]): Pro
   return body as T
 }
 const nextStatus: Record<string, string> = { PENDING: 'PACKING', PACKING: 'SHIPPED', SHIPPED: 'DELIVERED' }
-export function FulfillmentPage({ audience }: { audience: 'seller' | 'admin' | 'customer' }) {
+export function FulfillmentPage({ audience, onNavigate }: { audience: 'seller' | 'admin' | 'customer'; onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void }) {
   const customer = audience === 'customer'
   const endpoint = audience === 'admin' ? '/api/admin/fulfillment' : customer ? '/api/orders/fulfillment' : '/api/seller/fulfillment'
   const notify = useNotification(), lock = useRef(false), controller = useRef<AbortController | null>(null), requestId = useRef('')
@@ -74,7 +74,7 @@ export function FulfillmentPage({ audience }: { audience: 'seller' | 'admin' | '
   }
   const data = detail.isError ? undefined : detail.data
   return <Stack component="main" spacing={2.5} sx={{ maxWidth: 1120, mx: 'auto', px: { xs: 2, sm: 3 }, py: { xs: 3, sm: 5 } }}><Stack spacing={1}><Typography variant="overline" color="text.secondary">Shop fulfillment</Typography><Typography component="h1" variant="h3">{customer ? 'My shop shipments and returns' : audience === 'admin' ? 'Marketplace fulfillment oversight' : 'My shop orders'}</Typography></Stack>
-    {customer ? <a className="secondary-button" href="/orders">Back to orders</a> : <SellerNavigation admin={audience === 'admin'} />}
+    {customer ? <a className="secondary-button" href="/orders" onClick={onNavigate('/orders')}>Back to orders</a> : <SellerNavigation admin={audience === 'admin'} onNavigate={onNavigate} />}
     <Typography color="text.secondary">Each shop handles its own items, shipment and returns. A shop update does not change another shop or confirm any payment/refund.</Typography>
     <Button variant="outlined" sx={{ alignSelf: 'flex-start' }} disabled={busy || list.isFetching} onClick={() => void list.refetch()}>Refresh orders</Button>
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><FormControlLabel control={<Checkbox checked={inspectionOnly} disabled={busy} onChange={event => { setInspectionOnly(event.target.checked); setPage(0) }} />} label="Show inspections only" /><FormControlLabel control={<Checkbox checked={supportOnly} disabled={busy} onChange={event => { setSupportOnly(event.target.checked); setPage(0) }} />} label="Show support conversations only" /></Stack>
@@ -88,10 +88,10 @@ export function FulfillmentPage({ audience }: { audience: 'seller' | 'admin' | '
       {detail.isPending && <Stack role="status" direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 2 }}><CircularProgress size={20} /><Typography color="text.secondary">Loading details…</Typography></Stack>}{detail.isError && <Alert severity="error" role="alert">Order details unavailable.</Alert>}
       <Button variant="outlined" disabled={busy || detail.isFetching} onClick={() => void detail.refetch()}>Refresh details</Button>
       {data && <>
-        <Alert severity="info">Shop status: {data.order.status.replaceAll('_', ' ')}</Alert>{customer && !data.order.usesScopedFulfillment && <Alert severity="info">For Gadgify returns, open the original order in <a href="/orders">Your orders</a>.</Alert>}
+        <Alert severity="info">Shop status: {data.order.status.replaceAll('_', ' ')}</Alert>{customer && !data.order.usesScopedFulfillment && <Alert severity="info">For Gadgify returns, open the original order in <a href="/orders" onClick={onNavigate('/orders')}>Your orders</a>.</Alert>}
         <Stack spacing={1}>{data.items.map(item => <Paper variant="outlined" component="article" key={item.id} sx={{ p: 1.5 }}><Stack spacing={0.5}><Typography component="h3" variant="subtitle1">{item.productName}</Typography><Typography variant="body2" color="text.secondary">Quantity {item.quantity} · Unit price {data.order.currency} {(item.unitPriceMinor / 100).toFixed(2)}</Typography>{!customer && (item.feeAmountMinor ?? 0) > 0 && <Typography variant="body2">Gadgify fee: {data.order.currency} {((item.feeAmountMinor ?? 0) / 100).toFixed(2)} · {item.feeStatus === 'DUE' ? 'due after successful sale' : item.feeStatus === 'REVERSED' ? 'reversed after full refund' : item.feeStatus === 'VOID' ? 'voided' : 'pending payment or delivery'}</Typography>}</Stack></Paper>)}</Stack>
         {data.address && <Paper component="section" variant="outlined" sx={{ p: 1.5 }}><Stack spacing={0.5}><Typography component="h3" variant="subtitle1">Delivery address</Typography><Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{data.address.name}<br />{data.address.line1} {data.address.line2}<br />{data.address.city}, {data.address.state} {data.address.postalCode}<br />{data.address.country}{data.address.phone && <><br />{data.address.phone}</>}</Typography></Stack></Paper>}
-        {!customer && !data.order.usesScopedFulfillment && <Alert severity="info">Gadgify shipments are managed in <a href="/admin">Admin → Shipments</a>. Their status is reflected here.</Alert>}
+        {!customer && !data.order.usesScopedFulfillment && <Alert severity="info">Gadgify shipments are managed in <a href="/admin" onClick={onNavigate('/admin')}>Admin → Shipments</a>. Their status is reflected here.</Alert>}
         {data.returnRequest && <Alert severity="info"><Stack spacing={0.5}><Typography component="span" sx={{ fontWeight: 650 }}>Return: {data.returnRequest.status.replaceAll('_', ' ')}</Typography><Typography variant="body2">{data.returnRequest.reason}</Typography><Typography variant="body2">{data.returnRequest.resolution}</Typography><Typography variant="caption">Return acceptance or receipt does not mean a refund has been issued.</Typography></Stack></Alert>}
         <Stack component="form" spacing={1.5} onSubmit={(event: FormEvent) => event.preventDefault()}>
           {((!customer && data.order.canFulfill && nextStatus[data.order.status]) || (customer && data.order.usesScopedFulfillment && data.order.status === 'DELIVERED' && !data.returnRequest) || (data.returnRequest && ['REQUESTED','APPROVED'].includes(data.returnRequest.status))) && <TextField label={customer && !data.returnRequest ? 'Return reason' : 'Reason or update visible to the customer'} slotProps={{ htmlInput: { minLength: 3, maxLength: 1000 } }} multiline minRows={3} value={reason} disabled={busy} onChange={event => setReason(event.target.value)} />}
@@ -118,7 +118,7 @@ export function FulfillmentPage({ audience }: { audience: 'seller' | 'admin' | '
               {data.dispute?.status === 'OPEN' && <Button variant="outlined" type="button" disabled={busy || supportMessage.trim().length < 3} onClick={() => void save('support-escalate')}>Escalate to Gadgify</Button>}
               {audience === 'admin' && data.dispute && <Button variant="outlined" type="button" disabled={busy || supportMessage.trim().length < 3} onClick={() => void save('support-resolve')}>Resolve with this explanation</Button>}
             </Stack>
-          </Stack> : <Alert severity="success">This dispute is resolved. <a href="/support">Contact Gadgify</a> if you need further help.</Alert>}
+          </Stack> : <Alert severity="success">This dispute is resolved. <a href="/support" onClick={onNavigate('/support')}>Contact Gadgify</a> if you need further help.</Alert>}
           </Stack>
         </Paper>
         <Typography component="h3" variant="h6">Recent updates</Typography>{!data.events.length && <Typography color="text.secondary">No shop-specific updates recorded.</Typography>}

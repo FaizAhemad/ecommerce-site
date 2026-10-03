@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/http'
 import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScope'
@@ -40,7 +40,7 @@ function MediaPreview({ shopId, id }: { shopId: string; id: string }) {
   if (!query.data) return <Button type="button" variant="outlined" onClick={() => void query.refetch()}>Retry attachment</Button>
   return query.data.contentType.startsWith('video/') ? <video controls preload="metadata" src={query.data.data} /> : <img src={query.data.data} alt="Seller product attachment" />
 }
-export function SellerCatalogPage({ admin = false }: { admin?: boolean }) {
+export function SellerCatalogPage({ admin = false, onNavigate }: { admin?: boolean; onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void }) {
   const notify = useNotification(), lock = useRef(false), abortRef = useRef<AbortController | null>(null)
   const [shopId, setShopId] = useState(''), [page, setPage] = useState(0)
   const [draft, setDraft] = useState<Draft | null>(null), [price, setPrice] = useState(''), [comparePrice, setComparePrice] = useState(''), [feeType, setFeeType] = useState<Offer['type']>('FIXED_PER_UNIT'), [feeInput, setFeeInput] = useState('')
@@ -129,7 +129,7 @@ export function SellerCatalogPage({ admin = false }: { admin?: boolean }) {
   }
   return <Stack component="main" spacing={2.5} sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, sm: 3 }, py: { xs: 3, sm: 5 } }}>
     <Stack spacing={1}><Typography variant="overline" color="text.secondary">Gadgify marketplace</Typography><Typography component="h1" variant="h3">{admin ? 'Product moderation' : 'Seller workspace'}</Typography></Stack>
-    <SellerNavigation admin={admin} />
+    <SellerNavigation admin={admin} onNavigate={onNavigate} />
     {error && !draft && <Alert severity="error" role="alert" action={<Button color="inherit" size="small" disabled={query.isFetching} onClick={() => { setError(''); void query.refetch({ cancelRefetch: false }) }}>Refresh</Button>}>{error}</Alert>}
     <Typography color="text.secondary">Gadgify reviews product content and proposes a per-unit INR fee or a percentage of the discounted item price. Products become orderable through Gadgify only after the shop accepts the exact offer. Editing approved content withdraws it until it is reviewed again.</Typography>
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ alignItems: { sm: 'center' } }}>

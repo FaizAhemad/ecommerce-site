@@ -1,0 +1,94 @@
+GADGIFY PAGE-BY-PAGE REVIEW PLAN
+================================
+
+Purpose
+-------
+This file is the human-readable route index and review order requested by the owner.
+APPLICATION_BACKLOG.md remains the only completion checklist. Completion evidence and
+limitations belong in PROJECT_STATUS.md; current route behavior belongs in PAGE_INVENTORY.md.
+Each route is reviewed in its own batch. After a page batch is presented, the owner revalidates
+that page before the next page review begins.
+
+Review standard for every page
+------------------------------
+Security first: route and API authorization, account/shop ownership, private data exposure,
+CSRF, safe errors, input bounds, duplicate-write guards, untrusted content/media and no
+optimistic payment/order outcomes. Then review field validation and wording, keyboard/accessibility,
+loading/refresh/empty/error/pending/success states, and layout at 320, 360, 390, 430, 768, 1280
+and 1440 CSS pixels. Use synthetic records only. Playwright must run against local Vite with
+mocked API responses; never point write tests at production or a live database/provider.
+
+Review order
+------------
+01. Home: / — startup into the landing page, hero, navigation, categories, featured/new products,
+    product cards, add-to-cart feedback and newsletter validation/confirmation states.
+02. Products: /products — search, filters, sorting, server paging/loading, product availability,
+    mobile filter drawer, cards and query state in the URL.
+03. Product details: /product/:id — media gallery, options/stock, price, reviews, cart controls,
+    private review actions and unavailable/error states.
+04. Support: /support, /support-requests — guest help, ticket create/list/detail, validation,
+    attachments, replies, privacy and ownership.
+05. Login: /login — shared sign-in behavior, safe return path, rate-limit/error handling and roles.
+06. Signup: /signup — email/mobile choices, bounded inputs, consent, verification and duplicate guard.
+07. Forgot password: /forgot-password — neutral response, abuse limits, retained email and errors.
+08. Reset password: /reset-password — valid/expired/reused token, confirmation, session revocation.
+09. Email verification: /verify-email — guest/signed-in state, one-time tokens and resend ownership.
+10. Profile: /profile — personal data, phone change, addresses, defaults, order-linked protections.
+11. Cart: /cart — guest/auth boundaries, optimistic updates, duplicate guards, rollback and empty state.
+12. Checkout/payment: /checkout — address, quote, coupon, validation, pending/declined/captured outcomes.
+13. Orders: /orders, /orders/:id, /orders/shipments — customer ownership, payment truth, delivery,
+    tracking, cancellation/return eligibility and status wording.
+14. Order tracking: /track-order — public tracking number validation and minimal disclosure.
+15. Shops: /shops, /shops/:slug — approved public content only, no private seller contact/tax data.
+16. Seller application: /seller — account-owned shop application, GST declaration and admin review.
+17. Seller catalog: /seller/products — shop-scoped drafts/media, moderation and fee-offer acceptance.
+18. Seller fulfillment: /seller/orders — active-membership reads, scoped updates and attachments.
+19. Admin workspace: /admin — review every tab listed below for authorization, server-side filtering,
+    validation, mutation guards, errors, accessibility and mobile usability.
+20. Admin support: /admin/support — private inbox, ticket ownership, replies and attachments.
+21. Admin fulfillment: /admin/fulfillment — shipment/return/inspection permissions and audit trail.
+22. Admin sellers: /admin/sellers — private application/GST review, version conflicts and decisions.
+23. Admin seller products: /admin/seller-products — content moderation and exact offer versioning.
+24. Policies: /privacy, /returns, /refund-policy, /terms, /terms-and-conditions, /shipping,
+    /cancellation, /cookies — published content only and correct links/locale.
+25. Help/tour: route-tour overlays — explicit start/exit, keyboard and reduced motion. A standalone
+    /help page is referenced by historical documentation but is not registered in src/router.tsx;
+    record this as a missing route and decide whether it remains in scope before calling routes complete.
+26. Recovery/fallback: /wishlist redirect, /debug-error (development only), invalid IDs,
+    unknown public paths and unknown /admin/* paths.
+
+Admin tabs (component states under /admin)
+------------------------------------------
+Overview, Products, Orders, Payments, Returns, Customers, Messages, Analytics, Settings,
+Feedback, Policies, Coupons, Shipments and Notifications.
+
+Navigation and identity policy to validate
+------------------------------------------
+Guest: Home, Products, Shops, Sell with us, Support, search, Cart and Sign in. Hide private
+Orders, Profile and Admin destinations. Seller entry is a public application entry, not seller data.
+Signed-in customer: public links plus Orders, Profile and Seller workspace; the seller workspace
+entry is visible to all signed-in users and is an apply/manage destination. Admin: the server-
+assigned ADMIN role adds Admin; never infer it from email/name. Admin also sees Orders, Profile
+and Seller workspace because the current shared layout gates those links on authentication.
+Seller actions/data still require current server-verified shop membership and status. Staff: there
+is currently no staff role/permission model; do not show staff links or create a staff login until
+scoped permissions are designed and enforced server-side.
+Use one credential/sign-in flow with role-aware redirect/navigation. Separate login pages would
+not provide security and risk inconsistent authentication. Direct-route and API authorization
+must be tested independently of navbar visibility.
+
+Automation status
+-----------------
+Playwright config and the first Home-only spec live in playwright.config.ts and e2e/home.spec.ts.
+The spec uses local synthetic fixtures, blocks external network access, exercises responsive
+overflow and browser-native newsletter validation, and does not submit writes. Add route/state
+coverage during each page batch. Do not claim untested pages or real devices are verified.
+
+Windows run sequence (Node 22 required by the repository)
+----------------------------------------------------------
+Set PLAYWRIGHT_BROWSERS_PATH to .playwright-browsers in PowerShell, then run
+`npx playwright install chromium` once. In one terminal run `npm run dev`. In another terminal,
+set the same PLAYWRIGHT_BROWSERS_PATH and run `npm run test:e2e:home`. Keep the local dev server
+running until the test process exits; the configuration intentionally does not own server startup
+because Windows child-process cleanup stalled here. API calls are mocked by the test and the runner
+rejects non-loopback base URLs; never use production/customer credentials.

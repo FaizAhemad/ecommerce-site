@@ -1,5 +1,21 @@
 # Page and route inventory
 
+## Startup loader mobile review - 2026-10-03
+
+The app bootstrap screen is rendered before SiteLayout. Its narrow-screen scene previously kept a fixed 230px height and hid the fourth art tile; the mobile rules now scale with viewport height, retain four balanced tiles, compact further for short phone viewports, and include safe-area padding. This is a source-level correction based on the reported mobile issue; no rendered screenshot/device check was possible under the current no-local-service/browser validation restriction. Reduced-motion rules remain in place. See PROJECT_STATUS.md; UI-09/RB-02 acceptance remains pending.
+
+## Home page UI/UX review - 2026-10-03
+
+Home renders a MUI hero, category links, two shared `ProductGrid`/`ProductCard` product sections, a story panel and the shared newsletter form inside the shared site shell. Existing 1440px/390px Chromium snapshots show no visible horizontal overflow at those widths; the e2e overflow assertion also covers 320, 360, 430, 768, 1280 and 1440px. Snapshot catalog data is synthetic and repetitive, so it cannot validate live merchandising or image diversity. Source review corrected unsupported popularity/recency copy and added an explicit empty-catalog state. The Home E2E suite has an empty-catalog assertion, not yet run. Still pending: owner review, browser test/build under the deferred-check policy, missing/failed image behavior, keyboard and screen-reader semantics, enlarged text/zoom, newsletter loading/duplicate/saved-but-email-failed/success states, and real Android/iOS checks. The shared SiteLayout/header/footer/social links remain legacy consumers; track their conversion under UI-01/RB-02 rather than treating Home's page-local MUI work as full-shell migration. Evidence and limits: PROJECT_STATUS.md.
+
+## Page review and Playwright start - 2026-10-03
+
+2026-10-03 SPA navigation fix: shared seller/admin marketplace navigation buttons now invoke the router's `pushState` navigation handler; fulfillment cross-links do the same. Playwright verifies the document remains mounted across seller routes, admin section tabs and admin tool routes. Ten Home suite checks and the offline build pass; production and real-device acceptance remain pending.
+
+2026-10-03 responsive baseline snapshots: Playwright captures the page route inventory and all 14 admin sections full-page at 1440px desktop and 390px phone widths (106 images across 53 states). Synthetic-only data means unmocked private APIs may show loading/error/empty states. `/help` is included as a missing-route check. Home phone/desktop screenshots were inspected: the hero, category cards, product cards, subscription form and footer fit without horizontal overflow; admin phone layout stacks its content and uses a swipeable shared navbar. Continue per-page screenshot review and record any owner-requested visual changes.
+
+The requested ordered route review and navbar visibility matrix are listed in [PAGE_REVIEW_PLAN.txt](PAGE_REVIEW_PLAN.txt); APPLICATION_BACKLOG.md remains the only completion checklist. Playwright Test/Chromium is added for local-only browser checks. The Home batch has eleven passing Chromium checks using synthetic API routes, including role-aware navigation, direct-admin denial, guest cart/newsletter protections, responsive overflow and SPA navigation through seller links, admin section tabs and admin tool routes. This is not evidence of production, WebKit/Safari, keyboard/screen-reader, manual screenshot, or real-device acceptance. The standalone `/help` page mentioned by older notes is not currently registered in `src/router.tsx`; its scope is called out as a gap in the plan.
+
 ## WhatsApp local intake utility - 2026-09-30
 
 tools/whatsapp-intake is a separate Windows command-line service with generated Products/Needs review/Messages workbook sheets. No website route, admin tab, Vercel dispatcher, CSRF exception or live Product write was added. Provider/setup and Excel visual acceptance remain pending; future review/correction UI remains unimplemented.
