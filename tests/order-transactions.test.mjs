@@ -15,7 +15,7 @@ const orderTransactionsSource = readFileSync(
 const orderTransactionsModule = ts.transpileModule(orderTransactionsSource, {
   compilerOptions: { module: ts.ModuleKind.ESNext },
 }).outputText.replace(
-  "'./seller-fees.ts'",
+  "'./seller-fees.js'",
   JSON.stringify(new URL('../server/api/_lib/seller-fees.ts', import.meta.url).href),
 )
 const orderTransactionsUrl = `data:text/javascript;base64,${Buffer.from(orderTransactionsModule).toString('base64')}`

@@ -1,4 +1,4 @@
-import { UUID_V4_PATTERN } from './validation-patterns.ts'
+import { UUID_V4_PATTERN } from './validation-patterns.js'
 
 export type SellerDraft = {
   id: string; shopId: string; shopName: string; name: string; description: string; category: string;

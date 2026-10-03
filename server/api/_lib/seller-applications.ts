@@ -1,5 +1,5 @@
 import type { PrismaClient } from '@prisma/client'
-import { GST_ENROLMENT_ID_PATTERN, GSTIN_FORMAT_PATTERN, PHONE_PATTERN, UUID_V4_PATTERN } from './validation-patterns.ts'
+import { GST_ENROLMENT_ID_PATTERN, GSTIN_FORMAT_PATTERN, PHONE_PATTERN, UUID_V4_PATTERN } from './validation-patterns.js'
 
 export type SellerApplication = {
   id: string; userId: string; name: string; city: string; address: string; phone: string; description: string;
