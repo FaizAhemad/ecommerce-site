@@ -1,4 +1,4 @@
-import {
+﻿import {
   privateKey,
   sessionUser,
   sessionGeneration,
@@ -19,6 +19,10 @@ import { queryClient } from '../api/queryClient'
 import { useProductMetadata } from '../api/productMetadata'
 import { getCartPendingAction, updateCart, useCart } from '../api/cart'
 import { productAvailability } from '../components/productAvailability'
+import { ProductGrid } from '../components/ProductGrid'
+import { Box } from '../components/mui/Box'
+import { Stack } from '../components/mui/Stack'
+import { Typography } from '../components/mui/Typography'
 
 type ReviewMedia = { id: string; url: string }
 
@@ -72,9 +76,10 @@ type Props = {
   productId: string
   onAdd: (productId: string) => Promise<void>
   onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void
+  onOpenProduct: (id: string) => void
 }
 
-export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: Props) {
+export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, onOpenProduct }: Props) {
   const cartQuery = useCart()
   const catalogProduct = storefront.products.find((item) => item.id === productId)
   const productQuery = useQuery({
@@ -262,6 +267,9 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
     currency: storefront.localization.currency,
     maximumFractionDigits: 0,
   })
+  const relatedProducts = storefront.products
+    .filter((item) => item.id !== product.id && item.category === product.category)
+    .slice(0, 4)
   const submitReview = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (reviewSavingRef.current || !reviewComment.trim()) return
@@ -365,9 +373,22 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
   }
 
   return (
-    <>
-      <section className="mx-auto grid w-full max-w-[90rem] grid-cols-1 items-start gap-8 px-4 py-8 md:grid-cols-2 md:gap-12 md:px-8 md:py-12 lg:gap-16">
-        <div className="detail-gallery min-w-0 w-full">
+    <Box component="div" sx={{ width: '100%' }}>
+      <Box
+        component="section"
+        aria-labelledby="product-title"
+        sx={{
+          display: 'grid',
+          width: '100%',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) minmax(0, .92fr)' },
+          alignItems: 'center',
+          gap: { xs: 3, md: 5, lg: 7 },
+          px: { xs: 2, sm: 3, md: 4 },
+          pt: { xs: 3, md: 5 },
+          pb: { xs: 4, md: 6 },
+        }}
+      >
+        <Box className="detail-gallery" sx={{ minWidth: 0, width: '100%', maxWidth: { md: 560 }, justifySelf: 'center' }}>
           <div className="detail-art relative aspect-square overflow-hidden rounded-2xl bg-[var(--surface)] shadow-sm">
             <div className="detail-media-viewport relative h-full w-full overflow-hidden">
               {selectedVideo ? (
@@ -440,7 +461,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               )}
               {selectedImage && !failedImageIds.has(selectedImage.id) && (
                 <span className="pointer-events-none absolute bottom-4 right-4 rounded-full bg-[var(--surface)]/90 px-3 py-1.5 text-xs font-medium text-[var(--ink)] shadow-sm">
-                  <span className="hidden md:inline">Hover to zoom · Click to view</span>
+                  <span className="hidden md:inline">Hover to zoom Â· Click to view</span>
                   <span className="md:hidden">Tap to enlarge</span>
                 </span>
               )}
@@ -502,62 +523,40 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
           {product.media.images.length === 0 && product.media.videos.length === 0 && (
             <p className="mt-3 text-sm text-[var(--muted)]">{storefront.content.detail.noMediaLabel}</p>
           )}
-        </div>
-        <div className="detail-copy flex w-full max-w-2xl flex-col items-start gap-5 self-center">
-          <p className="eyebrow mb-0">{product.category}</p>
-          <h1 className="mb-0 text-4xl leading-tight text-[var(--ink)] md:text-5xl">{product.name}</h1>
-          <div
-            className="flex items-center gap-2 text-sm text-[var(--muted)]"
-            aria-label={
-              product.reviewCount > 0
-                ? `${product.rating.toFixed(1)} out of 5 from ${product.reviewCount} reviews`
-                : '0 reviews'
-            }
-          >
-            {product.reviewCount > 0 ? (
-              <>
-                <RatingStars rating={product.rating} size="medium" />
-                <strong className="font-semibold text-[var(--ink)]">{(product.rating || 0).toFixed(1)}</strong>
-                <span>({product.reviewCount} reviews)</span>
-              </>
-            ) : (
-              <span>0 reviews</span>
-            )}
-          </div>
-          {typeof product.stock === 'number' && (
-            <Chip
-              {...(product.stock <= 0
-                ? productAvailability(product.stock)
-                : product.purchase?.available === false && product.seller && !product.seller.isPlatform
-                  ? { label: 'Offer pending', color: 'warning' as const }
-                  : productAvailability(product.stock))}
-              size="small"
-              sx={{ height: 26, fontWeight: 650 }}
-            />
-          )}
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <p className="detail-price mb-0 text-3xl font-bold text-[var(--ink)]">{currency.format(product.price)}</p>
-            {product.compareAtPriceMinor != null && product.priceMinor != null && product.compareAtPriceMinor > product.priceMinor && (
-              <>
-                <span className="text-base text-[var(--muted)] line-through">
-                  {currency.format(product.compareAtPriceMinor / 100)}
-                </span>
-                <Chip
-                  label={`${Math.round(((product.compareAtPriceMinor - product.priceMinor) / product.compareAtPriceMinor) * 100)}% off`}
-                  size="small"
-                  color="success"
-                  sx={{ height: 24, fontSize: 12 }}
-                />
-              </>
-            )}
-          </div>
-          <p className="detail-description mb-0 max-w-xl text-base leading-relaxed text-[var(--muted)]">
-            {product.description || storefront.identity.tagline}
-          </p>
+        </Box>
+        <Stack className="detail-copy" spacing={{ xs: 2.5, md: 3 }} sx={{ width: '100%', maxWidth: 620, alignItems: 'flex-start', justifySelf: 'center' }}>
+          <Typography component="p" variant="overline" color="success.main" sx={{ m: 0, fontWeight: 700, letterSpacing: '.12em' }}>{product.category}</Typography>
+          <Typography component="h1" id="product-title" sx={{ m: 0, fontSize: 'clamp(2rem, 4.2vw, 3.75rem)', fontWeight: 500, lineHeight: 1.06, letterSpacing: '-.045em', overflowWrap: 'anywhere' }}>{product.name}</Typography>
+          <Stack component="div" role="group" direction="row" spacing={1} sx={{ minHeight: 40, alignItems: 'center', flexWrap: 'wrap' }} aria-label={product.reviewCount > 0 ? `${product.rating.toFixed(1)} out of 5 from ${product.reviewCount} reviews` : 'No reviews yet'}>
+            {product.reviewCount > 0 ? <>
+              <RatingStars rating={product.rating} size="medium" />
+              <Typography component="strong" sx={{ color: 'text.primary', fontWeight: 700 }}>{product.rating.toFixed(1)}</Typography>
+            </> : <Typography variant="body2" color="text.secondary">No reviews yet</Typography>}
+            <Button variant="text" href="#product-reviews" onClick={(event) => { event.preventDefault(); document.getElementById('product-reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }} sx={{ minHeight: 40, px: 0.5, fontSize: 13 }}>{product.reviewCount > 0 ? `Read ${product.reviewCount} reviews` : 'Be the first to review'}</Button>
+          </Stack>
+          <Box sx={{ width: '100%', p: { xs: 2, sm: 2.5 }, border: '1px solid', borderColor: 'divider', borderRadius: 2, bgcolor: 'background.paper' }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}>
+              <Stack spacing={0.75}>
+                <Typography component="span" variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>Price</Typography>
+                <Stack direction="row" spacing={1.25} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'baseline' }}>
+                  <Typography component="strong" sx={{ color: 'text.primary', fontSize: { xs: 26, md: 30 }, fontWeight: 800, lineHeight: 1.1 }}>{currency.format(product.price)}</Typography>
+                  {product.compareAtPriceMinor != null && product.priceMinor != null && product.compareAtPriceMinor > product.priceMinor && <>
+                    <Typography component="del" color="text.secondary" sx={{ fontSize: 15 }}>{currency.format(product.compareAtPriceMinor / 100)}</Typography>
+                    <Chip label={`${Math.round(((product.compareAtPriceMinor - product.priceMinor) / product.compareAtPriceMinor) * 100)}% off`} size="small" color="success" />
+                  </>}
+                </Stack>
+              </Stack>
+              {typeof product.stock === 'number' && <Chip {...(product.stock <= 0 ? productAvailability(product.stock) : product.purchase?.available === false && product.seller && !product.seller.isPlatform ? { label: 'Offer pending', color: 'warning' as const } : productAvailability(product.stock))} size="small" sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, height: 26, fontWeight: 650 }} />}
+            </Stack>
+          </Box>
+          {product.description?.trim() && <Stack spacing={0.75}>
+            <Typography component="h2" variant="subtitle2" sx={{ fontWeight: 750 }}>About this product</Typography>
+            <Typography component="p" sx={{ m: 0, maxWidth: 600, color: 'text.secondary', fontSize: { xs: 15, md: 16 }, lineHeight: 1.65, whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>{product.description.trim()}</Typography>
+          </Stack>}
           {product.colors && product.colors.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <p className="mb-0 text-sm font-semibold text-[var(--ink)]">Available colors</p>
-              <div className="detail-color-list flex flex-wrap items-center gap-3">
+            <Stack spacing={1.5}>
+              <Typography component="h2" variant="subtitle2" sx={{ fontWeight: 750 }}>Available colors</Typography>
+              <Stack direction="row" spacing={1.5} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
                 {product.colors.map((color) => (
                   <span
                     className="size-6 shrink-0 rounded-full border-2 border-[var(--surface)] outline outline-1 outline-[var(--line)]"
@@ -567,8 +566,8 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                     key={color}
                   />
                 ))}
-              </div>
-            </div>
+              </Stack>
+            </Stack>
           )}
           <AddToCartButton
             unavailableReason={typeof product.stock === 'number' && product.stock <= 0 ? 'Out of stock' : product.purchase?.available === false ? product.purchase.reason ?? 'Currently unavailable' : undefined}
@@ -592,9 +591,9 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             sx={{ width: 'fit-content', minWidth: 196, maxWidth: '100%' }}
             quantityControlSx={{ width: 220, maxWidth: '100%' }}
           />
-        </div>
-      </section>
-      <section className="mx-auto w-full max-w-[90rem] border-t border-[var(--line)] px-4 py-10 md:px-8 md:py-14">
+        </Stack>
+      </Box>
+      <section className="mx-auto w-full max-w-[90rem] border-t border-[var(--line)] px-4 py-10 md:px-8 md:py-14" id="product-reviews">
         <div className="mb-8 flex flex-col gap-2">
           <p className="eyebrow mb-0">Customer feedback</p>
           <h2 className="mb-0 text-3xl text-[var(--ink)] md:text-4xl">Product ratings &amp; reviews</h2>
@@ -614,12 +613,12 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
           </div>
           <div className="grid content-center gap-3" aria-label="Review rating distribution">
             {reviewsQuery.isLoading ? (
-              <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading rating breakdown…</p>
+              <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading rating breakdownâ€¦</p>
             ) : reviewsQuery.isError ? (
               <p className="m-0 text-sm text-[var(--muted)]">Rating breakdown unavailable.</p>
             ) : distribution.map(({ rating, count }) => (
               <div className="grid grid-cols-[4.5rem_1fr_2rem] items-center gap-3 text-sm text-[var(--muted)]" key={rating}>
-                <span>{rating} ★</span>
+                <span>{rating} â˜…</span>
                 <div className="h-2 overflow-hidden rounded-full bg-[var(--line)]" aria-hidden="true">
                   <i className="block h-full rounded-full bg-[var(--yellow)]" style={{ width: `${count ? Math.max((count / total) * 100, 8) : 0}%` }} />
                 </div>
@@ -637,7 +636,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               </Button>
             )}
           </div>
-          {reviewsQuery.isLoading && <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading reviews…</p>}
+          {reviewsQuery.isLoading && <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading reviewsâ€¦</p>}
           {reviewsQuery.isError && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4" role="alert">
               <p className="m-0 text-sm text-[var(--muted)]">Reviews could not be loaded.</p>
@@ -651,7 +650,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               <div className="flex flex-wrap items-center gap-3">
                 <RatingStars rating={review.rating} label={`${review.rating} out of 5 stars`} />
                 <span className="text-sm text-[var(--muted)]">
-                  {review.author} · {review.date}
+                  {review.author} Â· {review.date}
                 </span>
               </div>
               <p className="mb-0 mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed text-[var(--ink)]">{review.text}</p>
@@ -702,7 +701,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               onClick={() => setShowAll(false)}
               aria-label="Close reviews"
             >
-              ×
+              Ã—
             </Button>
             <h2 className="mb-5 text-3xl text-[var(--ink)]" id="all-reviews-title">All reviews</h2>
             {reviews.slice(0, limit).map((review) => (
@@ -710,7 +709,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                 <div className="flex flex-wrap items-center gap-3">
                   <RatingStars rating={review.rating} label={`${review.rating} out of 5 stars`} />
                   <span className="text-sm text-[var(--muted)]">
-                    {review.author} · {review.date}
+                    {review.author} Â· {review.date}
                   </span>
                 </div>
                 <p className="mb-0 mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed text-[var(--ink)]">{review.text}</p>
@@ -747,7 +746,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
         </div>
       )}
       <section className="mx-auto w-full max-w-[90rem] scroll-mt-28 border-t border-[var(--line)] px-4 py-10 md:px-8 md:py-14" id="review-form">
-        <div className="mx-auto max-w-3xl">
+        <div className="w-full">
         <p className="eyebrow mb-2">{storefront.content.collection.reviewsLabel}</p>
         <h2 className="mb-3 text-3xl text-[var(--ink)] md:text-4xl">{storefront.content.reviews.title}</h2>
         <p className="mb-6 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">Tell other shoppers what stood out. Your review helps people choose with confidence.</p>
@@ -778,7 +777,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               type="file"
               label="Photos or video"
               helperText="Up to 4 files, 1 MB each."
-              slotProps={{ htmlInput: { accept: 'image/jpeg,image/png,image/webp,video/mp4,video/webm', multiple: true } }}
+              slotProps={{ inputLabel: { shrink: true }, htmlInput: { accept: 'image/jpeg,image/png,image/webp,video/mp4,video/webm', multiple: true } }}
               disabled={reviewSaving}
               onChange={(event) => {
                 const input = event.target as HTMLInputElement
@@ -807,8 +806,8 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
           >
             {reviewSaving
               ? editingReviewId
-                ? 'Updating…'
-                : 'Saving…'
+                ? 'Updatingâ€¦'
+                : 'Savingâ€¦'
               : editingReviewId
                 ? 'Update review'
                 : storefront.content.reviews.submitLabel}
@@ -824,6 +823,24 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
         )}
         </div>
       </section>
+      {relatedProducts.length > 0 && (
+        <Box component="section" aria-labelledby="related-products-title" sx={{ width: '100%', borderTop: '1px solid', borderColor: 'divider', px: { xs: 2, sm: 3, md: 4 }, py: { xs: 4, md: 6 } }}>
+          <Stack spacing={0.75} sx={{ mb: 3 }}>
+            <Typography component="p" variant="overline" color="success.main" sx={{ m: 0, fontWeight: 700, letterSpacing: '.12em' }}>More to explore</Typography>
+            <Typography component="h2" id="related-products-title" sx={{ m: 0, fontSize: 'clamp(1.6rem, 3vw, 2.25rem)', fontWeight: 500, letterSpacing: '-.035em' }}>More from {product.category}</Typography>
+            <Typography color="text.secondary" variant="body2">A few more products from this category.</Typography>
+          </Stack>
+          <ProductGrid
+            products={relatedProducts}
+            currency={currency}
+            addToCartLabel={storefront.content.collection.addToCartLabel}
+            ratingLabel={storefront.content.collection.ratingLabel}
+            reviewsLabel={storefront.content.collection.reviewsLabel}
+            onAdd={onAdd}
+            onOpenProduct={onOpenProduct}
+          />
+        </Box>
+      )}
       {lightboxIndex !== null && availableMediaItems[lightboxIndex] && (
         <div
           className="media-lightbox"
@@ -841,7 +858,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             onClick={() => setLightboxIndex(null)}
             aria-label="Close media preview"
           >
-            ×
+            Ã—
           </Button>
           <Button
             variant="outlined"
@@ -852,7 +869,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             }
             aria-label="Previous media"
           >
-            ‹
+            â€¹
           </Button>
           <div className="media-lightbox-content">
             {availableMediaItems[lightboxIndex].type === 'video' ? (
@@ -881,10 +898,10 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             onClick={() => setLightboxIndex((lightboxIndex + 1) % availableMediaItems.length)}
             aria-label="Next media"
           >
-            ›
+            â€º
           </Button>
         </div>
       )}
-    </>
+    </Box>
   )
 }

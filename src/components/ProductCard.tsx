@@ -65,6 +65,7 @@ export function ProductCard({
   }
 
   const primaryImage = product.media.images.find((image) => image.isPrimary)
+  const shortDescription = product.description?.trim()
   const displayColors = product.colors?.filter(
     (color) => color.trim() && color.trim().toLowerCase() !== 'default',
   ) ?? []
@@ -171,7 +172,27 @@ export function ProductCard({
             <Heart aria-hidden="true" size={17} fill={wishlisted ? 'currentColor' : 'none'} />
           </IconButton>
         </Stack>
-        <Stack direction="row" spacing={1} sx={{ minHeight: 44, alignItems: 'center', mt: 0.25 }}>
+        {shortDescription && (
+          <Typography
+            component="p"
+            title={shortDescription}
+            sx={{
+              display: '-webkit-box',
+              m: 0,
+              minHeight: 34,
+              overflow: 'hidden',
+              color: 'text.secondary',
+              fontSize: 12,
+              lineHeight: 1.45,
+              overflowWrap: 'anywhere',
+              WebkitBoxOrient: 'vertical',
+              WebkitLineClamp: 2,
+            }}
+          >
+            {shortDescription}
+          </Typography>
+        )}
+        <Stack direction="row" spacing={1} sx={{ minHeight: 44, alignItems: 'center', justifyContent: 'space-between', mt: 0.25 }}>
           <Box sx={{ display: 'grid', minWidth: 0, flex: 1, alignContent: 'center', gap: 0.5 }}>
             <Typography component="strong" sx={{ color: 'text.primary', fontSize: 'clamp(18px,1.35vw,21px)', fontWeight: 800, lineHeight: 1.15, letterSpacing: '-.025em', overflowWrap: 'anywhere' }}>
               {currency.format(product.price)}
@@ -190,10 +211,10 @@ export function ProductCard({
               </Stack>
             )}
           </Box>
+          {typeof product.stock === 'number' && (
+            <Chip {...(product.stock <= 0 ? productAvailability(product.stock) : product.purchase?.available === false && product.seller && !product.seller.isPlatform ? { label: 'Offer pending', color: 'warning' as const } : productAvailability(product.stock))} size="small" sx={{ flexShrink: 0, height: 23, fontSize: 10, fontWeight: 650 }} />
+          )}
         </Stack>
-        {typeof product.stock === 'number' && (
-          <Chip {...(product.stock <= 0 ? productAvailability(product.stock) : product.purchase?.available === false && product.seller && !product.seller.isPlatform ? { label: 'Offer pending', color: 'warning' as const } : productAvailability(product.stock))} size="small" sx={{ alignSelf: 'flex-start', height: 23, fontSize: 10, fontWeight: 650 }} />
-        )}
         <Box
           aria-label={product.reviewCount > 0 ? `${ratingLabel}: ${product.rating}, ${product.reviewCount} ${reviewsLabel}` : 'No reviews yet'}
           sx={{ display: 'flex', width: 'fit-content', maxWidth: '100%', minHeight: 28, alignItems: 'center', gap: 0.75, borderRadius: 999, px: 1, py: 0.5, backgroundColor: 'rgba(215,225,208,.42)', fontSize: 10, lineHeight: 1.2 }}

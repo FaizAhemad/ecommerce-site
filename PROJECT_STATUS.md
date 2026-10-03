@@ -1,5 +1,9 @@
 # Project status
 
+2026-10-03 ProductCard price/status density: moved availability/offer status onto the selling-price row and kept compare-at price plus discount together beneath it, saving a separate vertical row while preserving stock/offer logic. `npm run build:offline` and the focused product-availability test pass; phone-width rendered review remains pending.
+
+2026-10-03 product-card content density: shared ProductCard now shows a two-line excerpt from the approved product description below the name. `/api/products` exposes only a 240-character description excerpt for public, already-published catalog entries; React renders it as text. Added a mocked Home regression assertion. `npm run build:offline` passes; mocked browser test and phone/tablet visual acceptance pending.
+
 2026-10-03 social icon contrast correction: set white explicitly on the social SVG stroke/color and force the shared MUI icon-button foreground to white over platform colors. Added a Home Playwright assertion for the SVG foreground; `npm run build:offline` passes. Browser rendering and device acceptance remain pending.
 
 2026-10-03 Home featured collections: reused the shared MUI PromoCarousel between category discovery and product picks, added a direct collection CTA, corrected its accessible region label, and sized its mobile content/slide selectors for responsive text and 44px touch targets. Added a mocked Playwright regression for manual slide selection and CTA navigation; browser test not run. `npm run build:offline` passes. Rendered phone/tablet/desktop, reduced-motion, image-failure and assistive-tech acceptance remain pending.
@@ -864,3 +868,9 @@ Help/tour automation source update (2026-10-03): two mocked Playwright cases now
 2026-10-03 header cart badge fix: the generic `.cart-button > span:last-child` selector was styling MUI Button's appended touch-ripple span as a second badge. Replaced it with the unique `.header-cart-count` target, removed the broad cart span rule and added a single-badge assertion to the guest navigation test. Offline build passes; browser screenshot verification remains blocked by missing Playwright Chromium.
 
 2026-10-03 shared route loader: replaced the route Suspense spinner with `BrandedPageLoader`, a responsive MUI backdrop with the existing Gadgify G mark, brand palette, accessible live status, reduced-motion handling and consistent content height while keeping the site shell visible. Admin redirect uses the same treatment. Added a Storybook story and component assertion. Offline build passes; component test and browser/device visual acceptance remain pending under the current test/browser constraints.
+
+2026-10-03 Product Details content pass: PDP summary now reflects approved catalog facts (rating/review count, sale/original price and discount, availability, colors and actual description), with no generic tagline substituted for missing product copy. Tightened nested page spacing and added same-category recommendations using shared product cards. Added a mocked Playwright test with phone/desktop screenshot capture and related-product navigation assertions; test is authored but not run. `npm run build:offline` passes; browser/device acceptance remains pending.
+
+2026-10-03 Product Details review form width: removed the extra 3xl inner cap so the review heading and form use the same content width as the ratings/latest-reviews sections. `npm run build:offline` passes; rendered desktop/mobile alignment remains pending.
+
+2026-10-03 Product Details upload label: forced the MUI floating label to shrink for the native file input, preventing “Photos or video” from overlapping the browser's file-picker text. Offline build passes; rendered browser check remains pending.

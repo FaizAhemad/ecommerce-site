@@ -242,6 +242,7 @@ function RouteContent({
             productId={safeRouteId(normalizedPath.slice('/product/'.length))!}
             onAdd={onAdd}
             onNavigate={navigate}
+            onOpenProduct={(id) => navigateTo(`/product/${id}`)}
           />
         )
       if (normalizedPath !== '/') return <NotFoundPage />

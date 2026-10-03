@@ -6,6 +6,7 @@ const productSeeds = [
   {
     id: 'e2e-home-product-1',
     name: 'Sample everyday organizer',
+    description: 'A compact organizer for keeping everyday kitchen essentials close at hand.',
     category: 'Home & Kitchen',
     price: 245,
     priceMinor: 24500,
@@ -123,6 +124,7 @@ test.describe('Home page', () => {
     await expect(primaryNav.getByRole('link', { name: 'Shops' })).toHaveCount(0)
     for (const label of ['Orders', 'Profile', 'Admin']) await expect(primaryNav.getByRole('link', { name: label })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Shop by category' })).toBeVisible()
+    await expect(page.getByText('A compact organizer for keeping everyday kitchen essentials close at hand.')).toBeVisible()
     const socialNav = page.getByRole('navigation', { name: 'Social media links' })
     await expect(socialNav.locator('svg')).toHaveAttribute('stroke', '#FFFFFF')
     await expect(socialNav.locator('svg')).toHaveAttribute('color', '#FFFFFF')

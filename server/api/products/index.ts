@@ -22,6 +22,7 @@ function toProduct(
     seller: publicSeller(product.shopOwnership),
     purchase: purchaseEligibility(product.shopOwnership),
     name: product.name,
+    description: product.description?.slice(0, 240) ?? null,
     category: product.category,
     priceMinor: product.priceMinor,
     compareAtPriceMinor: product.compareAtPriceMinor,

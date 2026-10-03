@@ -390,3 +390,13 @@ UI-01 shared-footer progress (2026-10-03): SiteLayout now renders one responsive
 RB-04 Home merchandising update (2026-10-03): Home now reuses the MUI featured-collections carousel between categories and product picks, with manual slide controls and a catalog CTA; 44px slide controls support touch use. A mocked Playwright test covers switching slides and CTA navigation. Offline build passes; browser/device and owner visual acceptance remain pending. See PAGE_INVENTORY.md and PROJECT_STATUS.md.
 
 UI-01 social icon contrast follow-up (2026-10-03): set social SVG strokes/colors explicitly to white and override MUI icon-button foreground styling; added a Home Playwright contrast assertion. Offline build passes; rendered/browser confirmation remains pending.
+
+RB-04 ProductCard density update (2026-10-03): shared MUI ProductCard now shows up to two lines from the approved product description below the title. The public product DTO caps the excerpt at 240 characters; React renders it as text. Added a mocked Home regression assertion. Offline build and phone/tablet/browser acceptance pending.
+RB-04 ProductCard build checkpoint (2026-10-03): npm run build:offline passed after adding the bounded product-description excerpt. E2E test discovery passes and lists the new regression, but the browser test has not been executed; device/owner visual review remains pending.
+RB-04 ProductCard price/status checkpoint (2026-10-03): selling price and stock/offer chip now share one compact row, with compare-at price and discount paired beneath it. Existing availability thresholds remain unchanged. The offline build passes and product-availability tests pass 3/3; rendered phone/desktop confirmation remains pending.
+
+RB-04 Product Details content update (2026-10-03): detail summary now mirrors card/catalog rating, pricing, discount, availability and color facts, displays actual approved product copy without a generic fallback, and offers same-category products through shared ProductGrid/ProductCard. Mocked Playwright coverage includes mobile/desktop screenshot capture and recommendation navigation. Offline build passes; browser/device review remains pending.
+
+UI-06 Product Details review width (2026-10-03): expanded the final review-form section to align with the ratings/latest-reviews content width by removing its nested max-width cap. Offline build passes; rendered responsive confirmation remains pending.
+
+UI-06 Product Details media field fix (2026-10-03): the MUI file-upload label now stays floated above the native picker, avoiding overlapping label/button text. Offline build passes; browser rendering remains pending.
