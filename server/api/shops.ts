@@ -1,4 +1,5 @@
 import { db } from './_lib/db.js'
+import { requireUser } from './_lib/auth.js'
 import { validateMediaUpload } from './_lib/media.js'
 import { sellerProductId } from './_lib/marketplace-purchases.js'
 import { validId, mediaKey, type SellerDraft } from './_lib/seller-catalog.js'
@@ -7,6 +8,29 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const id = requestId(request)
   response.setHeader?.('Cache-Control', 'private, no-store, max-age=0')
   if (request.method !== 'GET') return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET.', id)
+  const publicProductMedia = request.query?.raw === '1'
+    && typeof request.query?.slug === 'string'
+    && typeof request.query?.productId === 'string'
+    && typeof request.query?.mediaId === 'string'
+  if (!publicProductMedia) {
+    const user = await requireUser(request, response)
+    if (!user) return
+    if (user.role !== 'ADMIN') {
+      try {
+        const access = await db.$queryRaw<{ allowed: boolean }[]>`
+          SELECT EXISTS (
+            SELECT 1 FROM "Shop" s
+            JOIN "ShopMembership" m ON m."shopId" = s."id"
+            WHERE m."userId" = ${user.id} AND m."status" = 'ACTIVE'
+              AND s."status" = 'APPROVED' AND s."isPlatform" = FALSE
+          ) AS "allowed"
+        `
+        if (access[0]?.allowed !== true) return sendError(response, 403, 'FORBIDDEN', 'Approved seller access is required to browse shops.', id)
+      } catch {
+        return sendError(response, 503, 'SHOPS_UNAVAILABLE', 'Shops are temporarily unavailable.', id)
+      }
+    }
+  }
   const page = request.query?.page ?? '0', slug = request.query?.slug
   if (typeof page !== 'string' || !/^\d{1,5}$/.test(page) || (slug !== undefined && (typeof slug !== 'string' || !/^[a-z0-9-]{1,100}$/.test(slug))))
     return sendError(response, 400, 'VALIDATION_ERROR', 'Invalid shop request.', id)

@@ -9,6 +9,11 @@ import { OrderTimeline } from '../components/OrderTimeline'
 import { OrderTotals } from '../components/OrderTotals'
 import { PurchaseFeedback } from '../components/PurchaseFeedback'
 import { CustomerReturns } from '../components/CustomerReturns'
+import { Alert } from '../components/mui/Alert'
+import { Button } from '../components/mui/Button'
+import { Chip } from '../components/mui/Chip'
+import { CircularProgress } from '../components/mui/CircularProgress'
+import { Skeleton } from '../components/mui/Skeleton'
 
 type Props = {
   storefront: StorefrontApiResponse
@@ -40,20 +45,20 @@ export function OrderDetailPage({ storefront, orderId, onNavigate }: Props) {
           <h1 id="order-detail-title" className="!m-0 !max-w-none !text-3xl !font-normal !leading-tight !tracking-tight text-[var(--ink)] sm:!text-4xl">Your order</h1>
           {order && <p className="mb-0 mt-2 break-all font-mono text-xs text-[var(--muted)] sm:text-sm">{order.orderNumber}</p>}
         </div>
-        {order && <span className="inline-flex min-h-9 w-fit items-center rounded-full bg-[rgba(215,225,208,0.6)] px-3 text-sm font-semibold text-[var(--ink)]">{orderStatusLabel(order.status)}</span>}
+        {order && <Chip size="small" label={orderStatusLabel(order.status)} sx={{ fontWeight: 650 }} />}
       </header>
-      {query.isPending && <div className="grid min-h-48 place-content-center rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 text-center" role="status"><p className="m-0 text-sm text-[var(--muted)]">Loading your order details…</p></div>}
+      {query.isPending && <div className="grid min-h-48 place-content-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 text-center" role="status"><CircularProgress size={28} aria-label="Loading order details" /><Skeleton variant="rounded" width={180} height={14} /></div>}
       {query.isError && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-950 sm:p-6" role="alert">
-          <p className="mb-4 text-sm leading-6">{query.error.message}</p>
-          <button
-            className="secondary-button"
+        <Alert severity="error" role="alert" sx={{ alignItems: 'center' }}>
+          <p className="mb-3 text-sm leading-6">We couldn’t load this order. It may have changed, or you may not have access. Your recorded order and payment status have not been changed.</p>
+          <Button
+            variant="outlined"
             disabled={query.isFetching}
             onClick={() => void query.refetch({ cancelRefetch: false })}
           >
-            Retry
-          </button>
-        </div>
+            {query.isFetching ? <><CircularProgress size={16} sx={{ mr: 1 }} /> Refreshing…</> : 'Try again'}
+          </Button>
+        </Alert>
       )}
       {order && (
         <>

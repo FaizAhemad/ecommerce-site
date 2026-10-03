@@ -49,14 +49,14 @@ const baseProducts = Array.from({ length: 10 }, (_, index) => {
   }
 })
 
-async function installHomeMocks(page: Page, role: 'GUEST' | 'CUSTOMER' | 'ADMIN' = 'GUEST', emptyCatalog = false) {
+async function installHomeMocks(page: Page, role: 'GUEST' | 'CUSTOMER' | 'SELLER' | 'ADMIN' = 'GUEST', emptyCatalog = false) {
   const apiWrites: string[] = []
   const apiReads: string[] = []
   const fixtureUser = role === 'GUEST' ? null : {
-    id: role === 'ADMIN' ? 'e2e-admin' : 'e2e-customer',
-    name: role === 'ADMIN' ? 'Synthetic Administrator' : 'Synthetic Customer',
+    id: role === 'ADMIN' ? 'e2e-admin' : role === 'SELLER' ? 'e2e-seller' : 'e2e-customer',
+    name: role === 'ADMIN' ? 'Synthetic Administrator' : role === 'SELLER' ? 'Synthetic Seller' : 'Synthetic Customer',
     email: `${role.toLowerCase()}@example.test`,
-    role,
+    role: role === 'ADMIN' ? 'ADMIN' : 'CUSTOMER',
   }
   await page.route('**/*', async (route) => {
     const request = route.request()
@@ -73,6 +73,12 @@ async function installHomeMocks(page: Page, role: 'GUEST' | 'CUSTOMER' | 'ADMIN'
     }
     if (url.pathname === '/api/auth/me') {
       return route.fulfill({ status: fixtureUser ? 200 : 401, contentType: 'application/json', body: JSON.stringify(fixtureUser ? { user: fixtureUser } : { error: { code: 'UNAUTHENTICATED', message: 'Sign in required.' } }) })
+    }
+    if (url.pathname === '/api/shops/access') {
+      return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ allowed: role === 'ADMIN' || role === 'SELLER' }) })
+    }
+    if (url.pathname === '/api/shops') {
+      return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ shops: [], nextPage: null }) })
     }
     if (url.pathname === '/api/cart') {
       return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ cart: { items: [] } }) })
@@ -109,15 +115,98 @@ test.describe('Home page', () => {
 
     await expect(page.getByRole('heading', { level: 1, name: 'Good finds for everyday life.' })).toBeVisible()
     const primaryNav = page.getByRole('navigation', { name: 'Primary navigation' })
+    await expect(primaryNav.locator('.cart-button .header-cart-count')).toHaveCount(1)
+    await expect(primaryNav.locator('.cart-button .header-cart-count')).toHaveText('0')
     await expect(primaryNav.getByRole('link', { name: 'Home' })).toBeVisible()
     await expect(primaryNav.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
-    for (const label of ['Products', 'Shops', 'Sell with us', 'Support']) await expect(primaryNav.getByRole('link', { name: label })).toBeVisible()
+    for (const label of ['Products', 'Sell with us', 'Support']) await expect(primaryNav.getByRole('link', { name: label })).toBeVisible()
+    await expect(primaryNav.getByRole('link', { name: 'Shops' })).toHaveCount(0)
     for (const label of ['Orders', 'Profile', 'Admin']) await expect(primaryNav.getByRole('link', { name: label })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Shop by category' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'A few good finds' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'More useful finds' })).toBeVisible()
     await expect(page.getByLabel('Email address')).toBeVisible()
     expect(runtimeErrors).toEqual([])
+  })
+
+  test('opens every guest-visible primary navigation destination and captures desktop and phone views', async ({ page }) => {
+    await installHomeMocks(page)
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await page.goto('/')
+    await rememberDocument(page)
+    const destinations = [
+      { label: 'Home', path: '/', heading: 'Good finds for everyday life.' },
+      { label: 'Products', path: '/products', heading: 'collection-title' },
+      { label: 'Sell with us', path: '/seller', heading: 'Sell with Gadgify' },
+      { label: 'Support', path: '/support', heading: 'Support, made simple.' },
+    ]
+
+    for (const destination of destinations) {
+      const nav = page.getByRole('navigation', { name: 'Primary navigation' })
+      await nav.getByRole('link', { name: destination.label }).click()
+      await expect.poll(() => new URL(page.url()).pathname).toBe(destination.path)
+      expect(await documentWasPreserved(page)).toBe(true)
+      if (destination.heading === 'collection-title') await expect(page.locator('#collection-title')).toBeVisible()
+      else await expect(page.getByRole('heading', { level: 1, name: destination.heading })).toBeVisible()
+      const fileName = destination.label.toLowerCase().replaceAll(' ', '-')
+      await page.screenshot({ path: `artifacts/page-review/navigation/${fileName}-desktop.png`, fullPage: true, animations: 'disabled' })
+      await page.setViewportSize({ width: 390, height: 844 })
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+      await page.screenshot({ path: `artifacts/page-review/navigation/${fileName}-phone.png`, fullPage: true, animations: 'disabled' })
+      await page.setViewportSize({ width: 1440, height: 1000 })
+    }
+  })
+
+  test('captures customer-only navbar destinations with responsive views', async ({ page }) => {
+    await installHomeMocks(page, 'CUSTOMER')
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await page.goto('/')
+    await rememberDocument(page)
+    const nav = page.getByRole('navigation', { name: 'Primary navigation' })
+    await expect(nav.getByRole('link', { name: 'Shops' })).toHaveCount(0)
+    for (const destination of [
+      { label: 'Orders', path: '/orders', file: 'orders' },
+      { label: 'Profile', path: '/profile', file: 'profile' },
+    ]) {
+      await nav.getByRole('link', { name: destination.label }).click()
+      await expect.poll(() => new URL(page.url()).pathname).toBe(destination.path)
+      expect(await documentWasPreserved(page)).toBe(true)
+      await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
+      await page.screenshot({ path: `artifacts/page-review/navigation/customer-${destination.file}-desktop.png`, fullPage: true, animations: 'disabled' })
+      await page.setViewportSize({ width: 390, height: 844 })
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+      await page.screenshot({ path: `artifacts/page-review/navigation/customer-${destination.file}-phone.png`, fullPage: true, animations: 'disabled' })
+      await page.setViewportSize({ width: 1440, height: 1000 })
+      await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Home' }).click()
+      await expect.poll(() => new URL(page.url()).pathname).toBe('/')
+    }
+  })
+
+  test('shows shop browsing only to an approved seller membership', async ({ page }) => {
+    await installHomeMocks(page, 'SELLER')
+    await page.goto('/')
+    const nav = page.getByRole('navigation', { name: 'Primary navigation' })
+    await expect(nav.getByRole('link', { name: 'Shops' })).toBeVisible()
+    await expect(nav.getByRole('link', { name: 'Shops' })).toHaveAttribute('href', '/shops')
+    await nav.getByRole('link', { name: 'Shops' }).click()
+    await expect.poll(() => new URL(page.url()).pathname).toBe('/shops')
+    await expect(page.getByRole('heading', { name: 'Discover shops' })).toBeVisible()
+  })
+
+  test('captures the admin destination only for the server-assigned admin role', async ({ page }) => {
+    await installHomeMocks(page, 'ADMIN')
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await page.goto('/')
+    const nav = page.getByRole('navigation', { name: 'Primary navigation' })
+    await expect(nav.getByRole('link', { name: 'Shops' })).toBeVisible()
+    await expect(nav.getByRole('link', { name: 'Admin' })).toBeVisible()
+    await nav.getByRole('link', { name: 'Admin' }).click()
+    await expect.poll(() => new URL(page.url()).pathname).toBe('/admin')
+    await expect(page.getByRole('navigation', { name: 'Admin sections' })).toBeVisible()
+    await page.screenshot({ path: 'artifacts/page-review/navigation/admin-desktop.png', fullPage: true, animations: 'disabled' })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    await page.screenshot({ path: 'artifacts/page-review/navigation/admin-phone.png', fullPage: true, animations: 'disabled' })
   })
 
   test('explains a successfully loaded but empty catalog without rendering blank product sections', async ({ page }) => {

@@ -33,7 +33,7 @@ export const appConfig = {
 export type ProductImage = { id: string; url: string; alt: string; isPrimary: boolean }
 export type ProductVideo = { id: string; url: string; posterUrl?: string; alt: string }
 export type CatalogProduct = {
-  seller?: { name: string; slug: string; isPlatform: boolean } | null
+  seller?: { isPlatform: boolean } | null
   purchase?: { available: boolean; reason: string | null }
   description?: string | null
   stock?: number

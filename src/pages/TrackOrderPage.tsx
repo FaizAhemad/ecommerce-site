@@ -6,6 +6,11 @@ import { apiFetch } from '../api/http'
 import { queryClient } from '../api/queryClient'
 import type { StorefrontApiResponse } from '../api/storefront'
 import { OrderTimeline } from '../components/OrderTimeline'
+import { Alert } from '../components/mui/Alert'
+import { Button } from '../components/mui/Button'
+import { Chip } from '../components/mui/Chip'
+import { CircularProgress } from '../components/mui/CircularProgress'
+import { TextField } from '../components/mui/TextField'
 
 type Props = {
   storefront: StorefrontApiResponse
@@ -96,11 +101,11 @@ export function TrackOrderPage({ storefront, isAuthenticated, onNavigate }: Prop
           <a className="primary-button w-fit" href="/login" onClick={onNavigate('/login')}>Sign in to track an order <ArrowRight aria-hidden="true" className="size-4" /></a>
         </div>
       ) : <form className="grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-4 sm:p-6" onSubmit={(event) => void submit(event)} noValidate>
-        <label className="grid gap-2 text-sm font-medium text-[var(--ink)]" htmlFor="order-id">
-          Order number
-          <input
-            className="min-h-12 w-full rounded-lg border border-[var(--line)] bg-[var(--paper)] px-3 text-base text-[var(--ink)] placeholder:text-[var(--muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:opacity-60"
+        <TextField
             id="order-id"
+            label="Order number"
+            fullWidth
+            size="small"
             disabled={pending}
             value={orderId}
             onChange={(change) => { setOrderId(change.target.value); setTracking(null); setError('') }}
@@ -109,14 +114,13 @@ export function TrackOrderPage({ storefront, isAuthenticated, onNavigate }: Prop
             aria-invalid={Boolean(error)}
             aria-describedby={error ? 'track-error' : undefined}
           />
-        </label>
-        <button className="primary-button w-full sm:w-auto" type="submit" disabled={pending} aria-busy={pending}>
-          {pending ? 'Checking order…' : 'Track order'} <ArrowRight aria-hidden="true" className="size-4" />
-        </button>
-        {error && <p id="track-error" className="m-0 text-sm text-rose-800 sm:col-span-2" role="alert">{error}</p>}
+        <Button variant="contained" fullWidth type="submit" disabled={pending} aria-busy={pending}>
+          {pending ? <><CircularProgress size={16} sx={{ mr: 1 }} /> Checking order…</> : <>Track order <ArrowRight aria-hidden="true" className="ml-2 size-4" /></>}
+        </Button>
+        {error && <Alert id="track-error" className="sm:col-span-2" severity="error" role="alert">{error}</Alert>}
       </form>}
 
-      {pending && <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-sm text-[var(--muted)]" role="status">Checking the latest recorded status…</div>}
+      {pending && <Alert severity="info" role="status">Checking the latest recorded status…</Alert>}
 
       {tracking && (
         <div className="grid gap-4" aria-live="polite">
@@ -125,7 +129,7 @@ export function TrackOrderPage({ storefront, isAuthenticated, onNavigate }: Prop
               <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">Order number</p>
               <h2 className="!m-0 break-all font-mono !text-sm !font-semibold !leading-6 !tracking-normal text-[var(--ink)] sm:!text-base">{tracking.orderNumber}</h2>
             </div>
-            <span className="inline-flex min-h-9 w-fit items-center rounded-full bg-[rgba(215,225,208,0.6)] px-3 text-sm font-semibold text-[var(--ink)]">{tracking.status.replaceAll('_', ' ').toLowerCase()}</span>
+            <Chip size="small" label={tracking.status.replaceAll('_', ' ').toLowerCase()} />
           </div>
           {(tracking.shipment?.carrier || tracking.shipment?.trackingCode) && (
             <div className="grid gap-1 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm leading-6 text-[var(--muted)] sm:grid-cols-2 sm:gap-4">

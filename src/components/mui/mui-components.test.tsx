@@ -2,10 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Alert, Backdrop, Button, Checkbox, FormControlLabel, MUIProvider, Radio, RadioGroup, Skeleton, TextField } from './index'
+import { Alert, Backdrop, BrandedPageLoader, Button, Checkbox, FormControlLabel, MUIProvider, Radio, RadioGroup, Skeleton, TextField } from './index'
 import { DataGrid, type DataGridQuery } from '../DataGrid'
 import { AddToCartButton } from '../AddToCartButton'
+import { FilterSidebar } from '../FilterSidebar'
 import { createSessionRefreshCoordinator } from '../../api/sessionRefresh'
+import { gadgifyTheme } from './theme'
 
 function renderMUI(ui: ReactNode) {
   return render(<MUIProvider>{ui}</MUIProvider>)
@@ -14,6 +16,53 @@ function renderMUI(ui: ReactNode) {
 afterEach(cleanup)
 
 describe('Gadgify MUI components', () => {
+  it('renders the aligned Gadgify-branded route loading status', () => {
+    renderMUI(<BrandedPageLoader />)
+
+    expect(screen.getByRole('status').getAttribute('aria-busy')).toBe('true')
+    expect(screen.getByText('GADGIFY')).toBeTruthy()
+    expect(screen.getByText('Getting this page ready…')).toBeTruthy()
+    expect(screen.getByText('Useful finds are just a moment away.')).toBeTruthy()
+  })
+
+  it('keeps text fields on the shared medium control size', () => {
+    renderMUI(<TextField label="Email address" />)
+    const field = screen.getByRole('textbox', { name: 'Email address' })
+    expect(field.closest('.MuiOutlinedInput-root')).toBeTruthy()
+    expect(gadgifyTheme.components?.MuiTextField?.defaultProps?.size).toBe('medium')
+    expect(gadgifyTheme.components?.MuiOutlinedInput?.styleOverrides?.root).toEqual(expect.objectContaining({ minHeight: 48 }))
+  })
+
+  it('omits the color filter section when there are no color facets', () => {
+    renderMUI(<FilterSidebar
+      search=""
+      category=""
+      sort="newest"
+      categories={['Home & Kitchen']}
+      searchPlaceholder="Search the collection"
+      allCategoriesLabel="All categories"
+      sortLabel="Sort products"
+      newestSortLabel="Newest"
+      priceLowSortLabel="Price: low to high"
+      priceHighSortLabel="Price: high to low"
+      clearLabel="Clear filters"
+      selectedColors={[]}
+      selectedRatings={[]}
+      colorOptions={[]}
+      ratingLabel="Rating"
+      colorsLabel="Color"
+      onSearch={vi.fn()}
+      onCategory={vi.fn()}
+      onSort={vi.fn()}
+      onClear={vi.fn()}
+      onColorToggle={vi.fn()}
+      onRating={vi.fn()}
+    />)
+
+    expect(screen.getByText('Rating', { exact: true })).toBeTruthy()
+    expect(screen.queryByText('Color', { exact: true })).toBeNull()
+  })
+
   it('combines column filters and search in server queries and uses the server sort key', async () => {
     const user = userEvent.setup()
     const onQueryChange = vi.fn()

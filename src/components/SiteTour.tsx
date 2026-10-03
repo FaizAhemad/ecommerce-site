@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Button } from './mui/Button'
+import { Paper } from './mui/Paper'
 
 type TourStep = {
   path: string
@@ -32,7 +34,7 @@ const sharedSteps: TourStep[] = [
 
 type TargetRect = { top: number; left: number; width: number; height: number }
 
-export function SiteTour({ path, isAuthenticated }: { path: string; isAuthenticated: boolean }) {
+export function SiteTour({ path, isAuthenticated, onActiveChange }: { path: string; isAuthenticated: boolean; onActiveChange: (active: boolean) => void }) {
   const [stepIndex, setStepIndex] = useState<number | null>(null)
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null)
   const heading = useRef<HTMLHeadingElement>(null)
@@ -60,6 +62,13 @@ export function SiteTour({ path, isAuthenticated }: { path: string; isAuthentica
   )
   const isComplete = stepIndex !== null && stepIndex >= steps.length
   const current = stepIndex === null || isComplete ? null : steps[stepIndex]
+
+  useEffect(() => {
+    if (path !== '/support' || window.location.hash !== '#website-tour') return
+    window.history.replaceState(window.history.state, '', '/support')
+    setStepIndex(0)
+    onActiveChange(true)
+  }, [onActiveChange, path])
 
   useEffect(() => {
     if (stepIndex !== null) heading.current?.focus()
@@ -121,6 +130,7 @@ export function SiteTour({ path, isAuthenticated }: { path: string; isAuthentica
   function exitTour() {
     setStepIndex(null)
     setTargetRect(null)
+    onActiveChange(false)
   }
 
   function navigate(destination: string) {
@@ -149,18 +159,18 @@ export function SiteTour({ path, isAuthenticated }: { path: string; isAuthentica
 
   if (stepIndex === null) {
     return path === '/support' ? (
-      <button
+      <Button
         ref={start}
-        className="mb-5 inline-flex min-h-10 cursor-pointer items-center rounded-md border border-[var(--line)] bg-[var(--surface-raised)] px-4 text-sm font-medium text-[var(--ink)] transition-colors hover:border-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
-        onClick={() => setStepIndex(0)}
+        id="website-tour"
+        variant="outlined"
+        sx={{ mb: 2.5 }}
+        onClick={() => { setStepIndex(0); onActiveChange(true) }}
       >
         Take a website tour
-      </button>
+      </Button>
     ) : null
   }
 
-  const buttonClass =
-    'inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-[var(--line)] bg-transparent px-4 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:cursor-not-allowed disabled:opacity-50'
   const pointerLeft = targetRect ? targetRect.left + targetRect.width / 2 - 22 : 0
   const pointerTop = targetRect ? targetRect.top + targetRect.height + 5 : 0
   const stepNumber = Math.min((stepIndex ?? 0) + 1, steps.length)
@@ -205,19 +215,17 @@ export function SiteTour({ path, isAuthenticated }: { path: string; isAuthentica
           if (event.key === 'Escape') exitTour()
         }}
       >
-        <div
-          className="pointer-events-auto mx-auto max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--surface-raised)] p-4 shadow-[0_16px_48px_rgba(31,37,32,0.2)] sm:p-5"
-        >
+        <Paper component="div" role="dialog" aria-label="Website tour" aria-modal={false} elevation={8} sx={{ pointerEvents: 'auto', mx: 'auto', maxHeight: 'calc(100dvh - 2rem)', width: '100%', maxWidth: 576, overflowY: 'auto', border: 1, borderColor: 'divider', borderRadius: 4, bgcolor: 'background.paper', p: { xs: 2, sm: 2.5 } }}>
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]" aria-live="polite" aria-atomic="true">
               {isComplete ? 'Website tour complete' : `Website tour · Step ${stepNumber} of ${steps.length}`}
             </p>
-            <button
-              className="min-h-11 cursor-pointer rounded-md px-3 text-sm text-[var(--muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+            <Button
+              variant="text"
               onClick={exitTour}
             >
               {isComplete ? 'Close' : 'Exit tour'}
-            </button>
+            </Button>
           </div>
           <h2
             id="tour-title"
@@ -236,9 +244,9 @@ export function SiteTour({ path, isAuthenticated }: { path: string; isAuthentica
             <p className="mt-2 text-sm font-medium text-[var(--green)]">Use Next or choose the outlined link to continue.</p>
           )}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-3">
-            <button className={buttonClass} disabled={stepIndex === 0} onClick={goPrevious}>
+            <Button variant="outlined" disabled={stepIndex === 0} onClick={goPrevious}>
               Previous
-            </button>
+            </Button>
             <p className="min-w-0 flex-1 text-center text-xs text-[var(--muted)]">
               {isComplete
                 ? 'Tour finished'
@@ -246,14 +254,14 @@ export function SiteTour({ path, isAuthenticated }: { path: string; isAuthentica
                   ? 'Arrow = this page · Next = Products.'
                   : 'Arrow = this page · Next = the next page.'}
             </p>
-            <button
-              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-[var(--ink)] bg-[var(--ink)] px-4 text-sm font-medium text-[var(--surface-raised)] transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+            <Button
+              variant="contained"
               onClick={goNext}
             >
               {nextLabel}
-            </button>
+            </Button>
           </div>
-        </div>
+        </Paper>
       </section>
     </>
   )

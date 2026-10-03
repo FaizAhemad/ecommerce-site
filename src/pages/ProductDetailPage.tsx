@@ -7,6 +7,10 @@ import {
 import { useNotification } from '../components/NotificationProvider'
 import { AddToCartButton } from '../components/AddToCartButton'
 import { RatingStars } from '../components/RatingStars'
+import { Chip } from '../components/mui/Chip'
+import { Button } from '../components/mui/Button'
+import { MenuItem } from '../components/mui/MenuItem'
+import { TextField } from '../components/mui/TextField'
 import { apiFetch as fetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
@@ -14,6 +18,7 @@ import { getProduct, type StorefrontApiResponse } from '../api/storefront'
 import { queryClient } from '../api/queryClient'
 import { useProductMetadata } from '../api/productMetadata'
 import { getCartPendingAction, updateCart, useCart } from '../api/cart'
+import { productAvailability } from '../components/productAvailability'
 
 type ReviewMedia = { id: string; url: string }
 
@@ -217,15 +222,15 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
         </p>
         <div className="error-actions">
           {productError && (
-            <button
-              className="primary-button"
+            <Button
+              variant="contained"
               type="button"
               onClick={() => {
                 void productQuery.refetch()
               }}
             >
               Try again
-            </button>
+            </Button>
           )}
           <a className="secondary-button" href="/products" onClick={onNavigate('/products')}>
             Browse products
@@ -240,6 +245,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
   const cartItem = cartQuery.data?.find((item) => item.product.id === product.id)
   const cartQuantity = cartItem?.quantity ?? 0
   const isCartLoading = Boolean(sessionUser() && cartQuery.isPending)
+  const signedIn = Boolean(sessionUser())
 
   const selectedImage =
     selected
@@ -380,9 +386,11 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                   }
                 />
               ) : selectedImage && !failedImageIds.has(selectedImage.id) ? (
-                <button
+                <Button
+                  variant="text"
                   type="button"
                   className="h-full w-full cursor-zoom-in overflow-hidden border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--ink)]"
+                  sx={{ display: 'block', minWidth: 0, minHeight: 0, width: '100%', height: '100%', p: 0, borderRadius: 0 }}
                   aria-label={`View larger image: ${selectedImage.alt}`}
                   onClick={() =>
                     setLightboxIndex(
@@ -416,7 +424,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                       zoomImageRef.current.style.cursor = ''
                     }}
                   />
-                </button>
+                </Button>
               ) : (
                 <>
                   <div className="product-shape" aria-hidden="true" />
@@ -444,8 +452,10 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               aria-label={`${storefront.content.detail.imagesLabel} and ${storefront.content.detail.videosLabel}`}
             >
               {product.media.images.map((item) => (
-                <button
+                <Button
+                  variant="outlined"
                   className={`grid size-16 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-lg border bg-[var(--surface)] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50 ${selectedImage?.id === item.id ? 'border-[var(--ink)] ring-2 ring-[var(--ink)]' : 'border-[var(--line)] hover:border-[var(--ink)]'}`}
+                  sx={{ minWidth: 64, width: 64, minHeight: 64, height: 64, p: 0, overflow: 'hidden', flexShrink: 0 }}
                   type="button"
                   disabled={failedImageIds.has(item.id)}
                   key={item.id}
@@ -461,11 +471,13 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                   ) : (
                     <img className="h-full w-full object-cover" src={item.url} alt={item.alt} onError={() => markImageFailed(item.id)} />
                   )}
-                </button>
+                </Button>
               ))}
               {product.media.videos.map((item) => (
-                <button
+                <Button
+                  variant="outlined"
                   className={`media-video relative grid size-16 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-lg border bg-[var(--surface)] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${selectedVideo?.id === item.id ? 'border-[var(--ink)] ring-2 ring-[var(--ink)]' : 'border-[var(--line)] hover:border-[var(--ink)]'}`}
+                  sx={{ minWidth: 64, width: 64, minHeight: 64, height: 64, p: 0, overflow: 'hidden', flexShrink: 0 }}
                   type="button"
                   key={item.id}
                   onClick={() => {
@@ -483,7 +495,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                     playsInline
                     preload="metadata"
                   />
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -494,12 +506,6 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
         <div className="detail-copy flex w-full max-w-2xl flex-col items-start gap-5 self-center">
           <p className="eyebrow mb-0">{product.category}</p>
           <h1 className="mb-0 text-4xl leading-tight text-[var(--ink)] md:text-5xl">{product.name}</h1>
-          {product.seller && !product.seller.isPlatform && (
-            <p className="m-0 text-sm text-[var(--muted)]">
-              Sold by{' '}
-              <a href={`/shops/${encodeURIComponent(product.seller.slug)}`}>{product.seller.name}</a>
-            </p>
-          )}
           <div
             className="flex items-center gap-2 text-sm text-[var(--muted)]"
             aria-label={
@@ -518,7 +524,33 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               <span>0 reviews</span>
             )}
           </div>
-          <p className="detail-price mb-0 text-3xl font-bold text-[var(--ink)]">{currency.format(product.price)}</p>
+          {typeof product.stock === 'number' && (
+            <Chip
+              {...(product.stock <= 0
+                ? productAvailability(product.stock)
+                : product.purchase?.available === false && product.seller && !product.seller.isPlatform
+                  ? { label: 'Offer pending', color: 'warning' as const }
+                  : productAvailability(product.stock))}
+              size="small"
+              sx={{ height: 26, fontWeight: 650 }}
+            />
+          )}
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <p className="detail-price mb-0 text-3xl font-bold text-[var(--ink)]">{currency.format(product.price)}</p>
+            {product.compareAtPriceMinor != null && product.priceMinor != null && product.compareAtPriceMinor > product.priceMinor && (
+              <>
+                <span className="text-base text-[var(--muted)] line-through">
+                  {currency.format(product.compareAtPriceMinor / 100)}
+                </span>
+                <Chip
+                  label={`${Math.round(((product.compareAtPriceMinor - product.priceMinor) / product.compareAtPriceMinor) * 100)}% off`}
+                  size="small"
+                  color="success"
+                  sx={{ height: 24, fontSize: 12 }}
+                />
+              </>
+            )}
+          </div>
           <p className="detail-description mb-0 max-w-xl text-base leading-relaxed text-[var(--muted)]">
             {product.description || storefront.identity.tagline}
           </p>
@@ -600,18 +632,18 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
           <div className="flex flex-wrap items-center justify-between gap-4 pb-1">
             <h3 className="m-0 text-2xl text-[var(--ink)]">Latest reviews</h3>
             {reviews.length > 3 && (
-              <button className="secondary-button" type="button" onClick={() => setShowAll(true)}>
+              <Button variant="outlined" type="button" onClick={() => setShowAll(true)}>
                 View all reviews
-              </button>
+              </Button>
             )}
           </div>
           {reviewsQuery.isLoading && <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading reviews…</p>}
           {reviewsQuery.isError && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4" role="alert">
               <p className="m-0 text-sm text-[var(--muted)]">Reviews could not be loaded.</p>
-              <button className="secondary-button" type="button" onClick={() => void reviewsQuery.refetch()}>
+              <Button variant="outlined" type="button" onClick={() => void reviewsQuery.refetch()}>
                 Try again
-              </button>
+              </Button>
             </div>
           )}
           {!reviewsQuery.isLoading && !reviewsQuery.isError && reviews.slice(0, 3).map((review) => (
@@ -624,8 +656,8 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               </div>
               <p className="mb-0 mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed text-[var(--ink)]">{review.text}</p>
               {myReviewQuery.data?.id === review.id && (
-                <button
-                  className="secondary-button mt-4 inline-flex min-h-11 w-fit items-center gap-2 px-4 text-sm"
+                <Button
+                  variant="outlined"
                   type="button"
                   onClick={() => {
                     setEditingReviewId(review.id)
@@ -638,7 +670,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                 >
                   <PencilIcon />
                   <span>Edit review</span>
-                </button>
+                </Button>
               )}
               <ReviewAttachments media={review.media} />
             </article>
@@ -663,14 +695,15 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             aria-modal="true"
             aria-labelledby="all-reviews-title"
           >
-            <button
-              className="absolute right-4 top-4 grid size-11 place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-2xl text-[var(--ink)] transition hover:bg-[var(--line)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
+            <Button
+              variant="outlined"
+              sx={{ position: 'absolute', right: 2, top: 2, minWidth: 44, width: 44, height: 44, borderRadius: '50%', fontSize: 22 }}
               type="button"
               onClick={() => setShowAll(false)}
               aria-label="Close reviews"
             >
               ×
-            </button>
+            </Button>
             <h2 className="mb-5 text-3xl text-[var(--ink)]" id="all-reviews-title">All reviews</h2>
             {reviews.slice(0, limit).map((review) => (
               <article className="border-b border-[var(--line)] py-5 last:border-0" key={review.id}>
@@ -682,8 +715,8 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                 </div>
                 <p className="mb-0 mt-3 max-w-3xl whitespace-pre-wrap leading-relaxed text-[var(--ink)]">{review.text}</p>
                 {myReviewQuery.data?.id === review.id && (
-                  <button
-                    className="secondary-button mt-4 inline-flex min-h-11 w-fit items-center gap-2 px-4 text-sm"
+                  <Button
+                    variant="outlined"
                     type="button"
                     onClick={() => {
                       setEditingReviewId(review.id)
@@ -696,19 +729,19 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
                   >
                     <PencilIcon />
                     <span>Edit review</span>
-                  </button>
+                  </Button>
                 )}
                 <ReviewAttachments media={review.media} />
               </article>
             ))}
             {limit < reviews.length && (
-              <button
-                className="secondary-button"
+              <Button
+                variant="outlined"
                 type="button"
                 onClick={() => setLimit((value) => value + 4)}
               >
                 Load more reviews
-              </button>
+              </Button>
             )}
           </aside>
         </div>
@@ -718,64 +751,59 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
         <p className="eyebrow mb-2">{storefront.content.collection.reviewsLabel}</p>
         <h2 className="mb-3 text-3xl text-[var(--ink)] md:text-4xl">{storefront.content.reviews.title}</h2>
         <p className="mb-6 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">Tell other shoppers what stood out. Your review helps people choose with confidence.</p>
+        {signedIn ? (
         <form className="flex flex-col gap-5 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 shadow-sm md:p-8" onSubmit={submitReview}>
-          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
-            {storefront.content.reviews.ratingLabel}
-            <select
-              className="h-12 w-full max-w-xs rounded-lg border border-[var(--line)] bg-white px-3 text-base text-[var(--ink)] outline-none transition focus-visible:ring-2 focus-visible:ring-[var(--ink)]"
+          <TextField
+              select
+              label={storefront.content.reviews.ratingLabel}
               disabled={reviewSaving}
               value={reviewRating}
               onChange={(event) => setReviewRating(Number(event.target.value))}
             >
-              <option value="5">5 / 5</option>
-              <option value="4">4 / 5</option>
-              <option value="3">3 / 5</option>
-              <option value="2">2 / 5</option>
-              <option value="1">1 / 5</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
-            {storefront.content.reviews.commentLabel}
-            <textarea
-              className="min-h-36 w-full resize-y rounded-lg border border-[var(--line)] bg-white px-3 py-3 text-base leading-relaxed text-[var(--ink)] outline-none transition placeholder:text-[var(--muted)] focus-visible:ring-2 focus-visible:ring-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60"
+              {[5, 4, 3, 2, 1].map((rating) => <MenuItem value={rating} key={rating}>{rating} / 5</MenuItem>)}
+          </TextField>
+          <TextField
+              label={storefront.content.reviews.commentLabel}
+              multiline
+              minRows={5}
+              maxRows={12}
               disabled={reviewSaving}
               value={reviewComment}
               onChange={(event) => setReviewComment(event.target.value)}
               required
-              rows={5}
               placeholder={storefront.content.reviews.commentPlaceholder}
+              fullWidth
             />
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--ink)]">
-            Photos or video <span className="font-normal text-[var(--muted)]">Up to 4 files, 1 MB each.</span>
-            <input
-              className="w-full rounded-lg border border-[var(--line)] bg-white p-2 text-sm text-[var(--muted)] file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-[var(--ink)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-[var(--green)] disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={reviewSaving}
+          <TextField
               type="file"
-              accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
-              multiple
+              label="Photos or video"
+              helperText="Up to 4 files, 1 MB each."
+              slotProps={{ htmlInput: { accept: 'image/jpeg,image/png,image/webp,video/mp4,video/webm', multiple: true } }}
+              disabled={reviewSaving}
               onChange={(event) => {
-                const files = Array.from(event.target.files ?? [])
+                const input = event.target as HTMLInputElement
+                const files = Array.from(input.files ?? [])
                   .filter((file) => file.size <= 1_000_000)
                   .slice(0, 4)
                 setReviewFiles(files)
-                if (files.length < (event.target.files?.length ?? 0))
+                if (files.length < (input.files?.length ?? 0))
                   notify(
                     'Some files were skipped. Each image or video must be under 1 MB, with up to 4 files.',
                   )
-                event.currentTarget.value = ''
+                input.value = ''
               }}
             />
-          </label>
           {reviewFiles.length > 0 && (
             <ul className="m-0 flex list-none flex-wrap gap-2 p-0" aria-label="Selected review files">
               {reviewFiles.map((file) => <li className="rounded-full bg-[var(--paper)] px-3 py-1.5 text-xs text-[var(--muted)]" key={`${file.name}-${file.size}`}>{file.name}</li>)}
             </ul>
           )}
-          <button
-            className="primary-button w-full sm:w-auto sm:min-w-56"
+          <Button
+            variant="contained"
             type="submit"
+            fullWidth
             disabled={reviewSaving || !reviewComment.trim()}
+            sx={{ alignSelf: 'flex-start', width: { sm: 'auto' }, minWidth: { sm: 224 } }}
           >
             {reviewSaving
               ? editingReviewId
@@ -784,8 +812,16 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               : editingReviewId
                 ? 'Update review'
                 : storefront.content.reviews.submitLabel}
-          </button>
+          </Button>
         </form>
+        ) : (
+          <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 shadow-sm md:p-8">
+            <p className="mb-4 text-sm leading-relaxed text-[var(--muted)]">Sign in to share a review after your purchase.</p>
+            <Button component="a" variant="contained" fullWidth href="/login" onClick={onNavigate('/login')} sx={{ width: { sm: 'auto' }, minWidth: { sm: 224 } }}>
+              Sign in to write a review
+            </Button>
+          </div>
+        )}
         </div>
       </section>
       {lightboxIndex !== null && availableMediaItems[lightboxIndex] && (
@@ -798,15 +834,17 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             if (event.target === event.currentTarget) setLightboxIndex(null)
           }}
         >
-          <button
+          <Button
+            variant="outlined"
             className="media-lightbox-close"
             type="button"
             onClick={() => setLightboxIndex(null)}
             aria-label="Close media preview"
           >
             ×
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outlined"
             className="media-lightbox-arrow media-lightbox-prev"
             type="button"
             onClick={() =>
@@ -815,7 +853,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
             aria-label="Previous media"
           >
             ‹
-          </button>
+          </Button>
           <div className="media-lightbox-content">
             {availableMediaItems[lightboxIndex].type === 'video' ? (
               <video
@@ -836,14 +874,15 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate }: 
               {lightboxIndex + 1} / {availableMediaItems.length}
             </p>
           </div>
-          <button
+          <Button
+            variant="outlined"
             className="media-lightbox-arrow media-lightbox-next"
             type="button"
             onClick={() => setLightboxIndex((lightboxIndex + 1) % availableMediaItems.length)}
             aria-label="Next media"
           >
             ›
-          </button>
+          </Button>
         </div>
       )}
     </>

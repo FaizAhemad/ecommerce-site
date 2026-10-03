@@ -20,8 +20,9 @@ test('seller product requires the exact accepted fee-offer version before checko
   assert.equal(purchaseEligibility({ ...ownership, offerStatus: 'ACCEPTED', acceptedOfferVersion: 1 }).available, true)
   assert.equal(purchaseEligibility({ ...ownership, offerStatus: 'ACCEPTED', offerVersion: 2, acceptedOfferVersion: 1 }).available, false)
 })
-test('public seller identity excludes private records and product IDs isolate shops', () => {
-  assert.deepEqual(publicSeller({ shop: { ...shop, bankAccount: 'synthetic-private' } }), { name: 'Gadgify', slug: 'gadgify', isPlatform: true })
+test('public product channel omits shop identity and private records', () => {
+  assert.deepEqual(publicSeller({ shop: { ...shop, bankAccount: 'synthetic-private' } }), { isPlatform: true })
+  assert.deepEqual(publicSeller({ shop: { ...shop, name: 'Private Shop Name', slug: 'private-shop', isPlatform: false } }), { isPlatform: false })
   assert.notEqual(sellerProductId('shop-a', 'same-draft'), sellerProductId('shop-b', 'same-draft'))
 })
 test('catalog-only products do not advertise purchasable offers in structured data', () => {

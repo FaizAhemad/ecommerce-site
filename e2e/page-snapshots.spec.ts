@@ -89,7 +89,7 @@ const routeSnapshots: RouteSnapshot[] = [
   { name: 'policy-shipping', path: '/shipping', role: 'GUEST' },
   { name: 'policy-cancellation', path: '/cancellation', role: 'GUEST' },
   { name: 'policy-cookies', path: '/cookies', role: 'GUEST' },
-  { name: 'help-not-registered', path: '/help', role: 'GUEST' },
+  { name: 'help-hub', path: '/help', role: 'GUEST' },
   { name: 'debug-error', path: '/debug-error', role: 'GUEST' },
   { name: 'not-found', path: '/snapshot-not-a-route', role: 'GUEST' },
 ]

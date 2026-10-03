@@ -5,6 +5,14 @@ import { AddToCartButton } from '../components/AddToCartButton'
 import { ImagePreviewDialog } from '../components/ImagePreviewDialog'
 import { productPrimaryActionClass } from '../components/productCardStyles'
 import type { StorefrontApiResponse } from '../api/storefront'
+import { Alert } from '../components/mui/Alert'
+import { Button } from '../components/mui/Button'
+import { Chip } from '../components/mui/Chip'
+import { CircularProgress } from '../components/mui/CircularProgress'
+import { Container } from '../components/mui/Container'
+import { Paper } from '../components/mui/Paper'
+import { Stack } from '../components/mui/Stack'
+import { Typography } from '../components/mui/Typography'
 type Props = {
   storefront: StorefrontApiResponse
   onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void
@@ -14,7 +22,7 @@ export function CartPage({ storefront, onNavigate }: Props) {
   const cartQuery = useCart()
   const items = cartQuery.data ?? []
   const loading = cartQuery.isLoading
-  const error = cartQuery.isError ? 'Unable to load your cart.' : ''
+  const error = cartQuery.isError ? 'Unable to refresh your cart.' : ''
   const currency = new Intl.NumberFormat(storefront.localization.locale, {
     style: 'currency',
     currency: storefront.localization.currency,
@@ -28,36 +36,37 @@ export function CartPage({ storefront, onNavigate }: Props) {
     0,
   )
   return (
-    <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8">
-      <section className="pb-12 pt-5 sm:pb-16 sm:pt-7" aria-labelledby="cart-title">
+    <Container maxWidth="lg" component="section" aria-labelledby="cart-title" sx={{ py: { xs: 3, sm: 5 } }}>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-4 sm:mb-6 sm:pb-5">
         <div>
-          <p className="eyebrow">{storefront.content.ui.cartLabel}</p>
-          <h1 id="cart-title" className="!mb-2 text-4xl leading-tight tracking-[-0.04em] sm:text-5xl">{cart.title}</h1>
-          <p className="hero-text !mb-0">Review your selected pieces before checkout.</p>
+          <Typography variant="overline" color="text.secondary">{storefront.content.ui.cartLabel}</Typography>
+          <Typography id="cart-title" component="h1" variant="h3" sx={{ mb: 1 }}>{cart.title}</Typography>
+          <Typography color="text.secondary">Review your selected pieces before checkout.</Typography>
         </div>
-        <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 text-sm text-[var(--muted)]">
-          <ShoppingBag aria-hidden="true" className="size-4" />
-          {items.reduce((sum, item) => sum + item.quantity, 0)} items
-        </span>
+        <Chip
+          icon={<ShoppingBag aria-hidden="true" className="size-4" />}
+          label={`${items.reduce((sum, item) => sum + item.quantity, 0)} items`}
+          variant="outlined"
+        />
       </div>
+      {error && cartQuery.data && <Alert severity="warning" role="alert" sx={{ mb: 3 }} action={<Button color="inherit" size="small" disabled={cartQuery.isFetching} onClick={load}>Retry</Button>}>Your saved cart is still shown, but the latest refresh failed.</Alert>}
       {loading ? (
-        <p className="state-message" role="status">Loading your cart…</p>
-      ) : error ? (
-        <div className="mx-auto grid min-h-64 max-w-2xl place-content-center justify-items-center gap-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-8 text-center">
-          <p>{error}</p>
-          <button className="primary-button" type="button" onClick={load} disabled={cartQuery.isFetching}>
-            Try again
-          </button>
-        </div>
+        <Stack role="status" spacing={1.5} sx={{ minHeight: 240, alignItems: 'center', justifyContent: 'center', border: 1, borderColor: 'divider', borderRadius: 3, bgcolor: 'background.paper' }}>
+          <CircularProgress /><Typography color="text.secondary">Loading your cart…</Typography>
+        </Stack>
+      ) : error && !cartQuery.data ? (
+        <Stack spacing={2} sx={{ minHeight: 240, maxWidth: 600, mx: 'auto', alignItems: 'center', justifyContent: 'center' }}>
+          <Alert severity="error" role="alert">Unable to load your cart. Your saved items have not been changed.</Alert>
+          <Button variant="outlined" type="button" onClick={load} disabled={cartQuery.isFetching}>Try again</Button>
+        </Stack>
       ) : !items.length ? (
-        <div className="mx-auto grid min-h-[360px] max-w-3xl place-content-center justify-items-center gap-4 rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-6 py-12 text-center">
-          <span className="grid size-14 place-items-center rounded-full bg-[rgba(215,225,208,0.5)] text-[var(--ink)]"><ShoppingBag aria-hidden="true" className="size-6" /></span>
-          <p className="mb-0 max-w-md text-[var(--muted)]">{cart.emptyDescription}</p>
-          <a className="primary-button" href="/products" onClick={onNavigate('/products')}>
+        <Stack component={Paper} variant="outlined" spacing={2} sx={{ minHeight: 360, maxWidth: 800, mx: 'auto', px: 3, py: 6, textAlign: 'center', alignItems: 'center', justifyContent: 'center' }}>
+          <ShoppingBag aria-hidden="true" size={28} />
+          <Typography color="text.secondary">{cart.emptyDescription}</Typography>
+          <Button component="a" variant="contained" href="/products" onClick={onNavigate('/products')}>
             {cart.continueShoppingLabel}
-          </a>
-        </div>
+          </Button>
+        </Stack>
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
           <div className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-4 sm:px-6">
@@ -104,8 +113,8 @@ export function CartPage({ storefront, onNavigate }: Props) {
               ))}
             </div>
           </div>
-          <aside className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6 lg:sticky lg:top-24" aria-label="Order summary">
-            <h2 className="!mb-5 !text-lg !font-semibold !leading-tight !tracking-normal text-[var(--ink)]">Order summary</h2>
+          <Paper component="aside" variant="outlined" className="lg:sticky lg:top-24" sx={{ p: { xs: 2.5, sm: 3 } }} aria-label="Order summary">
+            <Typography component="h2" variant="h6" sx={{ mb: 2.5 }}>Order summary</Typography>
             <div className="flex justify-between gap-4 border-b border-[var(--line)] pb-4 text-sm text-[var(--muted)]">
               <span>Items ({items.reduce((sum, item) => sum + item.quantity, 0)})</span>
               <span className="tabular-nums text-[var(--ink)]">{currency.format(total)}</span>
@@ -115,8 +124,10 @@ export function CartPage({ storefront, onNavigate }: Props) {
               <strong className="tabular-nums">{currency.format(total)}</strong>
             </div>
             <p className="mb-5 text-xs leading-5 text-[var(--muted)]">Final charges and available payment options are shown during checkout.</p>
-            <a
-              className="primary-button flex w-full items-center justify-center gap-2"
+            <Button
+              component="a"
+              variant="contained"
+              fullWidth
               href="/checkout"
               aria-disabled={cartQuery.isUpdating}
               onClick={(event) => {
@@ -125,16 +136,15 @@ export function CartPage({ storefront, onNavigate }: Props) {
               }}
             >
               Proceed to checkout <ArrowRight aria-hidden="true" className="size-4" />
-            </a>
-            <a className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-[var(--radius-control)] px-3 text-sm font-medium text-[var(--muted)] transition-colors hover:bg-[var(--paper)] hover:text-[var(--ink)]" href="/products" onClick={onNavigate('/products')}>
+            </Button>
+            <Button className="mt-3" component="a" variant="text" fullWidth href="/products" onClick={onNavigate('/products')}>
               Continue shopping
-            </a>
+            </Button>
             {cartQuery.isUpdating && <p className="mb-0 mt-3 text-center text-xs text-[var(--muted)]" role="status">Saving cart changes…</p>}
-          </aside>
+          </Paper>
         </div>
       )}
-      </section>
-    </div>
+    </Container>
   )
 }
 
@@ -171,9 +181,11 @@ function CartProductImage({
   const alt = image?.alt?.trim() || product.name
   return (
     <>
-      <button
+      <Button
+        variant="outlined"
         type="button"
         className="group block size-[76px] cursor-zoom-in overflow-hidden rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--surface)] p-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)] disabled:cursor-wait sm:size-[88px]"
+        sx={{ minWidth: { xs: 76, sm: 88 }, width: { xs: 76, sm: 88 }, height: { xs: 76, sm: 88 }, minHeight: { xs: 76, sm: 88 }, p: 0, overflow: 'hidden', borderRadius: 2 }}
         disabled={loadedUrl !== safeImageUrl}
         aria-label={`View larger image of ${product.name}`}
         onClick={() => setPreviewOpen(true)}
@@ -186,7 +198,7 @@ function CartProductImage({
           onLoad={() => setLoadedUrl(safeImageUrl)}
           onError={() => setFailedUrl(safeImageUrl)}
         />
-      </button>
+      </Button>
       {previewOpen && (
         <ImagePreviewDialog src={safeImageUrl} alt={alt} onClose={() => setPreviewOpen(false)} />
       )}

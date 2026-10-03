@@ -11,6 +11,7 @@ import { createSession, hashPassword } from '../_lib/auth.js'
 import { issueEmailVerification } from '../_lib/email-verification.js'
 import { sendTransactionalEmail } from '../_lib/email.js'
 import { sendVerificationSms } from '../_lib/sms.js'
+import { EMAIL_ADDRESS_PATTERN, INTERNATIONAL_PHONE_PATTERN } from '../_lib/validation-patterns.js'
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   const id = requestId(request)
@@ -23,16 +24,18 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const method = body.verificationMethod === 'mobile' ? 'mobile' : 'email'
   const password = typeof body.password === 'string' ? body.password : ''
   const name = typeof body.name === 'string' ? body.name.trim() : null
+  const contactNameInvalid = !name || name.length < 2 || name.length > 100
   if (
-    (method === 'email' && !/^\S+@\S+\.\S+$/.test(email)) ||
-    (method === 'mobile' && !/^\+?[1-9]\d{9,14}$/.test(phone)) ||
-    password.length < 8
+    contactNameInvalid ||
+    (method === 'email' && !EMAIL_ADDRESS_PATTERN.test(email)) ||
+    (method === 'mobile' && !INTERNATIONAL_PHONE_PATTERN.test(phone)) ||
+    password.length < 8 || password.length > 128
   )
     return sendError(
       response,
       400,
       'VALIDATION_ERROR',
-      'Enter a valid verification contact and a password of at least 8 characters.',
+      'Enter a name between 2 and 100 characters, a valid verification contact, and a password between 8 and 128 characters.',
       id,
     )
   try {
@@ -76,7 +79,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     })
   } catch (error) {
     if (error instanceof Error && error.message.includes('Unique constraint'))
-      return sendError(response, 409, 'CONFLICT', 'An account with this email already exists.', id)
+      return sendError(response, 409, 'CONFLICT', 'An account with this contact already exists.', id)
     return sendError(
       response,
       503,

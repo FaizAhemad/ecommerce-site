@@ -5,6 +5,11 @@ import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScop
 import { queryClient } from '../api/queryClient'
 import { useNotification } from './NotificationProvider'
 import { OrderTotals } from './OrderTotals'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Stack } from './mui/Stack'
+import { TextField } from './mui/TextField'
+import { Typography } from './mui/Typography'
 type CheckoutProps = { addressId: string; cartRevision: string; disabled: boolean; itemsSubtotalMinor: number; onAttempt: () => void }
 export function CheckoutSubmit(props: CheckoutProps) {
   const [draft, setDraft] = useState('')
@@ -13,29 +18,32 @@ export function CheckoutSubmit(props: CheckoutProps) {
   return (
     <section className="mt-5 border-t border-[var(--line)] pt-5" aria-label="Order total and confirmation">
       <div className="grid gap-2">
-        <label className="text-sm font-medium text-[var(--ink)]" htmlFor="checkout-coupon">Coupon code <span className="font-normal text-[var(--muted)]">(optional)</span></label>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>Coupon code <Typography component="span" variant="body2" color="text.secondary">(optional)</Typography></Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          <TextField
             id="checkout-coupon"
-            className="min-h-11 min-w-0 flex-1 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-base uppercase text-[var(--ink)] placeholder:normal-case placeholder:text-[var(--muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:opacity-60"
+            label="Coupon code"
+            size="small"
+            fullWidth
             value={draft}
-            maxLength={32}
+            slotProps={{ htmlInput: { maxLength: 32, 'aria-label': 'Coupon code' } }}
             autoCapitalize="characters"
             autoComplete="off"
             placeholder="Enter code"
             disabled={locked || props.disabled}
             onChange={(event) => setDraft(event.target.value)}
           />
-          <button
+          <Button
             type="button"
-            className="secondary-button min-h-11 shrink-0 !py-2 !text-xs sm:min-w-28"
+            variant="outlined"
+            sx={{ flexShrink: 0, minWidth: { sm: 112 } }}
             disabled={locked || props.disabled || !draft.trim()}
             onClick={() => setCoupon(draft.trim().toUpperCase())}
           >
             Apply code
-          </button>
-        </div>
-        {coupon && <button type="button" className="min-h-10 justify-self-start text-xs font-medium text-[var(--muted)] underline underline-offset-4 hover:text-[var(--ink)]" disabled={locked} onClick={() => { setCoupon(''); setDraft('') }}>Remove applied code</button>}
+          </Button>
+        </Stack>
+        {coupon && <Button type="button" variant="text" sx={{ justifySelf: 'start' }} disabled={locked} onClick={() => { setCoupon(''); setDraft('') }}>Remove applied code</Button>}
       </div>
       <CheckoutOrder {...props} couponCode={coupon} onAttempt={() => { setLocked(true); props.onAttempt() }} />
     </section>
@@ -118,19 +126,19 @@ function CheckoutOrder({
         <a href={'/orders/' + encodeURIComponent(orderId)}>View order and payment</a>
       </p>
     )
-  if (!attempted && quote.isPending) return <p className="my-4 rounded-lg bg-[var(--paper)] p-3 text-sm text-[var(--muted)]" role="status">Checking delivery charges and total…</p>
+  if (!attempted && quote.isPending) return <Alert severity="info" role="status">Checking delivery charges and total…</Alert>
   if (!attempted && quote.isError)
     return (
-      <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-950" role="alert">
+      <Alert className="mt-4" severity="error" role="alert">
         <p className="mb-3">{quote.error instanceof Error ? quote.error.message : 'Unable to load charges.'}</p>
-        <button
-          className="secondary-button"
+        <Button
+          variant="outlined"
           disabled={quote.isFetching}
           onClick={() => void quote.refetch({ cancelRefetch: false })}
         >
           Retry
-        </button>
-      </div>
+        </Button>
+      </Alert>
     )
   if (!attempted && !quote.data?.enabled)
     return (
@@ -152,15 +160,16 @@ function CheckoutOrder({
     <div className="mt-4">
       {!!displayedQuote?.discountMinor && <p className="mb-3 rounded-lg bg-[rgba(215,225,208,0.4)] p-3 text-xs leading-5 text-[var(--ink)]" role="status">Coupon {displayedQuote?.couponCode}: −{money(displayedQuote?.discountMinor)}. Usage is confirmed when the order is recorded.</p>}
       <OrderTotals subtotalMinor={displayedQuote?.subtotalMinor} shippingMinor={displayedQuote?.shippingMinor} taxMinor={displayedQuote?.taxMinor} discountMinor={displayedQuote?.discountMinor} totalMinor={request.current?.expectedTotalMinor ?? displayedQuote?.totalMinor} />
-      {!addressId && <p className="my-3 rounded-lg bg-[var(--paper)] p-3 text-xs leading-5 text-[var(--muted)]" role="status">Add or select an India delivery address to continue.</p>}
-      {errorMessage && <div className="my-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-950" role="alert"><p className="mb-1 font-semibold">We couldn’t confirm your order.</p><p className="mb-0">The result may be unknown. Check <a href="/orders" className="font-medium underline">your orders</a> first. Retrying below uses the same order request and total.</p></div>}
-      <button
-        className="primary-button flex w-full items-center justify-center !normal-case !tracking-normal"
+      {!addressId && <Alert className="my-3" severity="info" role="status">Add or select an India delivery address to continue.</Alert>}
+      {errorMessage && <Alert className="my-3" severity="error" role="alert"><strong>We couldn’t confirm your order.</strong><br />The result may be unknown. Check <a href="/orders">your orders</a> first. Retrying below uses the same order request and total.</Alert>}
+      <Button
+        variant="contained"
+        fullWidth
         disabled={pending || (!attempted && (disabled || !addressId || quote.isFetching))}
         onClick={() => void submit()}
       >
         {pending ? 'Recording your order…' : (attempted ? 'Retry same order · ' : 'Place order · ') + money(request.current?.expectedTotalMinor ?? displayedQuote?.totalMinor)}
-      </button>
+      </Button>
       <p className="mb-0 mt-3 text-xs leading-5 text-[var(--muted)]">
         After the order is recorded, continue to payment from the order page. If a request is interrupted, check{' '}
         <a className="font-medium text-[var(--ink)] underline underline-offset-2" href="/orders">your orders</a> before starting another checkout.

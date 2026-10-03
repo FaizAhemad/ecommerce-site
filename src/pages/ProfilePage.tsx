@@ -5,6 +5,13 @@ import { privateKey } from '../api/sessionScope'
 import { queryClient } from '../api/queryClient'
 import { useNotification } from '../components/NotificationProvider'
 import { ProfileForms } from '../components/ProfileForms'
+import { Alert } from '../components/mui/Alert'
+import { Button } from '../components/mui/Button'
+import { Chip } from '../components/mui/Chip'
+import { CircularProgress } from '../components/mui/CircularProgress'
+import { Container } from '../components/mui/Container'
+import { Stack } from '../components/mui/Stack'
+import { Typography } from '../components/mui/Typography'
 
 export function ProfilePage({
   onNavigate,
@@ -52,49 +59,45 @@ export function ProfilePage({
     }
   }
   return (
-    <div className="w-full">
-      <section className="mx-auto w-full max-w-[1120px] px-4 py-7 sm:px-6 sm:py-10 lg:px-8 lg:py-12" aria-labelledby="profile-title">
+    <Container maxWidth="lg" component="section" aria-labelledby="profile-title" sx={{ py: { xs: 3, sm: 5 } }}>
         <header className="mb-6 flex flex-col gap-4 border-b border-[var(--line)] pb-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:pb-6">
           <div className="min-w-0">
-            <p className="eyebrow mb-2">YOUR ACCOUNT</p>
-            <h1 id="profile-title" className="!mb-2 !max-w-none !text-4xl !leading-tight !tracking-tight sm:!text-5xl">Profile</h1>
+            <Typography variant="overline" color="text.secondary">YOUR ACCOUNT</Typography>
+            <Typography id="profile-title" component="h1" variant="h3" sx={{ mb: 1 }}>Profile</Typography>
             {query.data && (
-              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[var(--muted)]">
-                <span className="max-w-full break-all text-[var(--ink)]">{query.data.profile.email || 'No email address on this account.'}</span>
-                {query.data.profile.email && <span className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-medium ${query.data.profile.emailVerified ? 'bg-[rgba(215,225,208,0.55)] text-[var(--ink)]' : 'bg-[var(--paper)] text-[var(--muted)]'}`}>{query.data.profile.emailVerified ? 'Verified' : 'Not verified'}</span>}
-              </div>
+              <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
+                <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{query.data.profile.email || 'No email address on this account.'}</Typography>
+                {query.data.profile.email && <Chip size="small" color={query.data.profile.emailVerified ? 'success' : 'warning'} label={query.data.profile.emailVerified ? 'Verified' : 'Not verified'} />}
+              </Stack>
             )}
           </div>
           {query.data && (
-            <nav className="flex flex-wrap gap-2" aria-label="Account security">
-              <a className="inline-flex min-h-11 items-center rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 text-sm font-medium text-[var(--ink)] transition-colors hover:bg-[var(--paper)]" href="/verify-email" onClick={onNavigate('/verify-email')}>Email verification</a>
-              {query.data.profile.email && <a className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-[var(--muted)] underline decoration-[var(--line)] underline-offset-4 hover:text-[var(--ink)]" href="/forgot-password" onClick={onNavigate('/forgot-password')}>Reset password</a>}
-            </nav>
+            <Stack component="nav" direction={{ xs: 'column', sm: 'row' }} spacing={1} aria-label="Account security">
+              <Button component="a" href="/verify-email" onClick={onNavigate('/verify-email')} variant="outlined">Email verification</Button>
+              {query.data.profile.email && <Button component="a" href="/forgot-password" onClick={onNavigate('/forgot-password')} variant="text">Reset password</Button>}
+            </Stack>
           )}
         </header>
         {query.isPending ? (
-          <div className="grid min-h-56 place-content-center justify-items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 text-center" role="status">
-            <span className="size-8 animate-pulse rounded-full bg-[rgba(215,225,208,0.65)] motion-reduce:animate-none" aria-hidden="true" />
-            <p className="m-0 text-sm text-[var(--muted)]">Loading your account details…</p>
-          </div>
+          <Stack role="status" spacing={1.5} sx={{ minHeight: 224, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 1, borderColor: 'divider', borderRadius: 3, bgcolor: 'background.paper', p: 3 }}>
+            <CircularProgress size={30} /><Typography color="text.secondary">Loading your account details…</Typography>
+          </Stack>
         ) : query.isError && !query.data ? (
-          <div className="mx-auto grid min-h-56 max-w-xl place-content-center justify-items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 text-center" role="alert">
-            <p className="m-0 text-sm text-[var(--ink)]">Unable to load your profile.</p>
-            <p className="m-0 text-sm text-[var(--muted)]">Your account details have not been changed.</p>
-            <button
-              className="secondary-button"
+          <Stack spacing={1.5} sx={{ minHeight: 224, maxWidth: 600, mx: 'auto', p: 3, textAlign: 'center', alignItems: 'center', justifyContent: 'center' }}>
+            <Alert severity="error" role="alert">Unable to load your profile. Your account details have not been changed.</Alert>
+            <Button
+              variant="outlined"
               disabled={query.isFetching}
               onClick={() => void query.refetch()}
             >
               Retry
-            </button>
-          </div>
+            </Button>
+          </Stack>
         ) : (
           query.data && (
             <ProfileForms data={query.data} pending={pending} error={error} clearError={() => setError('')} save={save} />
           )
         )}
-      </section>
-    </div>
+    </Container>
   )
 }

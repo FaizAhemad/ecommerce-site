@@ -1,5 +1,8 @@
-import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
+import { Button } from './mui/Button'
+import { Dialog } from './mui/Dialog'
+import { DialogContent } from './mui/DialogContent'
+import { DialogTitle } from './mui/DialogTitle'
 
 export function ImagePreviewDialog({
   src,
@@ -10,40 +13,34 @@ export function ImagePreviewDialog({
   alt: string
   onClose: () => void
 }) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-    dialog.showModal()
-    return () => {
-      if (dialog.open) dialog.close()
-    }
-  }, [])
-
   return (
-    <dialog
-      ref={dialogRef}
-      className="image-preview-dialog fixed inset-0 m-0 grid h-dvh max-h-none w-screen max-w-none place-items-center border-0 bg-transparent p-4 text-white"
-      aria-label="Product image preview"
+    <Dialog
+      open
+      aria-labelledby="product-image-preview-title"
       onClose={onClose}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose()
+      sx={{
+        '& .MuiDialog-paper': { m: 0, p: 2, width: '100vw', height: '100dvh', maxWidth: 'none', maxHeight: 'none', bgcolor: 'transparent', color: 'common.white', boxShadow: 'none', placeItems: 'center' },
+        '& .MuiBackdrop-root': { bgcolor: 'rgba(15, 18, 22, 0.88)' },
       }}
     >
-      <button
+      <DialogTitle id="product-image-preview-title" sx={{ position: 'absolute', width: 1, height: 1, p: 0, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Product image preview</DialogTitle>
+      <DialogContent sx={{ display: 'grid', placeItems: 'center', overflow: 'visible' }}>
+      <Button
+        variant="outlined"
+        color="inherit"
         type="button"
-        className="absolute right-4 top-4 z-10 grid size-11 place-items-center rounded-full border border-white/30 bg-black/45 text-white hover:bg-black/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         aria-label="Close image preview"
         onClick={onClose}
+        sx={{ position: 'absolute', top: 2, right: 2, zIndex: 1, minWidth: 44, width: 44, height: 44, borderRadius: '50%', bgcolor: 'rgba(0,0,0,.45)', borderColor: 'rgba(255,255,255,.3)', '&:hover': { bgcolor: 'rgba(0,0,0,.7)' } }}
       >
-        <X aria-hidden="true" className="size-5" />
-      </button>
+        <X aria-hidden="true" size={20} />
+      </Button>
       <img
-        className="max-h-[88dvh] max-w-[min(92vw,1100px)] rounded-xl object-contain shadow-2xl"
         src={src}
         alt={alt}
+        style={{ maxHeight: '88dvh', maxWidth: 'min(92vw, 1100px)', borderRadius: 12, objectFit: 'contain', boxShadow: '0 24px 64px rgba(0,0,0,.32)' }}
       />
-    </dialog>
+      </DialogContent>
+    </Dialog>
   )
 }

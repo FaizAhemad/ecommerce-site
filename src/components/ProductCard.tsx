@@ -171,11 +171,6 @@ export function ProductCard({
             <Heart aria-hidden="true" size={17} fill={wishlisted ? 'currentColor' : 'none'} />
           </IconButton>
         </Stack>
-        {product.seller && !product.seller.isPlatform && (
-          <Typography component="p" noWrap sx={{ m: 0, mt: -0.75, color: 'text.secondary', fontSize: 11 }}>
-            Sold by {product.seller.name}
-          </Typography>
-        )}
         <Stack direction="row" spacing={1} sx={{ minHeight: 44, alignItems: 'center', mt: 0.25 }}>
           <Box sx={{ display: 'grid', minWidth: 0, flex: 1, alignContent: 'center', gap: 0.5 }}>
             <Typography component="strong" sx={{ color: 'text.primary', fontSize: 'clamp(18px,1.35vw,21px)', fontWeight: 800, lineHeight: 1.15, letterSpacing: '-.025em', overflowWrap: 'anywhere' }}>

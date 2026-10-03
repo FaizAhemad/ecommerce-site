@@ -3,6 +3,12 @@ import type { StorefrontApiResponse } from '../api/storefront'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { getPublishedPolicy, type PolicyKind } from '../api/policies'
+import { Alert } from '../components/mui/Alert'
+import { Button } from '../components/mui/Button'
+import { CircularProgress } from '../components/mui/CircularProgress'
+import { Container } from '../components/mui/Container'
+import { Stack } from '../components/mui/Stack'
+import { Typography } from '../components/mui/Typography'
 
 type PolicyPageProps = {
   storefront: StorefrontApiResponse
@@ -25,19 +31,16 @@ export function PolicyPage({ storefront, policy, onNavigate }: PolicyPageProps) 
           ? policies.refundTitle
           : policy === 'terms' ? policies.termsTitle : policy === 'shipping' ? 'Shipping policy' : policy === 'cancellation' ? 'Cancellation policy' : 'Cookie policy'
   return (
-    <section className="policy-page page-section" aria-labelledby="policy-title">
-      <h1 id="policy-title">{query.data?.title ?? title}</h1>
-      {query.isPending ? <p role="status">Loading policy…</p> : query.isError ? <div role="alert"><p>Unable to load the published policy.</p><button className="secondary-button" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>Retry</button></div> : query.data ? <>
-        <p>Version {query.data.version} · Published {new Date(query.data.publishedAt).toLocaleDateString()}</p>
-        {query.data.text.split(/\n\s*\n/).map((paragraph, index) => <p key={index} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{paragraph}</p>)}
-      </> : <div className="policy-notice">
-        <strong>{policies.missingContentStatus}</strong>
-        <p>{policies.missingContentAction}</p>
-        <a href="/support" onClick={onNavigate('/support')}>Contact support before proceeding if you need policy information.</a>
-      </div>}
-      <a className="secondary-button" href="/" onClick={onNavigate('/')}>
-        {policies.backToHomeLabel}
-      </a>
-    </section>
+    <Container component="main" maxWidth="md" aria-labelledby="policy-title" sx={{ py: { xs: 3, sm: 5, md: 7 } }}>
+      <Stack spacing={2}>
+        <Typography variant="overline" color="text.secondary">Policies</Typography>
+        <Typography component="h1" id="policy-title" variant="h2" sx={{ fontSize: { xs: '2rem', sm: '2.75rem' } }}>{query.data?.title ?? title}</Typography>
+        {query.isPending ? <Alert severity="info" role="status"><CircularProgress size={16} sx={{ mr: 1 }} />Loading published policy…</Alert> : query.isError ? <Alert severity="error" role="alert" action={<Button color="inherit" size="small" disabled={query.isFetching} onClick={() => void query.refetch({ cancelRefetch: false })}>{query.isFetching ? 'Loading…' : 'Try again'}</Button>}>Unable to load the published policy. Your view has not changed.</Alert> : query.data ? <>
+          <Typography variant="caption" color="text.secondary">Version {query.data.version} · Published {new Date(query.data.publishedAt).toLocaleDateString()}</Typography>
+          <Stack spacing={1}>{query.data.text.split(/\n\s*\n/).map((paragraph, index) => <Typography component="p" key={index} sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{paragraph}</Typography>)}</Stack>
+        </> : <Alert severity="warning"><Typography component="strong" sx={{ display: 'block' }}>{policies.missingContentStatus}</Typography><Typography component="p">{policies.missingContentAction}</Typography><Button component="a" href="/support" onClick={onNavigate('/support')} variant="outlined">Contact support before proceeding</Button></Alert>}
+        <Button component="a" variant="outlined" href="/" onClick={onNavigate('/')}>{policies.backToHomeLabel}</Button>
+      </Stack>
+    </Container>
   )
 }

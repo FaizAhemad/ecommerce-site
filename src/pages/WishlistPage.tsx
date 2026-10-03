@@ -10,6 +10,12 @@ import { ProductCard } from '../components/ProductCard'
 import { queryClient } from '../api/queryClient'
 import { getCartPendingAction, useCart } from '../api/cart'
 import { sessionUser } from '../api/sessionScope'
+import { Box } from '../components/mui/Box'
+import { Button } from '../components/mui/Button'
+import { Container } from '../components/mui/Container'
+import { Paper } from '../components/mui/Paper'
+import { Stack } from '../components/mui/Stack'
+import { Typography } from '../components/mui/Typography'
 
 type Props = {
   storefront: StorefrontApiResponse
@@ -53,19 +59,19 @@ export function WishlistPage({ storefront, onAdd, onOpenProduct }: Props) {
     maximumFractionDigits: 0,
   })
   return (
-    <section className="wishlist-page page-section">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">{t('wishlist:eyebrow')}</p>
-          <h1>{t('wishlist:title')}</h1>
-        </div>
-        <p className="section-note">
-          {products.length}{' '}
-          {products.length === 1 ? t('wishlist:savedItem') : t('wishlist:savedItems')}
-        </p>
-      </div>
+    <Container component="main" maxWidth="xl" sx={{ py: { xs: 3, sm: 5, lg: 7 } }}>
+      <Stack spacing={{ xs: 3, sm: 4 }}>
+      <Stack component="header" direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: { sm: 'flex-end' } }}>
+        <Box>
+          <Typography variant="overline" color="text.secondary">{t('wishlist:eyebrow')}</Typography>
+          <Typography component="h1" variant="h3">{t('wishlist:title')}</Typography>
+        </Box>
+        <Typography variant="body2" color="text.secondary" aria-live="polite">
+          {products.length} {products.length === 1 ? t('wishlist:savedItem') : t('wishlist:savedItems')}
+        </Typography>
+      </Stack>
       {products.length ? (
-        <div className="product-grid">
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 248px), 1fr))', gap: { xs: 1.5, sm: 2.5 } }}>
           {products.map((product) => (
             <ProductCard
               key={product.id}
@@ -82,16 +88,19 @@ export function WishlistPage({ storefront, onAdd, onOpenProduct }: Props) {
               cartPendingAction={getCartPendingAction(product.id)}
             />
           ))}
-        </div>
+        </Box>
       ) : (
-        <div className="wishlist-empty">
-          <h2>{t('wishlist:emptyTitle')}</h2>
-          <p>{t('wishlist:emptyDescription')}</p>
-          <a className="primary-button" href="/products">
+        <Paper variant="outlined" sx={{ p: { xs: 3, sm: 5 }, textAlign: 'center' }}>
+          <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
+          <Typography component="h2" variant="h5">{t('wishlist:emptyTitle')}</Typography>
+          <Typography color="text.secondary">{t('wishlist:emptyDescription')}</Typography>
+          <Button component="a" variant="contained" href="/products">
             {t('wishlist:exploreProducts')}
-          </a>
-        </div>
+          </Button>
+          </Stack>
+        </Paper>
       )}
-    </section>
+      </Stack>
+    </Container>
   )
 }

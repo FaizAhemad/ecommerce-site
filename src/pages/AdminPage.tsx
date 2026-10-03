@@ -16,7 +16,7 @@ import { apiFetch as fetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
 import { csrfToken } from '../api/csrf'
 import { queryClient } from '../api/queryClient'
 import { upload as uploadBlob } from '@vercel/blob/client'
-import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent, type SyntheticEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 import { Box } from '../components/mui/Box'
 import { Button } from '../components/mui/Button'
@@ -49,6 +49,16 @@ type AdminProduct = {
   colors?: { name: string; hex: string }[]
   images?: { url: string; alt?: string; sortOrder: number }[]
   videos?: { url: string; poster?: string | null; sortOrder: number }[]
+}
+type AdminOrder = { id: string; orderNumber: string; totalMinor: number; status: string }
+type AdminCustomer = { id: string; name: string | null; email: string | null; role: 'CUSTOMER' | 'ADMIN'; _count: { orders: number } }
+type AdminAnalytics = { revenueMinor?: number; orders?: number; customers?: number; products?: number }
+type AdminPageData = {
+  [key: string]: unknown
+  analytics?: AdminAnalytics
+  products?: { products?: AdminProduct[]; pagination?: { total?: number } }
+  orders?: { orders?: AdminOrder[]; pagination?: { total?: number } }
+  customers?: { customers?: AdminCustomer[]; pagination?: { total?: number } }
 }
 
 type Section =
@@ -109,7 +119,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
   const productFormRef = useRef<HTMLFormElement>(null)
   const selectedMedia = useRef(new Map<HTMLInputElement, File[]>())
   const [section, setSection] = useState<Section>('overview')
-  const [data, setData] = useState<any>({})
+  const [data, setData] = useState<AdminPageData>({})
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
   const [categories, setCategories] = useState<string[]>([...storefront.categories])
@@ -128,14 +138,14 @@ export function AdminPage({ storefront, onNavigate }: Props) {
           queryFn: async ({ signal }) => {
             const response = await fetch(url, { cache: 'no-store', signal })
             if (!response.ok) throw new Error('Unable to load this section.')
-            return response.json()
+            return await response.json() as Record<string, unknown>
           },
         })
         .then((body) => {
           if (loadRevision.current[key] !== revision) return
           assertCurrentSession(generation)
           setLoadStates((current) => ({ ...current, [key]: 'ready' }))
-          setData((current: any) => ({ ...current, [key]: body }))
+          setData((current) => ({ ...current, [key]: body }))
         })
         .catch(() => {
           if (generation === sessionGeneration() && loadRevision.current[key] === revision)
@@ -511,9 +521,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
             }
           >
             {notice && (
-              <p className="admin-feedback admin-feedback-top" role="status">
-                {notice}
-              </p>
+              <Alert severity="success" role="status" sx={{ mb: 2 }}>{notice}</Alert>
             )}
             {section === 'overview' && (
               <>
@@ -560,16 +568,17 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                   <TextField disabled={busy} name="description" label="Description" defaultValue={editing?.description ?? ''} multiline minRows={4} />
                   <TextField disabled={busy} name="colors" label="Colors" helperText="One per line: Red or Red|#ff0000. Custom shades require a hex value." defaultValue={editing?.colors?.map((color) => `${color.name}|${color.hex}`).join('\n') ?? ''} multiline minRows={3} placeholder={'Black|#111111\nNatural|#d8c29d'} />
                   {editing && (
-                    <div className="full admin-existing-media">
-                      <h3>Current photos and videos</h3>
+                    <Card variant="outlined" sx={{ p: 2 }}>
+                      <Stack spacing={1.5}>
+                      <Typography component="h3" variant="h6">Current photos and videos</Typography>
                       <Typography variant="body2" color="text.secondary">
                         Kept photos come first, followed by new uploads. Choose the primary image
                         number from that order.
                       </Typography>
                       {keptImages.map((image, index) => (
-                        <div key={image.url}>
-                          <img src={image.url} alt={`Image ${index + 1}`} />
-                          <span>Image {index + 1}</span>
+                        <Stack key={image.url} direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+                          <Box component="img" src={image.url} alt={`Image ${index + 1}`} sx={{ width: 88, height: 72, objectFit: 'contain', borderRadius: 1.5, bgcolor: 'action.hover' }} />
+                          <Typography sx={{ flexGrow: 1 }}>Image {index + 1}</Typography>
                           <Button
                             variant="outlined"
                             type="button"
@@ -580,11 +589,12 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                           >
                             Remove image
                           </Button>
-                        </div>
+                        </Stack>
                       ))}
                       {keptVideos.map((video, index) => (
-                        <div key={video.url}>
-                          <video src={video.url} controls preload="metadata" />
+                        <Stack key={video.url} direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+                          <Box component="video" src={video.url} controls preload="metadata" sx={{ width: 120, height: 72, objectFit: 'contain', borderRadius: 1.5, bgcolor: 'action.hover' }} />
+                          <Typography sx={{ flexGrow: 1 }}>Video {index + 1}</Typography>
                           <Button
                             variant="outlined"
                             type="button"
@@ -595,9 +605,10 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                           >
                             Remove video
                           </Button>
-                        </div>
+                        </Stack>
                       ))}
-                    </div>
+                      </Stack>
+                    </Card>
                   )}
                   <TextField disabled={busy} name="imageFiles" label="Product images" type="file" slotProps={{ htmlInput: { accept: 'image/*', multiple: true }, inputLabel: { shrink: true } }} helperText="Multiple files supported. The primary image is selected below." />
                   <TextField disabled={busy} name="primaryImage" label="Primary image number" type="number" slotProps={{ htmlInput: { min: 1 }, inputLabel: { shrink: true } }} defaultValue="1" helperText="1 = first selected image" />
@@ -618,7 +629,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                 </Stack>
                 </FormDialog>
                 <DataGrid
-                  rows={products as AdminProduct[]}
+                  rows={products}
                   totalRows={data.products?.pagination?.total ?? 0}
                   isLoading={loadStates.products === 'loading'}
                   onQueryChange={onProductsQuery}
@@ -633,7 +644,7 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                       getFilterValue: (product) => product.name,
                       getSortValue: (product) => product.name,
                       minWidthClass: 'min-w-64',
-                      cell: (product) => <div className="flex min-w-56 items-center gap-3"><span className="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] text-[var(--muted)]">{product.images?.[0]?.url ? <img src={product.images[0].url} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" onError={(event) => { event.currentTarget.hidden = true }} /> : <ImageIcon className="size-5" aria-hidden="true" />}</span><span className="font-medium leading-5 text-[var(--ink)]">{product.name}</span></div>,
+                      cell: (product) => <Stack direction="row" spacing={1.5} sx={{ minWidth: 224, alignItems: 'center' }}><Box sx={{ position: 'relative', display: 'grid', width: 48, height: 48, flexShrink: 0, placeItems: 'center', overflow: 'hidden', borderRadius: 2, border: 1, borderColor: 'divider', bgcolor: 'action.hover', color: 'text.secondary' }}>{product.images?.[0]?.url ? <Box component="img" src={product.images[0].url} alt="" loading="lazy" sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={(event: SyntheticEvent<HTMLImageElement>) => { event.currentTarget.hidden = true }} /> : <ImageIcon size={20} aria-hidden="true" />}</Box><Typography sx={{ fontWeight: 600, lineHeight: 1.35 }}>{product.name}</Typography></Stack>,
                     },
                     {
                       id: 'category',
@@ -702,17 +713,17 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                   onQueryChange={onOrdersQuery}
                   label="Orders"
                   emptyMessage="No orders have been placed yet."
-                  getRowKey={(order: any) => order.id}
+                  getRowKey={(order) => order.id}
                   columns={[
-                    { id: 'order', header: 'Order', sortKey: 'orderNumber', getFilterValue: (order: any) => order.orderNumber, getSortValue: (order: any) => order.orderNumber, cell: (order: any) => <span className="whitespace-nowrap font-medium">{order.orderNumber}</span> },
-                    { id: 'total', header: 'Total', sortKey: 'totalMinor', getFilterValue: (order: any) => (order.totalMinor / 100).toLocaleString('en-IN'), getSortValue: (order: any) => order.totalMinor, filterType: 'number', filterStep: 0.01, cell: (order: any) => `₹${(order.totalMinor / 100).toLocaleString('en-IN')}` },
+                    { id: 'order', header: 'Order', sortKey: 'orderNumber', getFilterValue: (order) => order.orderNumber, getSortValue: (order) => order.orderNumber, cell: (order) => <Typography sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{order.orderNumber}</Typography> },
+                    { id: 'total', header: 'Total', sortKey: 'totalMinor', getFilterValue: (order) => (order.totalMinor / 100).toLocaleString('en-IN'), getSortValue: (order) => order.totalMinor, filterType: 'number', filterStep: 0.01, cell: (order) => `₹${(order.totalMinor / 100).toLocaleString('en-IN')}` },
                     {
                       id: 'status',
                       header: 'Status',
-                      getFilterValue: (order: any) => order.status,
+                      getFilterValue: (order) => order.status,
                       filterOptions: ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'].map((status) => ({ value: status, label: status })),
-                      getSortValue: (order: any) => order.status,
-                      cell: (order: any) => <FormControl size="small" sx={{ minWidth: 148 }}><Select aria-label={`Status for order ${order.orderNumber}`} disabled={busy || ['CANCELLED', 'REFUNDED', 'SHIPPED', 'DELIVERED'].includes(order.status)} value={order.status} onChange={(event) => patch('/api/admin/orders', { orderId: order.id, status: event.target.value }, 'Order updated.')}>
+                      getSortValue: (order) => order.status,
+                      cell: (order) => <FormControl size="small" sx={{ minWidth: 148 }}><Select aria-label={`Status for order ${order.orderNumber}`} disabled={busy || ['CANCELLED', 'REFUNDED', 'SHIPPED', 'DELIVERED'].includes(order.status)} value={order.status} onChange={(event) => patch('/api/admin/orders', { orderId: order.id, status: event.target.value }, 'Order updated.')}>
                         <MenuItem value="PENDING">Pending</MenuItem><MenuItem value="CONFIRMED">Confirmed</MenuItem><MenuItem value="PROCESSING">Processing</MenuItem><MenuItem value="SHIPPED" disabled>Shipped</MenuItem><MenuItem value="DELIVERED" disabled>Delivered</MenuItem><MenuItem value="CANCELLED" disabled={order.status !== 'PENDING' && order.status !== 'CONFIRMED'}>Cancelled</MenuItem><MenuItem value="REFUNDED" disabled>Refunded</MenuItem>
                       </Select></FormControl>,
                     },
@@ -743,12 +754,12 @@ export function AdminPage({ storefront, onNavigate }: Props) {
                   onQueryChange={onCustomersQuery}
                   label="Customers"
                   emptyMessage="No customer records yet."
-                  getRowKey={(customer: any) => customer.id}
+                  getRowKey={(customer) => customer.id}
                   columns={[
-                    { id: 'name', header: 'Name', getFilterValue: (customer: any) => customer.name, getSortValue: (customer: any) => customer.name, cell: (customer: any) => customer.name ?? '—' },
-                    { id: 'email', header: 'Email', getFilterValue: (customer: any) => customer.email, getSortValue: (customer: any) => customer.email, cell: (customer: any) => customer.email ?? '—' },
-                    { id: 'role', header: 'Account role', getFilterValue: (customer: any) => customer.role, getSortValue: (customer: any) => customer.role, filterOptions: customerRoleOptions, cell: (customer: any) => <Chip size="small" color={customer.role === 'ADMIN' ? 'success' : 'default'} variant={customer.role === 'ADMIN' ? 'filled' : 'outlined'} label={customer.role === 'ADMIN' ? 'Administrator' : 'Customer'} /> },
-                    { id: 'orders', header: 'Orders', getFilterValue: (customer: any) => customer._count.orders, getSortValue: (customer: any) => customer._count.orders, cell: (customer: any) => customer._count.orders },
+                    { id: 'name', header: 'Name', getFilterValue: (customer) => customer.name, getSortValue: (customer) => customer.name, cell: (customer) => customer.name ?? '—' },
+                    { id: 'email', header: 'Email', getFilterValue: (customer) => customer.email, getSortValue: (customer) => customer.email, cell: (customer) => customer.email ?? '—' },
+                    { id: 'role', header: 'Account role', getFilterValue: (customer) => customer.role, getSortValue: (customer) => customer.role, filterOptions: customerRoleOptions, cell: (customer) => <Chip size="small" color={customer.role === 'ADMIN' ? 'success' : 'default'} variant={customer.role === 'ADMIN' ? 'filled' : 'outlined'} label={customer.role === 'ADMIN' ? 'Administrator' : 'Customer'} /> },
+                    { id: 'orders', header: 'Orders', getFilterValue: (customer) => customer._count.orders, getSortValue: (customer) => customer._count.orders, cell: (customer) => customer._count.orders },
                   ]}
                 />
               </>
@@ -812,7 +823,7 @@ function lines(value: FormDataEntryValue | null) {
     .map((item) => item.trim())
     .filter(Boolean)
 }
-function Stats({ data }: { data: any }) {
+function Stats({ data }: { data: AdminAnalytics }) {
   return <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2,minmax(0,1fr))', md: 'repeat(4,minmax(0,1fr))' }, gap: 2, mb: 3 }}>
       <Stat
         label="Revenue"

@@ -4,6 +4,8 @@ import { sessionGeneration, sessionSignal } from '../api/sessionScope'
 import { createSessionRefreshCoordinator } from '../api/sessionRefresh'
 import './SessionActivity.css'
 import { createPortal } from 'react-dom'
+import { Button } from './mui/Button'
+import { CircularProgress } from './mui/CircularProgress'
 
 export function SessionActivity() {
   const [remaining, setRemaining] = useState<number | null>(null)
@@ -80,9 +82,9 @@ export function SessionActivity() {
   if (!unavailable && (remaining === null || remaining > 60)) return null
   return createPortal(<aside className="session-warning" aria-label="Session expiry warning">
     <p role="status">{unavailable ? 'Unable to verify your session. Your login has not been extended.' : 'Your session expires within one minute. Continue to stay signed in, unless the maximum login time has been reached.'}</p>
-    <button type="button" className="secondary-button session-continue" aria-busy={continuing} disabled={continuing} onClick={() => void continueSession.current()}>
-      {continuing && <span className="session-continue-spinner" aria-hidden="true" />}
+    <Button type="button" variant="outlined" className="session-continue" aria-busy={continuing} disabled={continuing} onClick={() => void continueSession.current()}>
+      {continuing && <CircularProgress size={16} aria-label="Extending session" sx={{ mr: 1 }} />}
       {continuing ? 'Extending session…' : 'Continue session'}
-    </button>
+    </Button>
   </aside>, host ?? document.body)
 }

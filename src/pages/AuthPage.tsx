@@ -3,6 +3,11 @@ import { useNotification } from '../components/NotificationProvider'
 import { apiFetch as fetch, ApiRateLimitError } from '../api/http'
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
+import { Alert } from '../components/mui/Alert'
+import { Button } from '../components/mui/Button'
+import { ButtonGroup } from '../components/mui/ButtonGroup'
+import { Stack } from '../components/mui/Stack'
+import { TextField } from '../components/mui/TextField'
 
 type Props = {
   mode: 'login' | 'signup'
@@ -19,14 +24,17 @@ export function AuthPage({ mode, storefront, onNavigate, onLogin }: Props) {
   const notify = useNotification()
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   useEffect(() => {
     setPassword('')
+    setErrorMessage('')
   }, [mode, method])
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (submitLock.current) return
     submitLock.current = true
     setSubmitting(true)
+    setErrorMessage('')
     const formElement = event.currentTarget
     const values = new FormData(formElement)
     const contact = String(values.get('contact') ?? '')
@@ -45,19 +53,25 @@ export function AuthPage({ mode, storefront, onNavigate, onLogin }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      if (!result.ok) throw new Error('Unable to complete authentication')
-      const resultBody = (await result.json()) as { user?: SessionUser }
-      if (!resultBody.user?.id) throw new Error('Invalid session response')
+      const resultBody = (await result.json().catch(() => null)) as
+        | { user?: SessionUser; error?: { message?: string } }
+        | null
+      if (!result.ok)
+        throw new Error(
+          typeof resultBody?.error?.message === 'string'
+            ? resultBody.error.message
+            : 'Unable to complete authentication. Please try again.',
+        )
+      const authenticatedUser = resultBody?.user
+      if (!authenticatedUser?.id) throw new Error('Invalid session response')
       formElement.reset()
       setPassword('')
-      onLogin(resultBody.user)
+      onLogin(authenticatedUser)
       notify(signup ? copy.signupSuccess : copy.loginSuccess, 'success')
     } catch (error) {
-      notify(
-        error instanceof ApiRateLimitError
-          ? error
-          : 'Unable to complete authentication. Please try again.',
-      )
+      setErrorMessage(error instanceof ApiRateLimitError || error instanceof Error
+        ? error.message
+        : 'Unable to complete authentication. Please try again.')
     } finally {
       submitLock.current = false
       setSubmitting(false)
@@ -73,75 +87,26 @@ export function AuthPage({ mode, storefront, onNavigate, onLogin }: Props) {
           new URLSearchParams(window.location.search).get('passwordReset') === 'success' && (
             <p role="status">Your password has been reset. Sign in with your new password.</p>
           )}
-        <div className="auth-verification-tabs" role="tablist" aria-label="Verification method">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={method === 'email'}
-            className={method === 'email' ? 'is-active' : ''}
-            onClick={() => setMethod('email')}
-          >
-            Email
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={method === 'mobile'}
-            className={method === 'mobile' ? 'is-active' : ''}
-            onClick={() => setMethod('mobile')}
-          >
-            Mobile
-          </button>
-        </div>
-        <form className="auth-form" onSubmit={submit}>
+        <ButtonGroup aria-label="Sign-in contact method" fullWidth variant="outlined" sx={{ mb: 2 }}>
+          <Button type="button" aria-pressed={method === 'email'} variant={method === 'email' ? 'contained' : 'outlined'} onClick={() => setMethod('email')}>Email</Button>
+          <Button type="button" aria-pressed={method === 'mobile'} variant={method === 'mobile' ? 'contained' : 'outlined'} onClick={() => setMethod('mobile')}>Mobile</Button>
+        </ButtonGroup>
+        <Stack component="form" className="auth-form" spacing={2} onSubmit={submit} aria-busy={submitting}>
+          {errorMessage && <Alert severity="error" role="alert">{errorMessage}</Alert>}
           {signup && (
-            <label>
-              {copy.fullNameLabel}
-              <input name="name" required autoComplete="name" placeholder={copy.fullNameLabel} />
-            </label>
+            <TextField name="name" label={copy.fullNameLabel} required autoComplete="name" slotProps={{ htmlInput: { minLength: 2, maxLength: 100 } }} fullWidth />
           )}
           {method === 'mobile' ? (
-            <label>
-              {copy.mobileLabel}
-              <input
-                name="contact"
-                required
-                type="tel"
-                autoComplete="tel"
-                placeholder="+91 00000 00000"
-              />
-            </label>
+            <TextField name="contact" label={copy.mobileLabel} required type="tel" autoComplete="tel" placeholder="+91 00000 00000" fullWidth />
           ) : (
-            <label>
-              {copy.emailLabel}
-              <input
-                name="contact"
-                required
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-              />
-            </label>
+            <TextField name="contact" label={copy.emailLabel} required type="email" autoComplete="email" placeholder="you@example.com" fullWidth />
           )}
 
-          <label>
-            {copy.passwordLabel}
-            <input
-              name="password"
-              required
-              type="password"
-              autoComplete={signup ? 'new-password' : 'current-password'}
-              minLength={8}
-              placeholder={copy.passwordPlaceholder}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-          <button className="primary-button auth-submit" type="submit" disabled={submitting}>
-            {submitting ? 'Please wait…' : signup ? copy.signupAction : copy.loginAction}{' '}
-            <span aria-hidden="true">→</span>
-          </button>
-        </form>
+          <TextField name="password" label={copy.passwordLabel} required type="password" autoComplete={signup ? 'new-password' : 'current-password'} slotProps={{ htmlInput: signup ? { minLength: 8, maxLength: 128 } : {} }} placeholder={copy.passwordPlaceholder} value={password} onChange={(event) => setPassword(event.target.value)} fullWidth />
+          <Button className="auth-submit" type="submit" variant="contained" disabled={submitting}>
+            {submitting ? (signup ? 'Creating account…' : 'Signing in…') : signup ? copy.signupAction : copy.loginAction}
+          </Button>
+        </Stack>
         {!signup && (
           <p className="auth-switch">
             <a href="/forgot-password" onClick={onNavigate('/forgot-password')}>

@@ -4,6 +4,11 @@ import { getReturns, submitReturn, type ReturnHistory } from '../api/returns'
 import { privateKey, sessionGeneration, assertCurrentSession } from '../api/sessionScope'
 import { queryClient } from '../api/queryClient'
 import { useNotification } from './NotificationProvider'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Chip } from './mui/Chip'
+import { CircularProgress } from './mui/CircularProgress'
+import { TextField } from './mui/TextField'
 
 export function CustomerReturns({ orderId }: { orderId: string }) {
   const notify = useNotification()
@@ -51,13 +56,13 @@ export function CustomerReturns({ orderId }: { orderId: string }) {
       <h2 className="!mb-2 !mt-0 !text-xl !font-semibold !leading-tight !tracking-tight text-[var(--ink)] sm:!text-2xl">Returns</h2>
       <p className="mb-0 text-sm leading-6 text-[var(--muted)]">Requests are reviewed under the <a className="font-medium text-[var(--ink)] underline decoration-[var(--line)] underline-offset-4" href="/returns">returns policy</a>. A request does not guarantee eligibility, collection or a refund.</p>
     </div>
-    {query.isPending && <p className="m-0 text-sm text-[var(--muted)]" role="status">Loading return status…</p>}
-    {query.isError && <p className="m-0 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-950" role="alert">Unable to load return status. Your order is still available above.</p>}
-    <button type="button" className="secondary-button w-fit" disabled={busy || query.isFetching}
-      onClick={() => void query.refetch({ cancelRefetch: false })}>{query.isFetching ? 'Checking…' : 'Refresh return status'}</button>
+    {query.isPending && <Alert severity="info" role="status"><CircularProgress size={16} sx={{ mr: 1 }} />Loading return status…</Alert>}
+    {query.isError && <Alert severity="error" role="alert">Unable to load return status. Your order is still available above.</Alert>}
+    <Button type="button" variant="outlined" sx={{ justifySelf: 'start' }} disabled={busy || query.isFetching}
+      onClick={() => void query.refetch({ cancelRefetch: false })}>{query.isFetching && <CircularProgress size={16} sx={{ mr: 1 }} />}{query.isFetching ? 'Checking…' : 'Refresh return status'}</Button>
     {query.data?.returns.map((item) => <article className="rounded-xl border border-[var(--line)] bg-[var(--paper)] p-4" key={item.id}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="!m-0 !text-base !font-semibold !tracking-normal text-[var(--ink)]">{Object.hasOwn(labels, item.status) ? labels[item.status] : 'Status unavailable'}</h3>
+        <h3 className="!m-0 !text-base !font-semibold !tracking-normal text-[var(--ink)]"><Chip size="small" label={Object.hasOwn(labels, item.status) ? labels[item.status] : 'Status unavailable'} /></h3>
         <time className="text-xs text-[var(--muted)]" dateTime={item.createdAt}>Submitted {new Date(item.createdAt).toLocaleDateString()}</time>
       </div>
       <p className="mb-1 mt-3 text-sm leading-6 text-[var(--ink)]">{item.reason}</p>
@@ -65,13 +70,11 @@ export function CustomerReturns({ orderId }: { orderId: string }) {
       {item.status === 'APPROVED' && <p className="mb-0 mt-2 text-sm leading-6 text-[var(--muted)]">Approval does not confirm a refund or collection. Contact support for next steps.</p>}
     </article>)}
     {query.data?.canRequest && <form className="grid gap-4 border-t border-[var(--line)] pt-4" onSubmit={(event) => void submit(event)}>
-      <label className="grid gap-2 text-sm font-medium text-[var(--ink)]">Reason for requesting a return
-        <textarea className="min-h-28 w-full resize-y rounded-lg border border-[var(--line)] bg-[var(--paper)] p-3 text-base leading-6 text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:opacity-60" required maxLength={2000} rows={4} value={reason} disabled={busy || attempted}
+      <TextField fullWidth multiline minRows={4} maxRows={8} label="Reason for requesting a return" required slotProps={{ htmlInput: { maxLength: 2000 } }} value={reason} disabled={busy || attempted}
           onChange={(event) => setReason(event.target.value)} />
-      </label>
-      <button className="primary-button w-fit" disabled={busy || query.isFetching || !reason.trim()}>
-        {busy ? 'Recording request…' : attempted ? 'Retry same request' : 'Submit return request'}
-      </button>
+      <Button variant="contained" sx={{ justifySelf: 'start' }} disabled={busy || query.isFetching || !reason.trim()}>
+        {busy && <CircularProgress size={16} sx={{ mr: 1, color: 'inherit' }} />}{busy ? 'Recording request…' : attempted ? 'Retry same request' : 'Submit return request'}
+      </Button>
       {attempted && <p className="m-0 text-sm leading-6 text-[var(--muted)]">A retry uses the original reason and request ID. Refresh status before retrying; if you need to change the request, contact support.</p>}
     </form>}
     {query.data && !query.data.canRequest && !query.data.returns.length && <p className="m-0 text-sm leading-6 text-[var(--muted)]">Return requests are available after delivery. For other issues, <a className="font-medium text-[var(--ink)] underline" href="/support">contact support</a>.</p>}

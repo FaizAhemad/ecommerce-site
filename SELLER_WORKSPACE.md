@@ -20,8 +20,8 @@ Source implemented 2026-09-23; all new tests/build/device/provider acceptance re
 | /seller/orders | Paginated snapshot-attributed items only; no unrelated customer, address, provider or other-shop fields |
 | /admin/sellers | Application review, suspension/restoration and audit |
 | /admin/seller-products | Paginated content inspection, media preview, fee proposal and versioned product/offer decisions |
-| /shops | Paginated approved non-platform shop directory |
-| /shops/:slug | Approved-content showcase and explicitly requested media; private contact details are excluded |
+| /shops | Paginated approved non-platform shop directory, administrator or active approved seller membership only |
+| /shops/:slug | Approved-content showcase and explicitly requested media, administrator or active approved seller membership only; private contact details remain excluded |
 
 Forms reuse shared drawers and width/spacing conventions with loading/error/empty/pending feedback. Failed writes preserve the open draft, cancellation uses account-generation guards, and saves are never replayed automatically. Customer login remains the entry point; membership grants access, not a platform seller role.
 

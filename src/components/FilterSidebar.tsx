@@ -50,15 +50,17 @@ export function FilterSidebar({
         <Typography component="legend" variant="overline" color="text.secondary" sx={{ mb: 1 }}>{ratingLabel}</Typography>
         <Stack>{[5, 4, 3, 2, 1].map((rating) => <FormControlLabel key={rating} control={<Checkbox checked={selectedRatings.includes(rating)} onChange={() => onRating(rating)} />} label={rating === 5 ? '5 stars' : `${rating} to under ${rating + 1} stars`} />)}</Stack>
       </Box>
-      <Divider />
-      <Box component="fieldset" sx={{ border: 0, m: 0, p: 0 }}>
-        <Typography component="legend" variant="overline" color="text.secondary" sx={{ mb: 1 }}>{colorsLabel}</Typography>
-        <Stack>{colorOptions.map((color) => {
-          const hex = colorValues[color]
-          const validHex = /^#[\da-f]{6}$/i.test(hex ?? '')
-          return <FormControlLabel key={color} control={<Checkbox checked={selectedColors.includes(color)} onChange={() => onColorToggle(color)} />} label={<Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Box aria-hidden="true" sx={{ width: 16, height: 16, borderRadius: '50%', border: 1, borderColor: 'divider', bgcolor: validHex ? hex : 'transparent' }} /><Typography variant="body2">{color}{validHex ? ` ${hex.toUpperCase()}` : ' (swatch unavailable)'}</Typography></Stack>} />
-        })}</Stack>
-      </Box>
+      {colorOptions.length > 0 && <>
+        <Divider />
+        <Box component="fieldset" sx={{ border: 0, m: 0, p: 0 }}>
+          <Typography component="legend" variant="overline" color="text.secondary" sx={{ mb: 1 }}>{colorsLabel}</Typography>
+          <Stack>{colorOptions.map((color) => {
+            const hex = colorValues[color]
+            const validHex = /^#[\da-f]{6}$/i.test(hex ?? '')
+            return <FormControlLabel key={color} control={<Checkbox checked={selectedColors.includes(color)} onChange={() => onColorToggle(color)} />} label={<Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Box aria-hidden="true" sx={{ width: 16, height: 16, borderRadius: '50%', border: 1, borderColor: 'divider', bgcolor: validHex ? hex : 'transparent' }} /><Typography variant="body2">{color}{validHex ? ` ${hex.toUpperCase()}` : ' (swatch unavailable)'}</Typography></Stack>} />
+          })}</Stack>
+        </Box>
+      </>}
       <Divider />
       <Box>
         <Typography variant="overline" color="text.secondary">{benefits.title}</Typography>

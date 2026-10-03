@@ -1,7 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiRateLimitError } from '../api/http'
 import { createPortal } from 'react-dom'
+const NotificationToast = lazy(() => import('./NotificationToast').then(module => ({ default: module.NotificationToast })))
 
 type Tone = 'error' | 'success' | 'info'
 type Notification = { message: string; tone: Tone; action?: 'sign-in' }
@@ -60,32 +61,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             <span className="notification-announcement">{notification.message}</span>
           )}
         </div>
-        {notification && (
-          <div className={`error-snackbar snackbar-${notification.tone}`}>
-            <p>{notification.message}</p>
-            {notification.action === 'sign-in' && (
-              <button
-                type="button"
-                className="snackbar-action"
-                onClick={() => {
-                  const returnTo = `${window.location.pathname}${window.location.search}`
-                  window.history.pushState({}, '', `/login?returnTo=${encodeURIComponent(returnTo)}`)
-                  window.dispatchEvent(new PopStateEvent('popstate'))
-                  setQueue((current) => current.slice(1))
-                }}
-              >
-                Sign in
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setQueue((current) => current.slice(1))}
-              aria-label="Dismiss notification"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
+        {notification && <Suspense fallback={null}><NotificationToast
+          message={notification.message}
+          tone={notification.tone}
+          action={notification.action}
+          onSignIn={() => {
+            const returnTo = `${window.location.pathname}${window.location.search}`
+            window.history.pushState({}, '', `/login?returnTo=${encodeURIComponent(returnTo)}`)
+            window.dispatchEvent(new PopStateEvent('popstate'))
+            setQueue((current) => current.slice(1))
+          }}
+          onDismiss={() => setQueue((current) => current.slice(1))}
+        /></Suspense>}
       </div>, notificationHost ?? document.body)}
     </NotificationContext.Provider>
   )

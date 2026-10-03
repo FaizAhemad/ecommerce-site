@@ -26,6 +26,9 @@ Review order
     mobile filter drawer, cards and query state in the URL. Specific mobile loading checkpoint:
     capture the delayed initial-load skeleton and verify it stays two columns at 320/360/390/430px,
     matching loaded product cards; compare loading and loaded screenshots before moving on.
+    Filter scenarios: verify the default query has no active search/category/color/rating/cursor filters, then exercise category-only, color-only and rating-only cases to ensure unselected facets stay omitted;
+    combine category, multiple colors, multiple rating bands, debounced search and sort; verify server results and URL state;
+    clear back to defaults; verify a valid no-results response is explained with a recovery path; and hide the Colors section entirely when the catalog has no color facets.
 03. Product details: /product/:id — media gallery, options/stock, price, reviews, cart controls,
     private review actions and unavailable/error states.
 04. Support: /support, /support-requests — guest help, ticket create/list/detail, validation,
@@ -54,8 +57,8 @@ Review order
 24. Policies: /privacy, /returns, /refund-policy, /terms, /terms-and-conditions, /shipping,
     /cancellation, /cookies — published content only and correct links/locale.
 25. Help/tour: route-tour overlays — explicit start/exit, keyboard and reduced motion. A standalone
-    /help page is referenced by historical documentation but is not registered in src/router.tsx;
-    record this as a missing route and decide whether it remains in scope before calling routes complete.
+    /help is now a registered public MUI help hub with an explicit support-tour action;
+    validate route and tour behavior in browser and phone checks before calling it complete.
 26. Recovery/fallback: /wishlist redirect, /debug-error (development only), invalid IDs,
     unknown public paths and unknown /admin/* paths.
 
@@ -81,16 +84,71 @@ must be tested independently of navbar visibility.
 
 Automation status
 -----------------
-Playwright config and the first Home-only spec live in playwright.config.ts and e2e/home.spec.ts.
-The spec uses local synthetic fixtures, blocks external network access, exercises responsive
-overflow and browser-native newsletter validation, and does not submit writes. Add route/state
-coverage during each page batch. Do not claim untested pages or real devices are verified.
+Playwright config and the Home and Products specs live in playwright.config.ts, e2e/home.spec.ts
+and e2e/products.spec.ts. Specs use local synthetic fixtures, block external network access,
+exercise selected responsive and loading states, and avoid live writes. Add route/state coverage
+during each page batch. Do not claim untested pages or real devices are verified.
 
 Windows run sequence (Node 22 required by the repository)
 ----------------------------------------------------------
 Set PLAYWRIGHT_BROWSERS_PATH to .playwright-browsers in PowerShell, then run
 `npx playwright install chromium` once. In one terminal run `npm run dev`. In another terminal,
-set the same PLAYWRIGHT_BROWSERS_PATH and run `npm run test:e2e:home`. Keep the local dev server
+set the same PLAYWRIGHT_BROWSERS_PATH and run `npm run test:e2e:home` for Home or `npx playwright test e2e/products.spec.ts` for Products. Keep the local dev server
 running until the test process exits; the configuration intentionally does not own server startup
 because Windows child-process cleanup stalled here. API calls are mocked by the test and the runner
 rejects non-loopback base URLs; never use production/customer credentials.
+
+Product Details checks to add to the page batch: public product read success, loading, 404 and 503/retry; stock states (out, limited <=5, available), seller offer-pending state, original price only when greater than selling price, guest cart behavior with no write, guest review sign-in action with no review write, signed-in review create/edit/error, empty and failed media, keyboard lightbox controls, and 320/360/390/430/768/1280/1440 widths. Keep synthetic fixtures and mock all API calls.
+
+Support page checks for this batch: guest landing/help link visibility and order links route to sign-in; phone/desktop screenshots and overflow; authenticated request validation, single-write duplicate guard, saved/email-status wording, failed API retained draft; owner-scoped ticket list, pagination, cancellation reason; attachment MIME/size/count limits, partial upload retry and session-change cancellation; admin-only queue direct-route/API denial; mobile focus/keyboard, slow/error/empty states. Existing page scope includes /support, /support-requests and /admin/support; review them as distinct access modes.
+
+Login checks for this batch: public guest/authenticated route behavior; email and mobile input/autocomplete/native validation; neutral invalid-credential wording; 429 wait messaging; failed draft retention; synchronous duplicate submission guard; CSRF bootstrap and no automatic write replay; successful customer/admin role redirects based only on server role; safe return-path behavior for private routes; password reset confirmation; 320/360/390/430/768/1280/1440 widths; keyboard, password manager, focus and zoom. No separate role-specific login page is needed; test role-based redirects and server guards instead.
+
+Signup review cases: required 2-100-character name; email or valid international phone; password 8-128; only selected contact sent; duplicate email/phone wording; verification delivery success/failure; session only after valid create; no ADMIN role from public signup; mobile verification code lifecycle; CSRF/quota/duplicate clicks; saved drafts, keyboard/password manager and phone layout. Current UI coverage adds email signup and duplicate conflict; mobile OTP/provider behavior remains unverified.
+
+Password recovery cases: known/unknown neutral acknowledgment; email validation/length; 429 and provider/store failures with draft retention; fragment and legacy query tokens; malformed/missing/expired/reused/replaced token; URL cleanup and no referrer/token storage; password mismatch/8-128 limits; duplicate submit guard; CSRF; successful password update/session revocation and normal login; keyboard/password manager/mobile widths; email provider delivery and timing privacy.
+
+Email verification review cases: guest valid/expired/used token, explicit confirm only and cleaned URL; signed-in own status verified/unverified/no email; resend uses server-owned contact, CSRF/quota, no duplicate writes, accepted-versus-delivered copy, provider error without false verification; account switch, token URL cleanup, keyboard, pending/focus and phone layout.
+
+Profile checks: guest direct route; customer/admin role access; minimal selected DTO; email read-only; password-confirmed phone update clears verification; no email/role/owner ID writes; address create/edit/default/delete; first/default promotion; order-referenced address protection; conflicts/429/offline and retained drafts; private query/cache on account switch; responsive 320/360/390/430/768/1280/1440; keyboard, text zoom, focus restoration and pending drawer close.
+
+Cart page cases: guest route gate/no write; authenticated empty/loading/fatal and background-refresh failure with retained items; quantity add/decrement/remove per-item lock, optimistic rollback and shared header reconciliation; server total vs checkout re-quote; checkout disabled while any update pending; stale/missing product/media, image preview/failure; multiple products; API 401/409/429/503/timeout; phone/tablet/desktop and focus/touch.
+
+Review progress override (owner, 2026-10-03): continue sequentially through the remaining routes without pausing for revalidation between pages. Owner will revalidate after the source/browser batches; browser and device gates remain explicitly unverified until evidence is available.
+12. Checkout/payment source review: CheckoutSubmit and address form use shared MUI; retain frozen UUID retry and pending-payment semantics. Offline build passed; chunk size and browser/provider/device verification pending.
+13. Orders source review: shared MUI states/status/pagination controls; private query semantics preserved. Continue next with order details, tracking and return states.
+
+13. Order history/details/tracking/returns source review: Order history + details states use shared MUI; tracking and returns forms/actions/status now use shared MUI. Retain private records and payment/return guards. Continue to Shops.
+
+15. Shops directory/showcase source review complete for this batch; source/build evidence in PROJECT_STATUS.md. Browser/public-media and phone acceptance pending. Next: seller application and seller catalog/fulfillment.
+
+16-18. Seller application, catalog and fulfillment: source reviewed. MUI controls now cover applicant/admin forms, catalog fields/media/actions, membership-gated navigation and fulfillment workflows. Source/build evidence in PROJECT_STATUS.md; browser, migration and production tests remain open. Continue with admin workspace and standalone tabs.
+
+19-24. Admin workspace/tabs, admin support/fulfillment/sellers/products, and published policy routes received a source review. AdminPage uses MUI navigation/shared DataGrid and feature components; core admin result DTOs now typed. Public policies and access/404 states now use MUI. Snapshot spec can enumerate all planned routes and admin sections, but has not been run here; use synthetic authenticated roles and check each tab state/device before completion. `/help` is now registered as a public MUI hub and added to responsive route snapshots; its explicit tour start remains browser-unverified.
+
+
+25. Help/tour source gap closed: `/help` is registered and its responsive snapshot case is `help-hub`; explicit tour launch routes through Support. Build passes; actual browser/focus/reduced-motion/device behavior remains to verify.
+
+26. Shared customer feedback/media/overlay source pass: PurchaseFeedback, seller media actions, image preview dialog and seller order records now use shared MUI components. Offline build passes. Browser/device and complete loading/empty/error/keyboard acceptance are pending; continue through remaining shared layout and route-local controls.
+
+27. Cross-route control pass: Support form/list actions, recovery resubmit and session expiry controls now use shared MUI. Offline build passes and 48 Playwright cases are discoverable; the runner/browser/device checks remain pending. Continue next with the shared header and remaining route-local product/checkout controls.
+
+28. Shared header migration: the global search, cart, authentication actions and back-to-top control now use shared MUI components. Build passes. Next source batch should finish product-detail and checkout route-local controls, followed by focused browser and device acceptance.
+
+29. Product Details continuation: all page-local native button/input/select/textarea controls were replaced by shared MUI controls; offline build passes. Next: Checkout/Payment address management controls, then re-scan shared and route-local consumers. Browser/device acceptance stays open.
+
+30. Payment route controls: Checkout retry, empty-cart route action and address chooser actions/radio controls now use shared MUI; source scan reports no native button/input/select/textarea controls in PaymentPage. Offline build passes. Continue with customer/admin support, shared component and route-consumer scan; checkout/provider/browser/device gates remain pending.
+
+31. Shared control scan: CheckoutSubmit retry and Cart image preview trigger now use MUI; source scan found no direct native button/input/select/textarea tags in src/pages or src/components. Build passes. Next inspect page-local MUI completeness, overlay semantics, typography/spacing and every route/admin tab via browser snapshots when the owner-provided supported Node/browser environment is available. Do not infer rendered acceptance from the markup scan.
+
+32. Admin workspace source audit: all 14 tabs, DataGrid and FormDialog reviewed; remaining feedback/media/cell presentation converted to shared MUI. Build passes. Next is standalone admin subroutes and MUI composition/state audit, then page snapshots for authenticated admin tabs when the supported browser runtime is available. Do not mark UI-04 verified from source review.
+
+33. Standalone marketplace/admin routes: Fulfillment, seller applications/catalog, inspection and ticket components source-audited; seller media storage now uses MUI responsive layout and obsolete CSS files/imports removed. Offline build passes. Next scan the remaining route/component inventory for CSS-only consumers and incomplete MUI page structure; then browser snapshot/keyboard/mobile acceptance when available.
+
+2026-10-03 navigation/auth review (historical): Playwright covered guest Home/Products/Shops/Sell with us/Support plus customer and Admin links. Shops visibility was corrected later in the source and e2e fixtures: only admins and approved sellers should see it. The corresponding new role test has not yet been run; browser runtime/device/production acceptance remains pending.
+
+2026-10-03 Support route source pass: public FAQ/contact and customer ticket list layouts now use shared MUI components; private query/mutation contracts and admin inbox flow are unchanged. Offline build passes. Support route states still need browser screenshots, mobile/keyboard review and authenticated fixtures.
+
+2026-10-03 header cart issue: fixed the duplicate lime dot by scoping badge CSS to `.header-cart-count`; the MUI ripple no longer matches the count selector. Regression assertion added. Build passes; visual screenshot check still requires an installed Playwright Chromium binary.
+
+2026-10-03 route loading backdrop: all lazy page chunks now share one Gadgify-branded MUI Suspense fallback with consistent responsive stage sizing; the persistent header/footer stay visible. Admin route redirects share the backdrop. Visual mobile/desktop and reduced-motion verification remains pending until a supported browser is available.

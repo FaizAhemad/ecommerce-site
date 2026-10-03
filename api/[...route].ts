@@ -39,6 +39,7 @@ import sellerFulfillment from '../server/api/seller/fulfillment.js'
 import adminFulfillment from '../server/api/admin/fulfillment.js'
 import customerFulfillment from '../server/api/orders/fulfillment.js'
 import shops from '../server/api/shops.js'
+import shopsAccess from '../server/api/shops-access.js'
 import sellerMedia from '../server/api/seller/media.js'
 import sellerProductsReview from '../server/api/admin/seller-products.js'
 import adminSellers from '../server/api/admin/sellers.js'
@@ -129,6 +130,7 @@ const routes: Record<string, Handler> = {
   'admin/fulfillment': adminFulfillment,
   'orders/fulfillment': customerFulfillment,
   shops,
+  'shops/access': shopsAccess,
   'seller/media': sellerMedia,
   'admin/seller-products': sellerProductsReview,
   'admin/sellers': adminSellers,

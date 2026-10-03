@@ -4,6 +4,10 @@ import { privateKey } from '../api/sessionScope'
 import { getEmailStatus, submitEmailVerification } from '../api/emailVerification'
 import { cleanResetUrl, readResetToken } from '../api/passwordRecovery'
 import { useNotification } from '../components/NotificationProvider'
+import { Alert } from '../components/mui/Alert'
+import { Button } from '../components/mui/Button'
+import { Stack } from '../components/mui/Stack'
+import { Typography } from '../components/mui/Typography'
 
 export function EmailVerificationPage({
   isAuthenticated,
@@ -64,68 +68,64 @@ export function EmailVerificationPage({
         <p className="eyebrow">ACCOUNT EMAIL</p>
         <h1 id="verification-title">Email verification</h1>
         {result && (
-          <p role="status" className="state-message">
+          <Alert role="status" severity={result === 'verified' ? 'success' : 'info'}>
             {result === 'verified'
               ? 'The email linked to this verification request is now verified.'
               : 'Check your inbox and spam folder. Use the newest link within 24 hours.'}
-          </p>
+          </Alert>
         )}
         {error && (
-          <p role="alert" className="state-message">
+          <Alert role="alert" severity="error">
             {error}
-          </p>
+          </Alert>
         )}
         {token && (
-          <div className="auth-form">
-            <p>Confirm the email associated with the link you opened.</p>
-            <button
-              className="primary-button auth-submit"
-              disabled={pending}
-              aria-busy={pending}
-              onClick={() => void submit(true)}
-            >
-              {pending ? 'Please wait…' : 'Verify email'}
-            </button>
-          </div>
+          <Stack spacing={2}>
+            <Typography>Confirm the email associated with the link you opened.</Typography>
+            <Button variant="contained" disabled={pending} aria-busy={pending} onClick={() => void submit(true)}>
+              {pending ? 'Verifying email…' : 'Verify email'}
+            </Button>
+          </Stack>
         )}
         {isAuthenticated ? (
           status.isPending ? (
-            <p role="status">Loading your email status…</p>
+            <Alert role="status" severity="info">Loading your email status…</Alert>
           ) : status.isError ? (
-            <div className="state-message">
-              <p>Unable to load your email status.</p>
-              <button
-                className="secondary-button"
+            <Alert severity="error" action={
+              <Button
+                color="inherit"
                 disabled={status.isFetching}
                 onClick={() => void status.refetch()}
               >
                 Retry status
-              </button>
-            </div>
+              </Button>
+            }>Unable to load your email status.</Alert>
           ) : (
             status.data && (
-              <div className="auth-form">
-                <p>
+              <Stack spacing={1.5}>
+                <Typography>
                   {status.data.email
                     ? `Account email: ${status.data.email}`
                     : 'This account has no email address. Email verification is unavailable.'}
-                </p>
+                </Typography>
                 {status.data.email && (
                   <>
-                    <p>{status.data.emailVerified ? 'Verified' : 'Not verified'}</p>
+                    <Alert severity={status.data.emailVerified ? 'success' : 'warning'}>
+                      {status.data.emailVerified ? 'Email verified' : 'Email not verified'}
+                    </Alert>
                     {!status.data.emailVerified && (
-                      <button
-                        className="secondary-button"
+                      <Button
+                        variant="outlined"
                         disabled={pending}
                         aria-busy={pending}
                         onClick={() => void submit(false)}
                       >
-                        {pending ? 'Please wait…' : 'Send a new verification link'}
-                      </button>
+                        {pending ? 'Requesting link…' : 'Send a new verification link'}
+                      </Button>
                     )}
                   </>
                 )}
-              </div>
+              </Stack>
             )
           )
         ) : (

@@ -1,11 +1,17 @@
 import { useNotification } from './NotificationProvider'
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import type { MouseEvent } from 'react'
 import type { StorefrontApiResponse } from '../api/storefront'
 import { SocialLinks } from './SocialLinks'
 import { PageContainer } from './PageContainer'
-import { SiteTour } from './SiteTour'
 import { useTranslation } from 'react-i18next'
+import { Button } from './mui/Button'
+import { IconButton } from './mui/IconButton'
+import { TextField } from './mui/TextField'
+import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from '../api/http'
+import { privateKey } from '../api/sessionScope'
+const SiteTour = lazy(() => import('./SiteTour').then(module => ({ default: module.SiteTour })))
 
 function SearchIcon() {
   return (
@@ -47,9 +53,22 @@ export function SiteLayout({
   const [loggingOut, setLoggingOut] = useState(false)
   const { content, identity } = storefront
   const { t } = useTranslation()
+  const shopAccess = useQuery({
+    queryKey: privateKey('shops-access'),
+    enabled: isAuthenticated && !isAdmin,
+    retry: false,
+    staleTime: 0,
+    queryFn: async ({ signal }) => {
+      const response = await apiFetch('/api/shops/access', { signal, cache: 'no-store' })
+      if (!response.ok) throw new Error('Shop access unavailable')
+      return await response.json() as { allowed: boolean }
+    },
+  })
+  const canBrowseShops = isAdmin || shopAccess.data?.allowed === true
   const [showHeaderShadow, setShowHeaderShadow] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
+  const [tourActive, setTourActive] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const headerActionsRef = useRef<HTMLDivElement>(null)
@@ -147,7 +166,7 @@ export function SiteLayout({
           >
             {content.navigation.products}
           </a>
-          <a
+          {canBrowseShops && <a
             aria-current={
               currentPath === '/shops' || currentPath.startsWith('/shops/') ? 'page' : undefined
             }
@@ -158,7 +177,7 @@ export function SiteLayout({
             onClick={navigate('/shops')}
           >
             Shops
-          </a>
+          </a>}
           <a
             aria-current={
               currentPath === '/seller' || currentPath.startsWith('/seller/') ? 'page' : undefined
@@ -221,8 +240,8 @@ export function SiteLayout({
           )}
         </nav>
         <div className="header-actions" ref={headerActionsRef}>
-          <button
-            className="search-button inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] p-0 text-[var(--ink)] transition-colors hover:border-[var(--ink)] hover:bg-white"
+          <IconButton
+            className="search-button"
             ref={searchButtonRef}
             type="button"
             onClick={() => setSearchOpen((open) => !open)}
@@ -231,28 +250,33 @@ export function SiteLayout({
             aria-controls="site-header-search"
           >
             {searchOpen ? <CloseIcon /> : <SearchIcon />}
-          </button>
+          </IconButton>
           {searchOpen && (
             <form className="header-search" id="site-header-search" role="search" onSubmit={submitSearch}>
-              <input
-                className="min-h-11 flex-1"
+              <TextField
+                className="header-search-field"
                 autoFocus
                 type="search"
+                size="small"
+                sx={{ flex: '1 1 auto', minWidth: 0, '& .MuiOutlinedInput-root': { minHeight: 44, bgcolor: 'background.paper' } }}
                 autoComplete="off"
                 spellCheck={false}
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder={t('common:searchProducts')}
                 aria-label={t('common:searchProducts')}
+                variant="outlined"
+                fullWidth
               />
-              <button
-                className="inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-md bg-[var(--ink)] px-4 text-sm font-medium text-white transition-colors hover:bg-[var(--green)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+              <Button
+                variant="contained"
+                className="header-search-submit"
                 type="submit"
               >
                 {t('common:search')}
-              </button>
-              <button
-                className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-md border border-transparent bg-transparent text-[var(--muted)] transition-colors hover:border-[var(--line)] hover:bg-[var(--paper)] hover:text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
+              </Button>
+              <IconButton
+                className="header-search-close"
                 type="button"
                 onClick={() => {
                   setSearchOpen(false)
@@ -261,11 +285,12 @@ export function SiteLayout({
                 aria-label="Close search"
               >
                 <CloseIcon />
-              </button>
+              </IconButton>
             </form>
           )}
 
-          <button
+          <Button
+            variant="outlined"
             className="cart-button"
             type="button"
             onClick={openCart}
@@ -275,10 +300,11 @@ export function SiteLayout({
               🛒
             </span>
             <span className="nav-action-label">{t('common:cart')}</span>
-            <span>{cartCount}</span>
-          </button>
+            <span className="header-cart-count">{cartCount}</span>
+          </Button>
           {isAuthenticated ? (
-            <button
+            <Button
+              variant="outlined"
               className="header-auth-link"
               type="button"
               disabled={loggingOut}
@@ -300,17 +326,17 @@ export function SiteLayout({
               }}
             >
               {loggingOut ? 'Logging out...' : t('common:logOut')}
-            </button>
+            </Button>
           ) : (
-            <a className="header-auth-link" href="/login" onClick={navigate('/login')}>
+            <Button component="a" variant="outlined" className="header-auth-link" href="/login" onClick={navigate('/login')}>
               {t('common:signIn')}
-            </a>
+            </Button>
           )}
         </div>
       </header>
       <PageContainer path={currentPath}>
         <div className="px-[var(--page-gutter)]">
-            <SiteTour path={currentPath} isAuthenticated={isAuthenticated} />
+            {(currentPath === '/support' || tourActive) && <Suspense fallback={null}><SiteTour path={currentPath} isAuthenticated={isAuthenticated} onActiveChange={setTourActive} /></Suspense>}
         </div>
         {children}
       </PageContainer>
@@ -374,14 +400,14 @@ export function SiteLayout({
         </p>
       </footer>
       {showBackToTop && (
-        <button
+        <IconButton
           className="back-to-top"
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           aria-label="Back to top"
         >
           <span aria-hidden="true">↑</span>
-        </button>
+        </IconButton>
       )}
     </div>
   )

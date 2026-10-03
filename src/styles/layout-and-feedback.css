@@ -25,7 +25,7 @@
   max-width: 760px;
 }
 .page-container[data-width='form'] {
-  max-width: 560px;
+  max-width: 620px;
 }
 .site-shell .page-container > :is(section, .page-section) {
   width: 100%;

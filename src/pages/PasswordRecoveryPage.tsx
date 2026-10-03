@@ -6,6 +6,10 @@ import {
   submitPasswordRecovery,
 } from '../api/passwordRecovery'
 import { useNotification } from '../components/NotificationProvider'
+import { Alert } from '../components/mui/Alert'
+import { Button } from '../components/mui/Button'
+import { Stack } from '../components/mui/Stack'
+import { TextField } from '../components/mui/TextField'
 
 type Props = {
   mode: 'forgot' | 'reset'
@@ -20,6 +24,7 @@ export function PasswordRecoveryPage({ mode, onNavigate }: Props) {
   const [confirmation, setConfirmation] = useState('')
   const [pending, setPending] = useState(false)
   const [accepted, setAccepted] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const operation = useRef<AbortController | null>(null)
   const notify = useNotification()
   useEffect(() => {
@@ -30,14 +35,15 @@ export function PasswordRecoveryPage({ mode, onNavigate }: Props) {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (operation.current || accepted) return
+    setErrorMessage('')
     if (reset) {
       const error = passwordValidation(password, confirmation)
       if (error) {
-        notify(error)
+        setErrorMessage(error)
         return
       }
       if (!token) {
-        notify('Open a valid reset link from your email.')
+        setErrorMessage('Open a valid reset link from your email.')
         return
       }
     }
@@ -62,8 +68,7 @@ export function PasswordRecoveryPage({ mode, onNavigate }: Props) {
         notify('If an account uses that email, you will receive a password reset link.', 'success')
       }
     } catch (error) {
-      if (!controller.signal.aborted)
-        notify(error instanceof Error ? error : 'Unable to complete this request.')
+      if (!controller.signal.aborted) setErrorMessage(error instanceof Error ? error.message : 'Unable to complete this request.')
     } finally {
       operation.current = null
       if (!controller.signal.aborted) setPending(false)
@@ -92,74 +97,32 @@ export function PasswordRecoveryPage({ mode, onNavigate }: Props) {
               If an account uses that email, you will receive a reset link. Check your inbox and
               spam folder.
             </p>
-            <button className="secondary-button" onClick={() => setAccepted(false)}>
+            <Button variant="outlined" onClick={() => setAccepted(false)}>
               Use another email or request again
-            </button>
+            </Button>
           </div>
         ) : (
-          <form className="auth-form" onSubmit={submit} aria-busy={pending}>
+          <Stack component="form" className="auth-form" spacing={2} onSubmit={submit} aria-busy={pending}>
+            {errorMessage && <Alert severity="error" role="alert">{errorMessage}</Alert>}
             {reset ? (
               <>
-                <label>
-                  New password
-                  <input
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    minLength={8}
-                    maxLength={128}
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    disabled={pending}
-                    aria-describedby="password-help"
-                  />
-                </label>
+                <TextField name="password" label="New password" type="password" autoComplete="new-password" required slotProps={{ htmlInput: { minLength: 8, maxLength: 128, 'aria-describedby': 'password-help' } }} value={password} onChange={(event) => setPassword(event.target.value)} disabled={pending} fullWidth />
                 <p id="password-help">Use 8–128 characters. A long, unique password is best.</p>
-                <label>
-                  Confirm new password
-                  <input
-                    name="confirmation"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    minLength={8}
-                    maxLength={128}
-                    value={confirmation}
-                    onChange={(event) => setConfirmation(event.target.value)}
-                    disabled={pending}
-                  />
-                </label>
+                <TextField name="confirmation" label="Confirm new password" type="password" autoComplete="new-password" required slotProps={{ htmlInput: { minLength: 8, maxLength: 128 } }} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} disabled={pending} fullWidth />
               </>
             ) : (
-              <label>
-                Email address
-                <input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  maxLength={254}
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  disabled={pending}
-                />
-              </label>
+              <TextField name="email" label="Email address" type="email" autoComplete="email" required slotProps={{ htmlInput: { maxLength: 254 } }} value={email} onChange={(event) => setEmail(event.target.value)} disabled={pending} fullWidth />
             )}
-            <button
-              className="primary-button auth-submit"
-              type="submit"
-              disabled={pending || accepted}
-            >
+            <Button className="auth-submit" variant="contained" type="submit" disabled={pending || accepted}>
               {pending
                 ? reset
-                  ? 'Resetting…'
+                  ? 'Resetting password…'
                   : 'Sending request…'
                 : reset
                   ? 'Reset password'
                   : 'Send reset link'}
-            </button>
-          </form>
+            </Button>
+          </Stack>
         )}
         <p className="auth-switch">
           <a href="/login" onClick={onNavigate('/login')}>

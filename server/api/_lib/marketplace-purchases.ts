@@ -18,7 +18,7 @@ export function purchaseEligibility(ownership: { moderationStatus: string; shop:
 }
 
 export function publicSeller(ownership: { shop: PublicShop } | null) {
-  return ownership ? { name: ownership.shop.name, slug: ownership.shop.slug, isPlatform: ownership.shop.isPlatform } : null
+  return ownership ? { isPlatform: ownership.shop.isPlatform } : null
 }
 
 export const sellerProductId = (shopId: string, draftId: string) => `seller-${shopId}-${draftId}`

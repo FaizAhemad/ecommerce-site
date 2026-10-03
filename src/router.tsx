@@ -1,8 +1,6 @@
 import type { SessionUser } from './api/sessionScope'
 import { lazy, Suspense, useEffect, type MouseEvent } from 'react'
-import { Box } from './components/mui/Box'
-import { CircularProgress } from './components/mui/CircularProgress'
-import { Typography } from './components/mui/Typography'
+import { BrandedPageLoader } from './components/mui/BrandedPageLoader'
 import type { StorefrontApiResponse } from './api/storefront'
 const HomePage = lazy(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })))
 const ShopPage = lazy(() => import('./pages/ShopPage').then((module) => ({ default: module.ShopPage })))
@@ -10,6 +8,7 @@ const SupportPage = lazy(() => import('./pages/SupportPage').then((module) => ({
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage').then((module) => ({ default: module.ProductDetailPage })))
 const CartPage = lazy(() => import('./pages/CartPage').then((module) => ({ default: module.CartPage })))
 const PolicyPage = lazy(() => import('./pages/PolicyPage').then((module) => ({ default: module.PolicyPage })))
+const HelpPage = lazy(() => import('./pages/HelpPage').then((module) => ({ default: module.HelpPage })))
 const PaymentPage = lazy(() => import('./pages/PaymentPage').then((module) => ({ default: module.PaymentPage })))
 const TrackOrderPage = lazy(() => import('./pages/TrackOrderPage').then((module) => ({ default: module.TrackOrderPage })))
 const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })))
@@ -24,6 +23,8 @@ import { safeRouteId } from './routePaths'
 const OrdersPage = lazy(() => import('./pages/OrdersPage').then((module) => ({ default: module.OrdersPage })))
 const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage').then((module) => ({ default: module.OrderDetailPage })))
 const AdminPage = lazy(() => import('./pages/AdminPage').then((module) => ({ default: module.AdminPage })))
+const NotFoundPage = lazy(() => import('./components/RouteFallbacks').then((module) => ({ default: module.NotFoundPage })))
+const AdminAccessRequired = lazy(() => import('./components/RouteFallbacks').then((module) => ({ default: module.AdminAccessRequired })))
 import { usePageMetadata } from './api/pageMetadata'
 
 type RouteProps = {
@@ -59,30 +60,7 @@ function AdminRedirect() {
     window.history.replaceState({}, '', '/admin')
     window.dispatchEvent(new PopStateEvent('popstate'))
   }, [])
-  return <p role="status">Opening dashboard…</p>
-}
-function NotFoundPage() {
-  return (
-    <section className="page-section">
-      <h1>Page not found</h1>
-      <p>This link is unavailable.</p>
-      <a href="/" onClick={navigate('/')}>
-        Back to home
-      </a>
-    </section>
-  )
-}
-
-function AdminAccessRequired({ isAuthenticated, onNavigate }: { isAuthenticated: boolean; onNavigate: (path: string) => (event: MouseEvent<HTMLAnchorElement>) => void }) {
-  return (
-    <section className="page-section" aria-labelledby="admin-access-title">
-      <h1 id="admin-access-title">{isAuthenticated ? 'Administrator access required' : 'Sign in to continue'}</h1>
-      <p>{isAuthenticated ? 'This area is available to authorized administrators.' : 'Sign in with an administrator account to open this page.'}</p>
-      <a href={isAuthenticated ? '/' : '/login'} onClick={onNavigate(isAuthenticated ? '/' : '/login')}>
-        {isAuthenticated ? 'Return to the storefront' : 'Sign in'}
-      </a>
-    </section>
-  )
+  return <BrandedPageLoader message="Opening the admin workspace" />
 }
 
 function DebugErrorPage() {
@@ -102,10 +80,11 @@ function RouteContent({
   const normalizedPath = path.length > 1 ? path.replace(/\/+$/, '') : path
   if (normalizedPath.startsWith('/shops/')) {
     const slug = safeRouteId(normalizedPath.slice('/shops/'.length))
-    return slug && /^[a-z0-9-]{1,100}$/.test(slug) ? <ShopsPage key={slug} slug={slug} /> : <NotFoundPage />
+    if (!slug || !/^[a-z0-9-]{1,100}$/.test(slug)) return <NotFoundPage />
+    return isAuthenticated ? <ShopsPage key={slug} slug={slug} admin={isAdmin} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
   }
   switch (normalizedPath) {
-    case '/shops': return <ShopsPage key="directory" />
+    case '/shops': return isAuthenticated ? <ShopsPage key="directory" admin={isAdmin} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/seller/products':
       return isAuthenticated ? <SellerCatalogPage key="seller-catalog" onNavigate={navigate} /> : <AuthPage mode="login" storefront={storefront} onNavigate={navigate} onLogin={onLogin} />
     case '/seller/orders':
@@ -201,6 +180,8 @@ function RouteContent({
     case '/terms':
     case '/terms-and-conditions':
       return <PolicyPage storefront={storefront} policy="terms" onNavigate={navigate} />
+    case '/help':
+      return <HelpPage />
     case '/products':
       return (
         <ShopPage
@@ -278,7 +259,7 @@ function RouteContent({
 /** Load only the selected page; the surrounding site shell stays mounted. */
 export function StorefrontRoute(props: RouteProps) {
   return (
-    <Suspense fallback={<Box role="status" aria-live="polite" sx={{ minHeight: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}><CircularProgress size={24} aria-hidden="true" /><Typography color="text.secondary">Loading page...</Typography></Box>}>
+    <Suspense fallback={<BrandedPageLoader />}>
       <RouteContent {...props} />
     </Suspense>
   )

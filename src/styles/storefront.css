@@ -80,7 +80,7 @@ nav a:hover,
   color: var(--paper);
   border-color: var(--ink);
 }
-.cart-button span {
+.cart-button .header-cart-count {
   display: inline-grid;
   place-items: center;
   width: 18px;

@@ -10,6 +10,10 @@ import type { StorefrontApiResponse } from '../api/storefront'
 import { CheckoutSubmit } from '../components/CheckoutSubmit'
 import { FormDialog } from '../components/FormDialog'
 import { useNotification } from '../components/NotificationProvider'
+import { Alert } from '../components/mui/Alert'
+import { Button } from '../components/mui/Button'
+import { TextField } from '../components/mui/TextField'
+import { Radio } from '../components/mui/Radio'
 
 type Props = {
   storefront: StorefrontApiResponse
@@ -121,8 +125,8 @@ export function PaymentPage({ storefront, onNavigate }: Props) {
           <div className="mx-auto grid min-h-64 max-w-2xl place-content-center justify-items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 text-center" role="alert">
             <p className="m-0 text-sm text-[var(--ink)]">We couldn’t load checkout details.</p>
             <p className="m-0 text-sm text-[var(--muted)]">Your cart and saved addresses have not been changed.</p>
-            <button
-              className="secondary-button"
+            <Button
+              variant="outlined"
               disabled={cart.isFetching || profile.isFetching}
               onClick={() => {
                 void cart.refetch({ cancelRefetch: false })
@@ -130,16 +134,16 @@ export function PaymentPage({ storefront, onNavigate }: Props) {
               }}
             >
               {cart.isFetching || profile.isFetching ? 'Refreshing…' : 'Try again'}
-            </button>
+            </Button>
           </div>
         ) : !items.length ? (
           <div className="mx-auto grid min-h-72 max-w-2xl place-content-center justify-items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 text-center">
             <span className="grid size-12 place-items-center rounded-full bg-[rgba(215,225,208,0.5)]"><PackageCheck aria-hidden="true" className="size-5" /></span>
             <h2 className="!mb-0 !text-xl !font-semibold !tracking-tight">Your cart is empty</h2>
             <p className="m-0 text-sm text-[var(--muted)]">Add something to your cart before checking out.</p>
-            <a className="primary-button mt-2" href="/products" onClick={onNavigate('/products')}>
+            <Button component="a" variant="contained" href="/products" onClick={onNavigate('/products')}>
               Browse products <ArrowRight aria-hidden="true" className="ml-2 inline size-4" />
-            </a>
+            </Button>
           </div>
         ) : (
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:gap-8">
@@ -155,7 +159,7 @@ export function PaymentPage({ storefront, onNavigate }: Props) {
                 <div className="rounded-xl border border-dashed border-[var(--line)] bg-[var(--paper)] p-4 sm:p-5">
                   <h3 className="mb-1 text-sm font-semibold text-[var(--ink)]">Add a delivery address</h3>
                   <p className="mb-4 text-sm leading-6 text-[var(--muted)]">A saved address is needed before checkout can continue.</p>
-                  {!attempted && <button type="button" className="primary-button inline-flex min-h-11 items-center gap-2 !normal-case !tracking-normal" onClick={() => { setAddressError(''); setAddressDraft({ ...emptyAddress }); setAddressOpen(true) }}><Plus aria-hidden="true" className="size-4" /> Add delivery address</button>}
+                  {!attempted && <Button type="button" variant="contained" onClick={() => { setAddressError(''); setAddressDraft({ ...emptyAddress }); setAddressOpen(true) }}><Plus aria-hidden="true" className="size-4" /> Add delivery address</Button>}
                 </div>
               ) : (
                 <fieldset className="m-0 grid min-w-0 gap-3 border-0 p-0" disabled={attempted}>
@@ -168,10 +172,9 @@ export function PaymentPage({ storefront, onNavigate }: Props) {
                         key={address.id}
                         className={`flex min-h-16 cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${unavailable ? 'cursor-not-allowed opacity-60' : 'hover:border-[rgba(40,49,59,0.35)]'} ${isSelected ? 'border-[var(--ink)] bg-[rgba(215,225,208,0.28)] ring-1 ring-[var(--ink)]' : 'border-[var(--line)] bg-[var(--surface)]'}`}
                       >
-                        <input
-                          className="mt-1 size-4 shrink-0 accent-[var(--ink)]"
-                          type="radio"
+                        <Radio
                           name="delivery-address"
+                          value={address.id}
                           disabled={unavailable}
                           checked={isSelected}
                           onChange={() => setSelected(address.id)}
@@ -195,7 +198,7 @@ export function PaymentPage({ storefront, onNavigate }: Props) {
               )}
               {!attempted && addresses.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-                  <button type="button" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[var(--ink)] underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--ink)]" onClick={() => { setAddressError(''); setAddressDraft({ ...emptyAddress }); setAddressOpen(true) }}><Plus aria-hidden="true" className="size-4" /> Add another address</button>
+                  <Button type="button" variant="text" onClick={() => { setAddressError(''); setAddressDraft({ ...emptyAddress }); setAddressOpen(true) }}><Plus aria-hidden="true" className="size-4" /> Add another address</Button>
                   <a className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[var(--ink)] underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--ink)]" href="/profile" onClick={onNavigate('/profile')}>Manage addresses <ArrowRight aria-hidden="true" className="size-4" /></a>
                 </div>
               )}
@@ -226,14 +229,14 @@ export function PaymentPage({ storefront, onNavigate }: Props) {
       <FormDialog open={addressOpen} title="Add delivery address" busy={addressPending} onClose={() => setAddressOpen(false)}>
         <form className="grid gap-4" onSubmit={(event) => void saveAddress(event)} aria-busy={addressPending}>
           <p className="m-0 text-sm leading-6 text-[var(--muted)]">Save an India delivery address to use for this order.</p>
-          {addressError && <p className="m-0 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-950" role="alert">{addressError}</p>}
+          {addressError && <Alert severity="error" role="alert">{addressError}</Alert>}
           {([
             ['label', 'Address label (optional)', 50, false], ['name', 'Recipient name', 100, true], ['line1', 'Address line 1', 200, true], ['line2', 'Address line 2 (optional)', 200, false], ['city', 'City', 100, true], ['state', 'State / region', 100, true], ['postalCode', 'Postal code', 20, true], ['phone', 'Delivery phone (optional)', 16, false],
           ] as const).map(([field, label, limit, required]) => (
-            <label className="grid gap-2 text-sm font-medium text-[var(--ink)]" key={field}>{label}<input className="min-h-12 w-full rounded-lg border border-[var(--line)] bg-[var(--paper)] px-3 text-base text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]" type={field === 'phone' ? 'tel' : 'text'} autoComplete={field === 'name' ? 'shipping name' : field === 'line1' ? 'shipping address-line1' : field === 'line2' ? 'shipping address-line2' : field === 'city' ? 'shipping address-level2' : field === 'state' ? 'shipping address-level1' : field === 'postalCode' ? 'shipping postal-code' : 'off'} maxLength={limit} required={required} value={addressDraft[field] ?? ''} disabled={addressPending} onChange={(input) => setAddressDraft({ ...addressDraft, [field]: input.target.value })} /></label>
+            <TextField fullWidth size="small" key={field} label={label} type={field === 'phone' ? 'tel' : 'text'} autoComplete={field === 'name' ? 'shipping name' : field === 'line1' ? 'shipping address-line1' : field === 'line2' ? 'shipping address-line2' : field === 'city' ? 'shipping address-level2' : field === 'state' ? 'shipping address-level1' : field === 'postalCode' ? 'shipping postal-code' : 'off'} slotProps={{ htmlInput: { maxLength: limit } }} required={required} value={addressDraft[field] ?? ''} disabled={addressPending} onChange={(input) => setAddressDraft({ ...addressDraft, [field]: input.target.value })} />
           ))}
-          <label className="grid gap-2 text-sm font-medium text-[var(--ink)]">Country code<input className="min-h-12 w-full rounded-lg border border-[var(--line)] bg-[var(--paper)] px-3 text-base uppercase text-[var(--ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]" type="text" autoComplete="shipping country" autoCapitalize="characters" spellCheck={false} inputMode="text" pattern="[A-Za-z]{2}" title="Enter a two-letter country code, such as IN." placeholder="IN" required maxLength={2} value={addressDraft.country} disabled={addressPending} onChange={(input) => setAddressDraft({ ...addressDraft, country: input.target.value.replace(/[^a-z]/gi, '').slice(0, 2).toUpperCase() })} /></label>
-          <button type="submit" className="primary-button min-h-12 w-full !normal-case !tracking-normal" disabled={addressPending}>{addressPending ? 'Saving address…' : 'Save and use this address'}</button>
+          <TextField fullWidth size="small" label="Country code" type="text" autoComplete="shipping country" autoCapitalize="characters" spellCheck={false} slotProps={{ htmlInput: { inputMode: 'text', pattern: '[A-Za-z]{2}', title: 'Enter a two-letter country code, such as IN.', maxLength: 2 } }} placeholder="IN" required value={addressDraft.country} disabled={addressPending} onChange={(input) => setAddressDraft({ ...addressDraft, country: input.target.value.replace(/[^a-z]/gi, '').slice(0, 2).toUpperCase() })} />
+          <Button type="submit" variant="contained" fullWidth disabled={addressPending}>{addressPending ? 'Saving address…' : 'Save and use this address'}</Button>
         </form>
       </FormDialog>
     </div>

@@ -4,6 +4,11 @@ import { loadRazorpay, type PaymentWidget, type PaymentResult, type PaymentFailu
 import { assertCurrentSession, sessionGeneration } from '../api/sessionScope'
 import { useNotification } from './NotificationProvider'
 import { CreditCard } from 'lucide-react'
+import { Alert } from './mui/Alert'
+import { Button } from './mui/Button'
+import { Paper } from './mui/Paper'
+import { Stack } from './mui/Stack'
+import { Typography } from './mui/Typography'
 export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefresh: () => void }) {
   const notify = useNotification(),
     lock = useRef(false),
@@ -194,16 +199,16 @@ export function OrderPayment({ orderId, onRefresh }: { orderId: string; onRefres
     }
   }
   return (
-    <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-raised)] p-4 sm:p-5">
-      <p className="mb-3 text-sm leading-6 text-[var(--muted)]">Continue with Razorpay to pay for this order. Your order changes to paid only after the server confirms the payment.</p>
-      <button className="primary-button flex w-full items-center justify-center gap-2" disabled={pending} onClick={() => void pay()}>
-        <CreditCard aria-hidden="true" className="size-4" />
-        {pending ? 'Payment in progress' : 'Continue to Razorpay'}
-      </button>
-      {feedback && <p className="mb-0 mt-3 rounded-lg bg-[var(--paper)] p-3 text-sm leading-6 text-[var(--ink)]" role="status" aria-live="polite">{feedback}</p>}
-      <p className="mb-0 mt-3 text-xs leading-5 text-[var(--muted)]">
-        If the payment window closes or the result is unclear, refresh this order before trying again.
-      </p>
-    </div>
+    <Paper variant="outlined" sx={{ mt: 2, p: { xs: 2, sm: 2.5 } }}>
+      <Stack spacing={1.5}>
+        <Typography variant="body2" color="text.secondary">Continue with Razorpay to pay for this order. Your order changes to paid only after the server confirms the payment.</Typography>
+        <Button variant="contained" fullWidth disabled={pending} onClick={() => void pay()}>
+          <CreditCard aria-hidden="true" className="mr-2 size-4" />
+          {pending ? 'Payment in progress' : 'Continue to Razorpay'}
+        </Button>
+        {feedback && <Alert severity="info" role="status" aria-live="polite">{feedback}</Alert>}
+        <Typography variant="caption" color="text.secondary">If the payment window closes or the result is unclear, refresh this order before trying again.</Typography>
+      </Stack>
+    </Paper>
   )
 }

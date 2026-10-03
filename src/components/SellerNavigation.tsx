@@ -13,7 +13,7 @@ export function SellerNavigation({
     [admin ? '/admin/sellers' : '/seller', admin ? 'Seller applications' : 'My application'],
     [admin ? '/admin/seller-products' : '/seller/products', admin ? 'Product moderation' : 'My products'],
     ...(!admin ? [['/seller/orders', 'Shop order records']] : [['/admin/fulfillment', 'Fulfillment oversight']]),
-    ['/shops', 'Browse shops'],
+    ...(admin ? [['/shops', 'Browse shops'] as const] : []),
     ['/support', 'Support'],
   ] as const
   return <Stack component="nav" aria-label={admin ? 'Admin marketplace tools' : 'Marketplace navigation'} direction="row" spacing={1} sx={{ flexWrap: 'wrap', py: 1 }}>

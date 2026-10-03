@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type MouseEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../api/http'
 import { privateKey, sessionGeneration, sessionSignal } from '../api/sessionScope'
 import { FormDialog } from '../components/FormDialog'
 import { useNotification } from '../components/NotificationProvider'
-import './SellerCatalogPage.css'
 import { SellerNavigation } from '../components/SellerNavigation'
 import { SellerMediaLibrary } from '../components/SellerMediaLibrary'
 import { Alert } from '../components/mui/Alert'
@@ -167,9 +166,9 @@ export function SellerCatalogPage({ admin = false, onNavigate }: { admin?: boole
           <TextField label="Original price (optional)" type="number" slotProps={{ htmlInput: { min: 1, max: 1000000, step: 0.01 } }} value={comparePrice} disabled={busy} onChange={event => setComparePrice(event.target.value)} helperText="Shown crossed out when higher than the selling price." />
           <TextField label="Stock" type="number" required slotProps={{ htmlInput: { min: 0, max: 1000000, step: 1 } }} value={draft.stock} disabled={busy} onChange={event => setDraft({ ...draft, stock: Number(event.target.value) })} />
         </>}
-        <div className="seller-media-grid">{draft.mediaIds.map(id => <div key={id}><MediaPreview shopId={draft.shopId} id={id} />{!admin && <button type="button" className="secondary-button" disabled={busy} onClick={() => setDraft({ ...draft, mediaIds: draft.mediaIds.filter(value => value !== id) })}>Remove attachment</button>}</div>)}</div>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2,minmax(0,1fr))', sm: 'repeat(3,minmax(0,1fr))' }, gap: 1.5 }}>{draft.mediaIds.map(id => <Paper variant="outlined" key={id} sx={{ p: 1, minWidth: 0 }}><Stack spacing={1}><MediaPreview shopId={draft.shopId} id={id} />{!admin && <Button type="button" variant="outlined" size="small" disabled={busy} onClick={() => setDraft({ ...draft, mediaIds: draft.mediaIds.filter(value => value !== id) })}>Remove attachment</Button>}</Stack></Paper>)}</Box>
         {!admin && <Stack spacing={1}>
-          <label>Product photos and videos (up to 10 total, 1 MB each)<input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" disabled={busy} onChange={event => {
+          <TextField type="file" label="Product photos and videos (up to 10 total, 1 MB each)" slotProps={{ inputLabel: { shrink: true }, htmlInput: { multiple: true, accept: 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm', onChange: (event: ChangeEvent<HTMLInputElement>) => {
             const added = Array.from(event.currentTarget.files ?? [])
             event.currentTarget.value = ''
             const existing = new Set(files.map(file => `${file.name}:${file.size}:${file.lastModified}`))
@@ -180,7 +179,7 @@ export function SellerCatalogPage({ admin = false, onNavigate }: { admin?: boole
             }
             setError('')
             setFiles(merged)
-          }} /></label>
+          } } }} disabled={busy} />
           <Typography variant="caption" color="text.secondary">Mix images and MP4/WebM videos for this one product. Add more files in another selection; each file must be at most 1 MB.</Typography>
           {files.map((file, index) => <Stack key={`${file.name}:${file.size}:${file.lastModified}`} direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{file.name} · {(file.size / 1024).toFixed(0)} KB</Typography>
@@ -195,7 +194,7 @@ export function SellerCatalogPage({ admin = false, onNavigate }: { admin?: boole
         {error && <Alert severity="error" role="alert">{error}</Alert>}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           {(!admin || draft.status === 'PENDING' || draft.status === 'APPROVED' && (!draft.offer || draft.offer.status === 'REJECTED')) && <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Saving…' : admin ? decision === 'REJECTED' ? 'Request product changes' : draft.status === 'PENDING' || !draft.offer ? 'Send fee offer' : 'Send revised offer' : 'Save draft'}</Button>}
-          {!admin && <><button type="button" className="secondary-button" disabled={busy} onClick={() => void save('submit')}>Submit for review</button>{draft.version > 0 && <button type="button" className="secondary-button" disabled={busy} onClick={() => archiveConfirm ? void save('archive') : setArchiveConfirm(true)}>{archiveConfirm ? 'Confirm archive' : 'Archive draft'}</button>}</>}
+          {!admin && <><Button type="button" variant="outlined" disabled={busy} onClick={() => void save('submit')}>Submit for review</Button>{draft.version > 0 && <Button type="button" variant="outlined" color={archiveConfirm ? 'error' : 'inherit'} disabled={busy} onClick={() => archiveConfirm ? void save('archive') : setArchiveConfirm(true)}>{archiveConfirm ? 'Confirm archive' : 'Archive draft'}</Button>}</>}
         </Stack>
         {archiveConfirm && <Alert severity="warning" action={<Button type="button" color="inherit" size="small" disabled={busy} onClick={() => setArchiveConfirm(false)}>Keep product</Button>}>This removes the product from review/showcase. Archived drafts cannot be edited.</Alert>}
       </Stack>}

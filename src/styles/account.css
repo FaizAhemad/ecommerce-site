@@ -51,53 +51,12 @@
   flex: 1;
   background: var(--line);
 }
-.auth-form {
-  display: grid;
-  gap: 16px;
-}
 .profile-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-block: 16px;
-}
-.auth-form .profile-default {
-  grid-template-columns: 24px minmax(0, 1fr);
-  align-items: center;
-  min-height: 44px;
-}
-.auth-form .profile-default input {
-  width: 20px;
-  min-height: 20px;
-  margin: 0;
-  padding: 0;
-}
-.auth-form label {
-  display: grid;
-  gap: 7px;
-  color: var(--ink);
-  font:
-    14px/1.5 var(--font-body);
-  min-width: 0;
-}
-.auth-form input,
-.auth-form select,
-.auth-form textarea {
-  min-height: 44px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
-  background: var(--paper);
-  color: var(--ink);
-  padding: 0 12px;
-  font:
-    16px/1.5 var(--font-body);
-  text-transform: none;
-  letter-spacing: normal;
-}
-.auth-form textarea {
-  padding: 12px;
-  resize: vertical;
 }
 .auth-submit {
   width: 100%;

@@ -457,7 +457,7 @@
   text-transform: uppercase;
 }
 .wishlist-button-header b,
-.cart-button > span:last-child {
+.cart-button > .header-cart-count {
   background: var(--yellow);
   color: var(--ink);
 }
@@ -482,7 +482,7 @@
     gap: 4px;
   }
   .wishlist-button-header b,
-  .cart-button > span:last-child {
+  .cart-button > .header-cart-count {
     min-width: 17px;
     height: 17px;
   }
@@ -525,7 +525,7 @@
 .wishlist-button-header .nav-action-label {
   color: var(--ink);
 }
-.cart-button > span:last-child {
+.cart-button > .header-cart-count {
   display: inline-grid;
   place-items: center;
   width: 18px;
