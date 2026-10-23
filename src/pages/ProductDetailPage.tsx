@@ -13,8 +13,11 @@ import { MenuItem } from '../components/mui/MenuItem'
 import { TextField } from '../components/mui/TextField'
 import { apiFetch as fetch, LONG_RUNNING_API_TIMEOUT_MS } from '../api/http'
 import { useQuery } from '@tanstack/react-query'
+import { Share2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { getProduct, type StorefrontApiResponse } from '../api/storefront'
+import { shareProductLink } from '../api/productSharing'
 import { queryClient } from '../api/queryClient'
 import { useProductMetadata } from '../api/productMetadata'
 import { getCartPendingAction, updateCart, useCart } from '../api/cart'
@@ -83,6 +86,7 @@ type Props = {
 }
 
 export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, onOpenProduct }: Props) {
+  const { t } = useTranslation('common')
   const cartQuery = useCart()
   const catalogProduct = storefront.products.find((item) => item.id === productId)
   const productQuery = useQuery({
@@ -206,6 +210,12 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
   }, [lightboxIndex, availableMediaItems.length])
 
   const reviews = reviewsQuery.data ?? []
+  const shareProductPage = async () => {
+    if (!product) return
+    const result = await shareProductLink({ id: product.id, name: product.name })
+    if (result === 'copied') notify(t('productLinkCopied'), 'success')
+    if (result === 'failed') notify(t('productLinkCopyFailed'))
+  }
 
   if (productLoading)
     return (
@@ -527,6 +537,15 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
         <Stack className="detail-copy" spacing={{ xs: 2.5, md: 3 }} sx={{ width: '100%', maxWidth: 620, alignItems: 'flex-start', justifySelf: 'center' }}>
           <Typography component="p" variant="overline" color="success.main" sx={{ m: 0, fontWeight: 700, letterSpacing: '.12em' }}>{product.category}</Typography>
           <Typography component="h1" id="product-title" sx={{ m: 0, fontSize: 'clamp(2rem, 4.2vw, 3.75rem)', fontWeight: 500, lineHeight: 1.06, letterSpacing: '-.045em', overflowWrap: 'anywhere' }}>{product.name}</Typography>
+          <Button
+            variant="outlined"
+            type="button"
+            onClick={() => void shareProductPage()}
+            startIcon={<Share2 aria-hidden="true" size={18} />}
+            sx={{ minHeight: 44 }}
+          >
+            {t('shareProduct')}
+          </Button>
           <Stack component="div" role="group" direction="row" spacing={1} sx={{ minHeight: 40, alignItems: 'center', flexWrap: 'wrap' }} aria-label={product.reviewCount > 0 ? `${product.rating.toFixed(1)} out of 5 from ${product.reviewCount} reviews` : 'No reviews yet'}>
             {product.reviewCount > 0 ? <>
               <RatingStars rating={product.rating} size="medium" />
