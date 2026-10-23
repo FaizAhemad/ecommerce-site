@@ -16,5 +16,14 @@
   "errorTitle": "कुछ गलत हो गया",
   "reloadPage": "पेज फिर लोड करें",
   "backToHome": "होम पर जाएँ",
-  "rateLimited": "बहुत अधिक अनुरोध। कृपया {{seconds}} सेकंड बाद फिर प्रयास करें।"
+  "rateLimited": "बहुत अधिक अनुरोध। कृपया {{seconds}} सेकंड बाद फिर प्रयास करें।",
+  "shareProduct": "उत्पाद शेयर करें",
+  "shareOnFacebook": "Facebook पर शेयर करें",
+  "copyForInstagram": "Instagram के लिए लिंक कॉपी करें",
+  "copyForYouTube": "YouTube के लिए लिंक कॉपी करें",
+  "moreShareOptions": "शेयर करने के अन्य विकल्प",
+  "copyLink": "लिंक कॉपी करें",
+  "productLinkCopied": "उत्पाद का लिंक कॉपी हो गया।",
+  "productLinkCopiedForPlatform": "लिंक कॉपी हो गया। इसे {{platform}} में पेस्ट करें।",
+  "productLinkCopyFailed": "उत्पाद का लिंक कॉपी नहीं हो सका। फिर से कोशिश करें।"
 }
