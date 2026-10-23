@@ -16,5 +16,14 @@
   "errorTitle": "Something went wrong.",
   "reloadPage": "Reload page",
   "backToHome": "Back to home",
-  "rateLimited": "Too many requests. Please try again in {{seconds}} seconds."
+  "rateLimited": "Too many requests. Please try again in {{seconds}} seconds.",
+  "shareProduct": "Share product",
+  "shareOnFacebook": "Share on Facebook",
+  "copyForInstagram": "Copy link for Instagram",
+  "copyForYouTube": "Copy link for YouTube",
+  "moreShareOptions": "More sharing options",
+  "copyLink": "Copy link",
+  "productLinkCopied": "Product link copied.",
+  "productLinkCopiedForPlatform": "Link copied. Paste it into {{platform}}.",
+  "productLinkCopyFailed": "Could not copy the product link. Please try again."
 }

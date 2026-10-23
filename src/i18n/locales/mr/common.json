@@ -16,5 +16,14 @@
   "errorTitle": "काहीतरी चूक झाली",
   "reloadPage": "पृष्ठ पुन्हा लोड करा",
   "backToHome": "मुख्यपृष्ठावर जा",
-  "rateLimited": "खूप विनंत्या आल्या आहेत. कृपया {{seconds}} सेकंदांनंतर पुन्हा प्रयत्न करा."
+  "rateLimited": "खूप विनंत्या आल्या आहेत. कृपया {{seconds}} सेकंदांनंतर पुन्हा प्रयत्न करा.",
+  "shareProduct": "उत्पादन शेअर करा",
+  "shareOnFacebook": "Facebook वर शेअर करा",
+  "copyForInstagram": "Instagram साठी लिंक कॉपी करा",
+  "copyForYouTube": "YouTube साठी लिंक कॉपी करा",
+  "moreShareOptions": "शेअर करण्याचे इतर पर्याय",
+  "copyLink": "लिंक कॉपी करा",
+  "productLinkCopied": "उत्पादनाची लिंक कॉपी झाली.",
+  "productLinkCopiedForPlatform": "लिंक कॉपी झाली. ती {{platform}} मध्ये पेस्ट करा.",
+  "productLinkCopyFailed": "उत्पादनाची लिंक कॉपी करता आली नाही. पुन्हा प्रयत्न करा."
 }

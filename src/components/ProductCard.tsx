@@ -1,7 +1,8 @@
 import { readWishlist, toggleWishlistItem, wishlistPending } from '../api/wishlistState'
 import type { StorefrontApiResponse } from '../api/storefront'
-import { Heart } from 'lucide-react'
+import { Copy, Facebook, Heart, Instagram, MoreVertical, Share2, Youtube } from 'lucide-react'
 import { useEffect, useState, type MouseEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AddToCartButton } from './AddToCartButton'
 import { RatingStars } from './RatingStars'
 import { useNotification } from './NotificationProvider'
@@ -11,9 +12,12 @@ import { Card } from './mui/Card'
 import { CardContent } from './mui/CardContent'
 import { Chip } from './mui/Chip'
 import { IconButton } from './mui/IconButton'
+import { Menu } from './mui/Menu'
+import { MenuItem } from './mui/MenuItem'
 import { Stack } from './mui/Stack'
 import { Typography } from './mui/Typography'
 import { productAvailability } from './productAvailability'
+import { copyProductLink, facebookProductShareUrl, productPublicUrl, shareProductLink } from '../api/productSharing'
 
 type ProductCardProps = {
   product: StorefrontApiResponse['products'][number]
@@ -44,6 +48,8 @@ export function ProductCard({
 }: ProductCardProps) {
   const [wishlisted, setWishlisted] = useState(() => readWishlist().includes(product.id))
   const [actionLocked, setActionLocked] = useState(() => wishlistPending(product.id))
+  const [shareAnchor, setShareAnchor] = useState<HTMLElement | null>(null)
+  const { t } = useTranslation('common')
 
   useEffect(() => {
     const sync = () => {
@@ -55,6 +61,26 @@ export function ProductCard({
   }, [product.id])
 
   const notify = useNotification()
+  const shareUrl = productPublicUrl(product.id)
+  const copyLink = async (platform?: string) => {
+    setShareAnchor(null)
+    const copied = await copyProductLink(shareUrl)
+    if (!copied) {
+      notify(t('productLinkCopyFailed'))
+      return
+    }
+    notify(platform ? t('productLinkCopiedForPlatform', { platform }) : t('productLinkCopied'), 'success')
+  }
+  const shareWithApps = async () => {
+    setShareAnchor(null)
+    const result = await shareProductLink({ id: product.id, name: product.name })
+    if (result === 'copied') notify(t('productLinkCopied'), 'success')
+    if (result === 'failed') notify(t('productLinkCopyFailed'))
+  }
+  const shareOnFacebook = () => {
+    setShareAnchor(null)
+    window.open(facebookProductShareUrl(shareUrl), '_blank', 'noopener,noreferrer')
+  }
   const toggleWishlist = async (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation()
     try {
@@ -115,7 +141,7 @@ export function ProductCard({
           <Chip
             label={product.badge}
             size="small"
-            sx={{ position: 'absolute', zIndex: 1, top: 1, left: 1, maxWidth: '90%', height: 24, backgroundColor: 'rgba(255,254,250,.94)', color: 'text.primary', fontSize: 9, letterSpacing: '.08em', textTransform: 'uppercase', boxShadow: '0 1px 4px rgba(37,40,33,.12)' }}
+            sx={{ position: 'absolute', zIndex: 1, top: 1, left: 1, maxWidth: '90%', height: 28, backgroundColor: 'rgba(255,254,250,.94)', color: 'text.primary', fontSize: 12, letterSpacing: '.08em', textTransform: 'uppercase', boxShadow: '0 1px 4px rgba(37,40,33,.12)' }}
           />
         )}
         {primaryImage ? (
@@ -132,13 +158,42 @@ export function ProductCard({
             sx={{ position: 'absolute', width: '42%', height: '52%', top: '24%', left: '29%', borderRadius: '48% 48% 18% 18%', backgroundColor: '#ebeee4', boxShadow: '23px 18px 0 rgba(36,92,75,.26)', transform: 'rotate(-7deg)' }}
           />
         )}
+        <IconButton
+          aria-label={t('shareProduct')}
+          aria-haspopup="menu"
+          aria-expanded={Boolean(shareAnchor)}
+          onClick={(event) => {
+            event.stopPropagation()
+            setShareAnchor(event.currentTarget)
+          }}
+          sx={{
+            position: 'absolute',
+            zIndex: 2,
+            top: 8,
+            right: 8,
+            border: '1px solid rgba(37,40,33,.12)',
+            backgroundColor: 'rgba(255,254,250,.96)',
+            color: 'text.primary',
+            boxShadow: '0 2px 8px rgba(37,40,33,.16)',
+            '&:hover': { backgroundColor: '#fff' },
+          }}
+        >
+          <MoreVertical aria-hidden="true" size={20} />
+        </IconButton>
+        <Menu anchorEl={shareAnchor} open={Boolean(shareAnchor)} onClose={() => setShareAnchor(null)}>
+          <MenuItem onClick={shareOnFacebook}><Facebook aria-hidden="true" size={18} />{t('shareOnFacebook')}</MenuItem>
+          <MenuItem onClick={() => void copyLink('Instagram')}><Instagram aria-hidden="true" size={18} />{t('copyForInstagram')}</MenuItem>
+          <MenuItem onClick={() => void copyLink('YouTube')}><Youtube aria-hidden="true" size={18} />{t('copyForYouTube')}</MenuItem>
+          <MenuItem onClick={() => void shareWithApps()}><Share2 aria-hidden="true" size={18} />{t('moreShareOptions')}</MenuItem>
+          <MenuItem onClick={() => void copyLink()}><Copy aria-hidden="true" size={18} />{t('copyLink')}</MenuItem>
+        </Menu>
       </Box>
 
       <CardContent sx={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 1, px: 1, pt: 1.5, pb: 1, '&:last-child': { pb: 1 } }}>
-        <Typography component="p" noWrap sx={{ m: 0, color: 'text.secondary', fontSize: 10, fontWeight: 700, lineHeight: 1.3, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+        <Typography component="p" noWrap sx={{ m: 0, color: 'text.secondary', fontSize: 12, fontWeight: 700, lineHeight: 1.35, letterSpacing: '.1em', textTransform: 'uppercase' }}>
           {product.category}
         </Typography>
-        <Stack direction="row" spacing={0.75} sx={{ minHeight: 44, alignItems: 'flex-start' }}>
+        <Stack direction="row" spacing={0.75} sx={{ minHeight: 48, alignItems: 'flex-start' }}>
           <Typography
             data-product-open
             component="h3"
@@ -150,7 +205,7 @@ export function ProductCard({
               m: 0,
               overflow: 'hidden',
               color: 'success.dark',
-              fontSize: { xs: 14, sm: 15 },
+              fontSize: { xs: 16, sm: 17 },
               fontWeight: 650,
               lineHeight: 1.35,
               overflowWrap: 'anywhere',
@@ -179,11 +234,11 @@ export function ProductCard({
             sx={{
               display: '-webkit-box',
               m: 0,
-              minHeight: 34,
+              minHeight: 40,
               overflow: 'hidden',
               color: 'text.secondary',
-              fontSize: 12,
-              lineHeight: 1.45,
+              fontSize: 14,
+              lineHeight: 1.5,
               overflowWrap: 'anywhere',
               WebkitBoxOrient: 'vertical',
               WebkitLineClamp: 2,
@@ -194,41 +249,41 @@ export function ProductCard({
         )}
         <Stack direction="row" spacing={1} sx={{ minHeight: 44, alignItems: 'center', justifyContent: 'space-between', mt: 0.25 }}>
           <Box sx={{ display: 'grid', minWidth: 0, flex: 1, alignContent: 'center', gap: 0.5 }}>
-            <Typography component="strong" sx={{ color: 'text.primary', fontSize: 'clamp(18px,1.35vw,21px)', fontWeight: 800, lineHeight: 1.15, letterSpacing: '-.025em', overflowWrap: 'anywhere' }}>
+            <Typography component="strong" sx={{ color: 'text.primary', fontSize: 'clamp(20px,1.5vw,23px)', fontWeight: 800, lineHeight: 1.15, letterSpacing: '-.025em', overflowWrap: 'anywhere' }}>
               {currency.format(product.price)}
             </Typography>
             {product.compareAtPriceMinor != null && product.priceMinor != null && product.compareAtPriceMinor > product.priceMinor && (
               <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
-                <Typography component="del" sx={{ color: 'text.secondary', fontSize: 11 }}>
+                <Typography component="del" sx={{ color: 'text.secondary', fontSize: 13 }}>
                   {currency.format(product.compareAtPriceMinor / 100)}
                 </Typography>
                 <Chip
                   label={`${Math.round(((product.compareAtPriceMinor - product.priceMinor) / product.compareAtPriceMinor) * 100)}% off`}
                   size="small"
                   color="success"
-                  sx={{ height: 22, fontSize: 10 }}
+                  sx={{ height: 24, fontSize: 12 }}
                 />
               </Stack>
             )}
           </Box>
           {typeof product.stock === 'number' && (
-            <Chip {...(product.stock <= 0 ? productAvailability(product.stock) : product.purchase?.available === false && product.seller && !product.seller.isPlatform ? { label: 'Offer pending', color: 'warning' as const } : productAvailability(product.stock))} size="small" sx={{ flexShrink: 0, height: 23, fontSize: 10, fontWeight: 650 }} />
+            <Chip {...(product.stock <= 0 ? productAvailability(product.stock) : product.purchase?.available === false && product.seller && !product.seller.isPlatform ? { label: 'Offer pending', color: 'warning' as const } : productAvailability(product.stock))} size="small" sx={{ flexShrink: 0, minHeight: 28, height: 'auto', fontSize: 12, fontWeight: 650, '& .MuiChip-label': { px: 1.25, py: 0.5 } }} />
           )}
         </Stack>
         <Box
           aria-label={product.reviewCount > 0 ? `${ratingLabel}: ${product.rating}, ${product.reviewCount} ${reviewsLabel}` : 'No reviews yet'}
-          sx={{ display: 'flex', width: 'fit-content', maxWidth: '100%', minHeight: 28, alignItems: 'center', gap: 0.75, borderRadius: 999, px: 1, py: 0.5, backgroundColor: 'rgba(215,225,208,.42)', fontSize: 10, lineHeight: 1.2 }}
+          sx={{ display: 'flex', width: 'fit-content', maxWidth: '100%', minHeight: 32, alignItems: 'center', gap: 0.75, borderRadius: 999, px: 1, py: 0.5, backgroundColor: 'rgba(215,225,208,.42)', fontSize: 12, lineHeight: 1.3 }}
         >
           {product.reviewCount > 0 ? (
             <>
               <RatingStars rating={product.rating} />
-              <Typography component="b" sx={{ flexShrink: 0, fontSize: 10, fontWeight: 700 }}>{product.rating.toFixed(1)}</Typography>
-              <Typography component="span" noWrap sx={{ color: 'text.secondary', fontSize: 10 }}>
+              <Typography component="b" sx={{ flexShrink: 0, fontSize: 12, fontWeight: 700 }}>{product.rating.toFixed(1)}</Typography>
+              <Typography component="span" noWrap sx={{ color: 'text.secondary', fontSize: 12 }}>
                 ({product.reviewCount} {reviewsLabel})
               </Typography>
             </>
           ) : (
-            <Typography component="span" sx={{ color: 'text.secondary', fontSize: 10 }}>No reviews yet</Typography>
+            <Typography component="span" sx={{ color: 'text.secondary', fontSize: 12 }}>No reviews yet</Typography>
           )}
         </Box>
         {displayColors.length > 0 && (
