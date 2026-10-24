@@ -111,7 +111,7 @@ export function PaymentPage({ storefront, onNavigate }: Props) {
             <ArrowRight aria-hidden="true" className="size-4 text-[var(--muted)]" />
             <li className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 text-[var(--muted)]">
               <span className="grid size-5 place-items-center rounded-full border border-[var(--line)] text-[10px]">2</span>
-              Payment after order
+              Confirm order
             </li>
           </ol>
         </header>
@@ -147,7 +147,7 @@ export function PaymentPage({ storefront, onNavigate }: Props) {
           </div>
         ) : (
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.78fr)] lg:gap-8">
-            <section className="min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-6" aria-labelledby="delivery-title">
+            <section className="order-2 min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-6 lg:order-1" aria-labelledby="delivery-title">
               <div className="mb-5 flex items-start gap-3 border-b border-[var(--line)] pb-4 sm:mb-6 sm:pb-5">
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[rgba(215,225,208,0.55)] text-[var(--ink)]"><MapPin aria-hidden="true" className="size-[18px]" /></span>
                 <div>
@@ -204,7 +204,7 @@ export function PaymentPage({ storefront, onNavigate }: Props) {
               )}
             </section>
 
-            <aside className="min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-6 lg:sticky lg:top-24" aria-labelledby="checkout-summary-title">
+            <aside className="order-1 min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-6 lg:sticky lg:top-24 lg:order-2" aria-labelledby="checkout-summary-title">
               <div className="mb-4 flex items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
                 <h2 id="checkout-summary-title" className="!mb-0 !text-xl !font-semibold !leading-tight !tracking-tight text-[var(--ink)]">Order summary</h2>
                 <span className="shrink-0 rounded-full bg-[var(--paper)] px-2.5 py-1 text-xs text-[var(--muted)]">{units} {units === 1 ? 'item' : 'items'}</span>

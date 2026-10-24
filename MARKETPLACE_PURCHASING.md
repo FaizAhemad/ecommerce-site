@@ -12,11 +12,17 @@ Product list/detail and sitemap/SEO require approved ownership and approved shop
 
 Cart additions, checkout quotes and order creation enforce server purchase eligibility. Order creation checks it inside the stock-reservation transaction, including the legacy COD path. Missing ownership, moderation removal and suspension fail closed. Unavailable items can still be removed from carts/wishlists. Client availability is informational, never authorization.
 
+2026-10-24 listing correction: external-shop products are included in public product lists/details and sitemap only when shop/content/GST gates pass and the current fee offer is accepted. Proposed or declined offers are excluded; they are not rendered as public "Offer pending" cards. The restricted shop showcase and public media route also require accepted offer state. Server eligibility remains authoritative.
+
 Gadgify is the customer payment merchant. After admin content approval and seller acceptance, existing Gadgify checkout may accept the item when checkout/payment settings are enabled. The fee amount is not added to the customer total: it is a shop-side fee snapshot. Coupon discounts are allocated deterministically to item lines; a percentage is calculated on that discounted item subtotal, excluding delivery and tax. Fixed fees apply per unit sold.
 
 The prepared migration extends the order-item shop snapshot with the exact fee type/value/version, discounted fee base, calculated fee amount and status. Captured online orders and delivered COD orders accrue the fee as due to Gadgify; cancellation before payment voids a pending fee and a provider-confirmed full refund reverses a due fee. No fee is accrued from an unconfirmed payment. This is a durable charge calculation/record, not a seller payment collection, payout transfer or settlement reconciliation. Those operations and partial-refund fee adjustments remain pending.
 
 ## Owner decisions and rollout prerequisites
+
+### Seller/admin flow audit (2026-10-24)
+
+The current fee snapshot records an amount due to Gadgify; it does not calculate seller proceeds or provide a payout/settlement ledger. Do not enable marketplace sales until owner-approved seller payment terms, holds, adjustments, cancellation/return/partial-refund allocation and provider reconciliation are designed and implemented. The customer-facing experience must also explain who fulfills and handles support/returns while preserving private seller contact data. These are rollout gates; this review does not change the existing fee snapshot rules. Track work in MP-07 and MP-08c in APPLICATION_BACKLOG.md.
 
 Per-product fee basis is approved as a fixed INR fee per unit sold or percentage of discounted item price; the admin chooses the actual amount/rate and the seller accepts each offer. Customer payments go to Gadgify through its existing payment setup. Delivery remains free under current owner direction and shops handle their own fulfillment. Automated fee collection from sellers, settlement/payouts, partial-refund allocation and financial/legal terms remain unresolved.
 

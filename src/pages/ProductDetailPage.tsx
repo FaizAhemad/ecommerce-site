@@ -26,6 +26,7 @@ import { Typography } from '../components/mui/Typography'
 import { Dialog } from '../components/mui/Dialog'
 import { DialogContent } from '../components/mui/DialogContent'
 import { IconButton } from '../components/mui/IconButton'
+import { ShareProductButton } from '../components/ShareProductButton'
 
 type ReviewMedia = { id: string; url: string }
 
@@ -525,7 +526,10 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
           )}
         </Box>
         <Stack className="detail-copy" spacing={{ xs: 2.5, md: 3 }} sx={{ width: '100%', maxWidth: 620, alignItems: 'flex-start', justifySelf: 'center' }}>
-          <Typography component="p" variant="overline" color="success.main" sx={{ m: 0, fontWeight: 700, letterSpacing: '.12em' }}>{product.category}</Typography>
+          <Stack direction="row" spacing={1.5} sx={{ width: '100%', minHeight: 44, alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography component="p" variant="overline" color="success.main" sx={{ m: 0, minWidth: 0, fontWeight: 700, letterSpacing: '.12em', overflowWrap: 'anywhere' }}>{product.category}</Typography>
+            <ShareProductButton productId={product.id} productName={product.name} />
+          </Stack>
           <Typography component="h1" id="product-title" sx={{ m: 0, fontSize: 'clamp(2rem, 4.2vw, 3.75rem)', fontWeight: 500, lineHeight: 1.06, letterSpacing: '-.045em', overflowWrap: 'anywhere' }}>{product.name}</Typography>
           <Stack component="div" role="group" direction="row" spacing={1} sx={{ minHeight: 40, alignItems: 'center', flexWrap: 'wrap' }} aria-label={product.reviewCount > 0 ? `${product.rating.toFixed(1)} out of 5 from ${product.reviewCount} reviews` : 'No reviews yet'}>
             {product.reviewCount > 0 ? <>
@@ -546,7 +550,7 @@ export function ProductDetailPage({ storefront, productId, onAdd, onNavigate, on
                   </>}
                 </Stack>
               </Stack>
-              {typeof product.stock === 'number' && <Chip {...(product.stock <= 0 ? productAvailability(product.stock) : product.purchase?.available === false && product.seller && !product.seller.isPlatform ? { label: 'Offer pending', color: 'warning' as const } : productAvailability(product.stock))} size="small" sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, height: 26, fontWeight: 650 }} />}
+              {typeof product.stock === 'number' && <Chip {...productAvailability(product.stock)} size="small" sx={{ alignSelf: { xs: 'flex-start', sm: 'center' }, height: 26, fontWeight: 650 }} />}
             </Stack>
           </Box>
           {product.description?.trim() && <Stack spacing={0.75}>

@@ -12,7 +12,7 @@ import { Paper } from './mui/Paper'
 import { Stack } from './mui/Stack'
 import { TextField } from './mui/TextField'
 import { Typography } from './mui/Typography'
-type Rules = { enabled: boolean; shippingMinor: number; taxBps: number }
+type Rules = { enabled: boolean; codEnabled?: boolean; shippingMinor: number; taxBps: number }
 export function CheckoutSettings() {
   const query = useQuery({
     queryKey: privateKey('admin', 'settings'),
@@ -60,6 +60,7 @@ function CheckoutSettingsForm({ initial, saved }: { initial?: Rules; saved: () =
     }
     const rules = {
       enabled: fields.get('enabled') === 'on',
+      codEnabled: fields.get('codEnabled') === 'on',
       shippingMinor: 0,
       taxBps: tax ? Math.round(Number(tax) * 100) : 0,
     }
@@ -98,7 +99,9 @@ function CheckoutSettingsForm({ initial, saved }: { initial?: Rules; saved: () =
       </Typography>
       <Alert severity="info">No per-item or order-level delivery fee is charged currently. Delivery will be quoted once per shipment after regional rates are configured.</Alert>
       <TextField name="tax" label="Tax (%) · optional" type="number" slotProps={{ htmlInput: { min: 0, max: 100, step: 0.01 } }} defaultValue={initial ? initial.taxBps / 100 : ''} disabled={pending} sx={{ maxWidth: 320 }} />
-      <FormControlLabel control={<Checkbox name="enabled" defaultChecked={initial?.enabled ?? false} disabled={pending} />} label="Enable checkout after charges, policies and Razorpay configuration are approved" />
+      <FormControlLabel control={<Checkbox name="enabled" defaultChecked={initial?.enabled ?? false} disabled={pending} />} label="Enable checkout after charges and policies are approved" />
+      <FormControlLabel control={<Checkbox name="codEnabled" defaultChecked={initial?.codEnabled ?? false} disabled={pending} />} label="Offer Cash on Delivery" />
+      <Alert severity="warning">Cash on Delivery is off by default. The admin workflow to record collected cash is not implemented yet; keep this off until that workflow and its rules are approved. A COD order will not be marked paid automatically.</Alert>
       <Button type="submit" variant="contained" disabled={pending} sx={{ alignSelf: 'flex-start' }}>
         {pending ? 'Saving…' : 'Save checkout settings'}
       </Button>

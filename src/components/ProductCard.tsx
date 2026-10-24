@@ -69,6 +69,7 @@ export function ProductCard({
   const displayColors = product.colors?.filter(
     (color) => color.trim() && color.trim().toLowerCase() !== 'default',
   ) ?? []
+  if (product.seller && !product.seller.isPlatform && product.purchase?.available === false) return null
   const decreaseQuantity = () =>
     updateCart(
       {
@@ -212,7 +213,7 @@ export function ProductCard({
             )}
           </Box>
           {typeof product.stock === 'number' && (
-            <Chip {...(product.stock <= 0 ? productAvailability(product.stock) : product.purchase?.available === false && product.seller && !product.seller.isPlatform ? { label: 'Offer pending', color: 'warning' as const } : productAvailability(product.stock))} size="small" sx={{ flexShrink: 0, height: 23, fontSize: 10, fontWeight: 650 }} />
+            <Chip {...productAvailability(product.stock)} size="small" sx={{ flexShrink: 0, height: 23, fontSize: 10, fontWeight: 650 }} />
           )}
         </Stack>
         <Box

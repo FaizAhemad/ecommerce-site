@@ -23,22 +23,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
     user = await requireUser(request, response)
   if (!user) return
   try {
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      if (request.method === 'GET') return response.status(200).json({ enabled: false, reason: 'Payments are not available right now. Please try again later.' })
-      if (request.method === 'POST')
-        return sendError(
-          response,
-          503,
-          'CHECKOUT_UNAVAILABLE',
-          'Online ordering is temporarily unavailable.',
-          id,
-        )
-    }
     if (request.method === 'GET') {
       const rules = checkoutRules(
         (await db.storeSetting.findUnique({ where: { key: 'checkout' } }))?.value,
       )
-      if (!rules?.enabled) return response.status(200).json({ enabled: false, reason: 'Online checkout is not enabled yet.' })
+      const methods = { razorpay: Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET), cod: Boolean(rules?.codEnabled) }
+      if (!rules?.enabled || (!methods.razorpay && !methods.cod)) return response.status(200).json({ enabled: false, methods, reason: 'Checkout is not available right now.' })
       const cart = await db.cart.findUnique({
         where: { userId: user.id },
         include: { items: { include: { product: { include: { shopOwnership: { include: { shop: true } } } } } } },
@@ -55,18 +45,20 @@ export default async function handler(request: VercelRequest, response: VercelRe
       )
       const coupon = request.query?.coupon
         ? await quoteCoupon(db, user.id, request.query.coupon, subtotal) : null
-      return response.status(200).json({ enabled: true,
+      return response.status(200).json({ enabled: true, methods,
         ...checkoutTotal(subtotal, rules, coupon?.discountMinor, coupon?.taxTreatment),
         discountMinor: coupon?.discountMinor ?? 0, couponCode: coupon?.code ?? null })
     }
     if (request.method !== 'POST')
       return sendError(response, 405, 'METHOD_NOT_ALLOWED', 'Use GET or POST.', id)
     const body = bodyRecord(request)
+    const paymentProvider = body.paymentMethod === 'COD' ? 'COD' : body.paymentMethod === 'RAZORPAY' ? 'RAZORPAY' : null
     if (
       typeof body.requestId !== 'string' ||
       !/^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(body.requestId) ||
       typeof body.addressId !== 'string' ||
       !body.addressId ||
+      !paymentProvider ||
       !Number.isSafeInteger(body.expectedTotalMinor)
     )
       return sendError(
@@ -76,9 +68,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
         'Review the total and select a delivery address.',
         id,
       )
+    if (paymentProvider === 'RAZORPAY' && (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET))
+      return sendError(response, 503, 'CHECKOUT_UNAVAILABLE', 'Online payment is not available right now.', id)
     const order = await createCartOrder(db, user.id, body.addressId, {
       requestId: body.requestId,
       expectedTotalMinor: Number(body.expectedTotalMinor),
+      paymentProvider,
       rules: checkoutRules,
       calculate: checkoutTotal,
       couponCode: body.couponCode === undefined || body.couponCode === '' ? undefined : couponCode(body.couponCode),

@@ -14,7 +14,7 @@ Admin selects an external-shop order before customer dispatch, provides a note a
 
 Admin notes should identify defects and, when returning items, the carrier/tracking reference. Return-to-shop status records staff activity; it does not book a courier, deduct stock, cancel an order or issue a refund. Inspection covers all items in the selected shop order; per-item/partial acceptance is separate pending scope.
 
-Up to three private evidence images of 1 MB each are supported after receipt or failure, using existing signature/MIME validation. Photos are not public URLs and cannot be viewed by other shops or customers. Images remain evidence; no deletion/retention automation is added. Staff may record call notes, visible to admins only; the application does not place calls.
+Up to three private evidence images of 1 MB each are supported after receipt or failure, using existing signature/MIME validation. Photos are not public URLs and cannot be viewed by other shops or customers. Images remain evidence; no deletion/retention automation is added. Media validation is not malware scanning. Define evidence retention/deletion and malware-safety controls before broad seller operations; see MP-03c in APPLICATION_BACKLOG.md. Staff may record call notes, visible to admins only; the application does not place calls.
 
 ## Security and delivery behavior
 

@@ -48,6 +48,10 @@ Do not assume the existing single-store payment/refund flow is marketplace-ready
 | Delivery responsibility | Confirmed: each shop handles its own delivery/returns; Gadgify handles its own products and retains oversight |
 | Mixed-shop delivery charges, cancellation/refund allocation and return eligibility | Undecided; new fulfillment pages do not enable financial rules |
 | Seller agreement, privacy disclosures, invoicing and legal requirements | Requires approved content and appropriate review |
+| Seller identity/contact verification, eligibility evidence, application response targets and record retention | Owner policy and operating process required; current source does not implement these controls |
+| Seller proceeds, payout/settlement, holds, adjustments and partial-refund allocation | Not implemented; block seller checkout activation until approved rules and reconciliation are implemented |
+| Customer disclosure of fulfillment/return responsibility and seller-specific dispute routing | Define approved customer wording and support escalation before marketplace rollout |
+| Seller media malware safety and retention/deletion lifecycle | Current signature/MIME checks are not malware scanning; retention automation is absent |
 | Seller staff access and number of shops per account | Decide before expanding membership permissions |
 | Medicines and other regulated categories | Still subject to separate approval; marketplace scope does not enable them |
 

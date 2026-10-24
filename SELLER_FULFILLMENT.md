@@ -1,5 +1,9 @@
 # Shop fulfillment and returns
 
+## Marketplace operations review (2026-10-24)
+
+The implemented fulfillment records are shop-order scoped. They do not settle seller proceeds, allocate partial refunds, or define the customer-facing division of responsibility for delivery, returns and disputes. Confirm customer wording and implement seller-specific support/dispute escalation and admin audit handling before rollout. Preserve private seller contact data. See MP-07 and MP-08c in APPLICATION_BACKLOG.md. This review adds no evidence of migration, worker, provider or production operation.
+
 2026-09-24 mixed platform extension: Gadgify groups in mixed orders now use scoped admin shipments and owned customer returns. Platform-only orders retain legacy workflows. The server derives this distinction from stored groups, never client input. External-shop sales, allocation and financial rules remain gated; source/regression cases unverified.
 
 Quality inspection extension (2026-09-24): optional admin-requested inspection holds external-shop customer dispatch until PASSED. Receipt/pass/fail, return/replacement records, private photos and seller notifications are coded. This is separate from listing moderation and does not imply refunds, stock movements or booked transport. Current seller-managed delivery remains; universal/central inspection is undecided. See QUALITY_INSPECTION.md.

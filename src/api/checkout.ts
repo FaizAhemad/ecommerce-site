@@ -1,6 +1,7 @@
 import { apiFetch } from './http'
 export type Quote = {
   enabled: boolean
+  methods?: { razorpay: boolean; cod: boolean }
   reason?: string
   subtotalMinor?: number
   shippingMinor?: number
@@ -13,7 +14,7 @@ export type Quote = {
 export async function checkoutRequest(
   method: 'GET' | 'POST',
   signal: AbortSignal,
-  body?: { requestId: string; addressId: string; expectedTotalMinor: number; couponCode?: string },
+  body?: { requestId: string; addressId: string; expectedTotalMinor: number; paymentMethod: 'RAZORPAY' | 'COD'; couponCode?: string },
   couponCode?: string,
 ) {
   const response = await apiFetch('/api/checkout' + (method === 'GET' && couponCode ? '?coupon=' + encodeURIComponent(couponCode) : ''), {

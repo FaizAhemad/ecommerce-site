@@ -63,6 +63,15 @@ export function OrderDetailPage({ storefront, orderId, onNavigate }: Props) {
       {order && (
         <>
           <p className="-mt-3 text-sm text-[var(--muted)]">Placed {new Intl.DateTimeFormat(storefront.localization.locale, { dateStyle: 'medium' }).format(new Date(order.createdAt))}</p>
+          <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 shadow-sm sm:p-6" aria-labelledby="payment-status-title">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h2 id="payment-status-title" className="!mb-1 !mt-0 !text-xl !font-semibold !leading-tight !tracking-tight text-[var(--ink)]">Payment</h2>
+                <p className="mb-0 text-sm text-[var(--muted)]">{order.payment?.provider === 'COD' ? 'Cash on Delivery · payment is due when delivered' : order.payment ? `Online payment · ${paymentStatusLabel(order.payment.status)}` : 'No payment recorded.'}</p>
+              </div>
+              {order.status === 'PENDING' && order.payment?.provider === 'RAZORPAY' && ['PENDING', 'FAILED'].includes(order.payment.status) && <div className="w-full sm:max-w-sm"><OrderPayment orderId={order.id} onRefresh={() => void query.refetch({ cancelRefetch: false })} /></div>}
+            </div>
+          </section>
           <OrderTimeline status={order.status} createdAt={order.createdAt} locale={storefront.localization.locale} events={order.shipment?.events ?? []} />
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)] lg:gap-6">
             <section className="min-w-0 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-6" aria-labelledby="order-items-title">
@@ -92,11 +101,6 @@ export function OrderDetailPage({ storefront, orderId, onNavigate }: Props) {
               <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-6" aria-labelledby="delivery-address-title">
                 <h2 id="delivery-address-title" className="!mb-3 !mt-0 !text-xl !font-semibold !leading-tight !tracking-tight text-[var(--ink)]">Delivery address</h2>
                 {address ? <address className="not-italic text-sm leading-6 text-[var(--muted)]"><span className="font-semibold text-[var(--ink)]">{address.name}</span><br />{address.line1}{address.line2 ? ', ' + address.line2 : ''}<br />{address.city}, {address.state} {address.postalCode}<br />{address.country}{address.phone ? <><br />{address.phone}</> : null}</address> : <p className="mb-0 text-sm text-[var(--muted)]">No delivery address available.</p>}
-              </section>
-              <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-6" aria-labelledby="payment-status-title">
-                <h2 id="payment-status-title" className="!mb-3 !mt-0 !text-xl !font-semibold !leading-tight !tracking-tight text-[var(--ink)]">Payment</h2>
-                <p className="mb-3 text-sm text-[var(--muted)]">{order.payment ? `${order.payment.provider} · ${paymentStatusLabel(order.payment.status)}` : 'No payment recorded.'}</p>
-                {order.status === 'PENDING' && order.payment?.provider === 'RAZORPAY' && ['PENDING', 'FAILED'].includes(order.payment.status) && <OrderPayment orderId={order.id} onRefresh={() => void query.refetch({ cancelRefetch: false })} />}
               </section>
             </aside>
           </div>

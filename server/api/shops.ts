@@ -43,7 +43,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (!shop) return sendError(response, 404, 'NOT_FOUND', 'Shop unavailable.', id)
     // Approved content is a showcase only. No customer/provider/financial ledger fields.
     const rows = await db.storeSetting.findMany({ where: { key: { startsWith: `seller-product.${shop.id}.` }, value: { contains: '"status":"APPROVED"' } }, orderBy: { key: 'asc' }, skip: Number(page) * 20, take: 21 })
-    const products = rows.map(row => JSON.parse(row.value) as SellerDraft).filter(product => product.status === 'APPROVED' && product.shopId === shop.id)
+    const products = rows.map(row => JSON.parse(row.value) as SellerDraft).filter(product =>
+      product.status === 'APPROVED' &&
+      product.shopId === shop.id &&
+      product.offer?.status === 'ACCEPTED' &&
+      product.offer.acceptedVersion === product.offer.version,
+    )
     const mediaId = request.query?.mediaId
     if (mediaId !== undefined) {
       if (!validId(mediaId)) return sendError(response, 404, 'NOT_FOUND', 'Media unavailable.', id)
@@ -51,7 +56,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       if (!validId(productId)) return sendError(response, 404, 'NOT_FOUND', 'Media unavailable.', id)
       const productRow = await db.storeSetting.findUnique({ where: { key: `seller-product.${shop.id}.${productId}` } })
       const product = productRow && JSON.parse(productRow.value) as SellerDraft | null
-      if (!product || product.status !== 'APPROVED' || !product.mediaIds.includes(mediaId)) return sendError(response, 404, 'NOT_FOUND', 'Media unavailable.', id)
+      if (!product || product.status !== 'APPROVED' || !product.mediaIds.includes(mediaId) || publicProductMedia && (product.offer?.status !== 'ACCEPTED' || product.offer.acceptedVersion !== product.offer.version)) return sendError(response, 404, 'NOT_FOUND', 'Media unavailable.', id)
       const media = await db.storeSetting.findUnique({ where: { key: mediaKey(shop.id, mediaId) } })
       if (!media) return sendError(response, 404, 'NOT_FOUND', 'Media unavailable.', id)
       const value = JSON.parse(media.value) as { contentType: string; data: string }

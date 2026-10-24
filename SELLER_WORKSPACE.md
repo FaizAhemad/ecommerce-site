@@ -1,5 +1,9 @@
 # Seller workspace and shop showcase
 
+## Seller/admin flow audit (2026-10-24)
+
+The workspace supports one account-owned application, seller product drafts/media, exact-version offer decisions and scoped shop order reads. It does not yet provide an end-to-end seller operations console: no core shop profile editing after approval, seller payout/earnings reconciliation, or first-class seller dispute workflow is documented. Application decision notifications and information-request responses are also absent. See MP-02c/d, MP-07 and MP-08c in APPLICATION_BACKLOG.md. Keep checkout gated until financial and migration prerequisites are met.
+
 Media cleanup update (2026-09-23): GET seller/media without an attachment id provides private usage metadata; DELETE removes only uploads with no saved draft or catalog references after scoped authorization, serializable reference checks and timestamp comparison. Archived references remain protected. UI previews fetch individual files on demand. Detach/save/review products before attempting cleanup; no forced deletion or provider storage mutation. Existing 100 uploads/shop and 1 MB/file limits remain; larger uploads are separate pending work. Source and regression cases are unverified.
 
 
@@ -27,7 +31,7 @@ Forms reuse shared drawers and width/spacing conventions with loading/error/empt
 
 ## Isolation and publication
 
-Drafts live in reserved seller-product records, separate from Product and checkout. Seller reads are limited to approved shops/active membership. Mutation transactions recheck scope, expected version, category and shop-owned media. Editing approved content resets it to draft/pending and removes it from the showcase. Admin content approval creates a versioned commercial offer; seller acceptance records that exact version. Server checkout and the database order-item trigger require approved ownership, an approved shop and matching accepted offer version. Suspension removes the shop from new public requests and seller access. Already downloaded public content cannot be recalled.
+Drafts live in reserved seller-product records, separate from Product and checkout. Seller reads are limited to approved shops/active membership. Mutation transactions recheck scope, expected version, category and shop-owned media. Editing approved content resets it to draft/pending and removes it from the showcase. Admin content approval creates a versioned commercial offer; seller acceptance records that exact version. Public product lists/details, sitemap, restricted shop showcase and public product media expose the external-shop product only after the offer is accepted. Server checkout and the database order-item trigger require approved ownership, an approved shop and matching accepted offer version. Suspension removes the shop from new public requests and seller access. Already downloaded public content cannot be recalled.
 
 Media is private database-backed validated base64 (JPEG, PNG, GIF, WebP, MP4 or WebM), max 1 MB per file, ten mixed image/video attachments per product, and 100 stored attachments per shop. The seller editor accepts additional file selections and permits removing queued files before upload. Admin inspection is authenticated; public media requires an approved shop, approved product and referenced media ID. Arbitrary third-party URLs are not accepted. File validation is not malware scanning. Larger-media/provider storage remains pending; capacity errors direct the seller to support. No raw media is placed in list responses or generic Settings.
 

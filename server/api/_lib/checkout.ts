@@ -1,4 +1,4 @@
-export type CheckoutRules = { enabled: boolean; shippingMinor: number; taxBps: number }
+export type CheckoutRules = { enabled: boolean; codEnabled: boolean; shippingMinor: number; taxBps: number }
 export class CheckoutDiscountError extends Error {}
 export function checkoutRules(value: string | undefined): CheckoutRules | null {
   try {
@@ -12,8 +12,9 @@ export function checkoutRules(value: string | undefined): CheckoutRules | null {
       Number(taxBps) > 10000
     )
       return null
+    if (rules.codEnabled !== undefined && typeof rules.codEnabled !== 'boolean') return null
     // Delivery is product-specific. Ignore the legacy flat order fee in stored settings.
-    return { enabled: rules.enabled, shippingMinor: 0, taxBps: Number(taxBps) }
+    return { enabled: rules.enabled, codEnabled: rules.codEnabled === true, shippingMinor: 0, taxBps: Number(taxBps) }
   } catch {
     return null
   }

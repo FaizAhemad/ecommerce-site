@@ -38,7 +38,7 @@ Session policy: GET auth/me adds expiry/server-time metadata; CSRF-protected POS
 
 E33 extends admin/payments PATCH with initiate-refund (confirmed amount/reason) alongside reconcile-refund. GET returns selected latest-100 payment/status fields. Reserved refund-attempt records prevent repeat financial writes; no new function/migration. See REFUND_OPERATIONS.md.
 
-E31 adds `seo` through the same dispatcher for product HTML and sitemap/robots responses. Vercel preserves filesystem/Vite assets before SEO routes and bundles the HTML template. `VITE_SITE_URL` must be an approved HTTPS production origin at build/runtime; public SEO uses selected active-product fields only. See SEO_OPERATIONS.md for pending validation.
+E31 adds `seo` through the same dispatcher for product HTML and sitemap/robots responses. Vercel preserves filesystem/Vite assets before SEO routes and bundles the HTML template. `SITE_URL` must be an approved HTTPS production origin at build/runtime; public SEO uses selected active-product fields only. See SEO_OPERATIONS.md for pending validation.
 
 E30 adds owned return submission/status, private support attachments/replies, coupon lifecycle/redemption, manual shipment events and admin notification-attempt history through the existing single dispatcher. The support attachment/reply migrations are prepared and unapplied. All E30 source remains unverified.
 

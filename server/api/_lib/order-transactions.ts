@@ -33,6 +33,7 @@ export async function createCartOrder(
   checkout?: {
     requestId: string
     expectedTotalMinor: number
+    paymentProvider: 'RAZORPAY' | 'COD'
     rules: typeof checkoutRules
     calculate: typeof checkoutTotal
     couponCode?: string
@@ -48,7 +49,12 @@ export async function createCartOrder(
         include: { payment: true },
       })
       if (existing) {
-        if (existing.userId !== userId || existing.shippingAddressId !== addressId)
+        if (
+          existing.userId !== userId ||
+          existing.shippingAddressId !== addressId ||
+          existing.payment?.provider !== checkout.paymentProvider ||
+          existing.payment?.amountMinor !== checkout.expectedTotalMinor
+        )
           throw new OrderActionError(
             409,
             'CONFLICT',
@@ -67,7 +73,7 @@ export async function createCartOrder(
     const rules = checkout
       ? checkout.rules((await tx.storeSetting.findUnique({ where: { key: 'checkout' } }))?.value)
       : null
-    if (checkout && (!rules?.enabled || address.country !== 'IN'))
+    if (checkout && (!rules?.enabled || address.country !== 'IN' || (checkout.paymentProvider === 'COD' && !rules.codEnabled)))
       throw new OrderActionError(
         409,
         'CHECKOUT_UNAVAILABLE',
@@ -139,7 +145,7 @@ export async function createCartOrder(
           })),
         },
         payment: {
-          create: { provider: checkout ? 'RAZORPAY' : 'COD', amountMinor: totals.totalMinor },
+          create: { provider: checkout?.paymentProvider ?? 'COD', amountMinor: totals.totalMinor },
         },
       },
       include: { items: true, payment: true },

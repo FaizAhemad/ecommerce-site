@@ -10,6 +10,8 @@ import { Button } from './mui/Button'
 import { Stack } from './mui/Stack'
 import { TextField } from './mui/TextField'
 import { Typography } from './mui/Typography'
+import { Radio } from './mui/Radio'
+type PaymentMethod = 'RAZORPAY' | 'COD'
 type CheckoutProps = { addressId: string; cartRevision: string; disabled: boolean; itemsSubtotalMinor: number; onAttempt: () => void }
 export function CheckoutSubmit(props: CheckoutProps) {
   const [draft, setDraft] = useState('')
@@ -70,16 +72,21 @@ function CheckoutOrder({
   })
   const frozenQuote = useRef<Quote | null>(null)
   const displayedQuote = frozenQuote.current ?? quote.data
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | ''>('')
+  const methods = displayedQuote?.methods
+  const paymentMethod: PaymentMethod | '' = selectedMethod && methods?.[selectedMethod === 'COD' ? 'cod' : 'razorpay']
+    ? selectedMethod
+    : methods?.razorpay ? 'RAZORPAY' : methods?.cod ? 'COD' : ''
   const lock = useRef(false),
     controller = useRef<AbortController | null>(null),
-    request = useRef<{ requestId: string; addressId: string; expectedTotalMinor: number; couponCode?: string } | null>(
+    request = useRef<{ requestId: string; addressId: string; expectedTotalMinor: number; paymentMethod: PaymentMethod; couponCode?: string } | null>(
       null,
     )
   const [pending, setPending] = useState(false),
     [orderId, setOrderId] = useState('')
   useEffect(() => () => controller.current?.abort(), [])
   async function submit() {
-    if (lock.current || orderId || (!request.current && (disabled || quote.isFetching || !quote.data?.enabled || !addressId || !Number.isSafeInteger(quote.data?.totalMinor))))
+    if (lock.current || orderId || (!request.current && (disabled || quote.isFetching || !quote.data?.enabled || !paymentMethod || !addressId || !Number.isSafeInteger(quote.data?.totalMinor))))
       return
     lock.current = true
     frozenQuote.current ??= quote.data ?? null
@@ -93,6 +100,7 @@ function CheckoutOrder({
       requestId: crypto.randomUUID(),
       addressId,
       expectedTotalMinor: quote.data!.totalMinor!,
+      paymentMethod: paymentMethod as PaymentMethod,
       ...(couponCode ? { couponCode } : {}),
     }
     try {
@@ -102,8 +110,8 @@ function CheckoutOrder({
       if (abort.signal.aborted || generation !== sessionGeneration()) return
       setOrderId(result.orderId)
       notify(result.emailStatus === 'UNCONFIRMED'
-        ? 'Order recorded; payment is pending. The confirmation email could not be confirmed. Check Orders for details.'
-        : 'Order recorded. Payment is still pending.', 'info')
+        ? 'Order recorded; the confirmation email could not be confirmed. Check Orders for details.'
+        : paymentMethod === 'COD' ? 'Order placed with Cash on Delivery. Payment is due when delivered.' : 'Order recorded. Continue to payment from the order page.', 'info')
       void queryClient.invalidateQueries({ queryKey: privateKey('cart') })
       void queryClient.invalidateQueries({ queryKey: privateKey('orders') })
       window.history.pushState({}, '', '/orders/' + encodeURIComponent(result.orderId))
@@ -160,18 +168,29 @@ function CheckoutOrder({
     <div className="mt-4">
       {!!displayedQuote?.discountMinor && <p className="mb-3 rounded-lg bg-[rgba(215,225,208,0.4)] p-3 text-xs leading-5 text-[var(--ink)]" role="status">Coupon {displayedQuote?.couponCode}: −{money(displayedQuote?.discountMinor)}. Usage is confirmed when the order is recorded.</p>}
       <OrderTotals subtotalMinor={displayedQuote?.subtotalMinor} shippingMinor={displayedQuote?.shippingMinor} taxMinor={displayedQuote?.taxMinor} discountMinor={displayedQuote?.discountMinor} totalMinor={request.current?.expectedTotalMinor ?? displayedQuote?.totalMinor} />
+      {methods && (methods.razorpay || methods.cod) && <fieldset className="my-4 grid gap-2 border-0 p-0" disabled={attempted}>
+        <legend className="mb-2 text-sm font-semibold text-[var(--ink)]">Payment method</legend>
+        {methods.razorpay && <label className={`flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border p-3 ${paymentMethod === 'RAZORPAY' ? 'border-[var(--ink)] bg-[rgba(215,225,208,0.28)]' : 'border-[var(--line)]'}`}>
+          <Radio name="checkout-payment-method" checked={paymentMethod === 'RAZORPAY'} onChange={() => setSelectedMethod('RAZORPAY')} />
+          <span><strong className="block text-sm">Pay online</strong><span className="text-xs text-[var(--muted)]">Secure payment with Razorpay</span></span>
+        </label>}
+        {methods.cod && <label className={`flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border p-3 ${paymentMethod === 'COD' ? 'border-[var(--ink)] bg-[rgba(215,225,208,0.28)]' : 'border-[var(--line)]'}`}>
+          <Radio name="checkout-payment-method" checked={paymentMethod === 'COD'} onChange={() => setSelectedMethod('COD')} />
+          <span><strong className="block text-sm">Cash on Delivery</strong><span className="text-xs text-[var(--muted)]">Pay when your order is delivered</span></span>
+        </label>}
+      </fieldset>}
       {!addressId && <Alert className="my-3" severity="info" role="status">Add or select an India delivery address to continue.</Alert>}
       {errorMessage && <Alert className="my-3" severity="error" role="alert"><strong>We couldn’t confirm your order.</strong><br />The result may be unknown. Check <a href="/orders">your orders</a> first. Retrying below uses the same order request and total.</Alert>}
       <Button
         variant="contained"
         fullWidth
-        disabled={pending || (!attempted && (disabled || !addressId || quote.isFetching))}
+        disabled={pending || (!attempted && (disabled || !addressId || !paymentMethod || quote.isFetching))}
         onClick={() => void submit()}
       >
-        {pending ? 'Recording your order…' : (attempted ? 'Retry same order · ' : 'Place order · ') + money(request.current?.expectedTotalMinor ?? displayedQuote?.totalMinor)}
+        {pending ? 'Recording your order…' : (paymentMethod === 'COD' ? 'Place Cash on Delivery order · ' : 'Place order · ') + money(request.current?.expectedTotalMinor ?? displayedQuote?.totalMinor)}
       </Button>
       <p className="mb-0 mt-3 text-xs leading-5 text-[var(--muted)]">
-        After the order is recorded, continue to payment from the order page. If a request is interrupted, check{' '}
+        {paymentMethod === 'COD' ? 'Payment remains due until delivery collection is confirmed. ' : 'After the order is recorded, continue to payment from the order page. '}If a request is interrupted, check{' '}
         <a className="font-medium text-[var(--ink)] underline underline-offset-2" href="/orders">your orders</a> before starting another checkout.
       </p>
       {attempted && <p className="mb-0 mt-2 text-xs leading-5 text-[var(--muted)]">Retry uses the original address, coupon and total to avoid creating a duplicate order.</p>}

@@ -3,7 +3,19 @@ import type { Prisma } from '@prisma/client'
 // Missing ownership is not permission to sell. Requires the marketplace backfill.
 export const publishedProductWhere = {
   isActive: true,
-  shopOwnership: { is: { moderationStatus: 'APPROVED', shop: { status: 'APPROVED' } } },
+  shopOwnership: {
+    is: {
+      moderationStatus: 'APPROVED',
+      OR: [
+        { shop: { is: { isPlatform: true, status: 'APPROVED' } } },
+        {
+          shop: { is: { isPlatform: false, status: 'APPROVED', gstReviewStatus: 'APPROVED' } },
+          offerStatus: 'ACCEPTED',
+          acceptedOfferVersion: { not: null },
+        },
+      ],
+    },
+  },
 } satisfies Prisma.ProductWhereInput
 
 export type PublicShop = { id: string; name: string; slug: string; isPlatform: boolean; status: string; gstReviewStatus?: string }

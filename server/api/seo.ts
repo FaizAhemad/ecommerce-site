@@ -19,7 +19,7 @@ export default async function handler(request: VercelRequest, response: TextResp
   const head = request.method === 'HEAD'
   if (request.method !== 'GET' && !head) return send(response, 405, 'text/plain', 'Use GET or HEAD.')
   const kind = request.query?.kind
-  const origin = canonicalOrigin(process.env.VITE_SITE_URL)
+  const origin = canonicalOrigin(process.env.SITE_URL ?? process.env.VITE_SITE_URL)
   const host = request.headers?.host
   const indexable = !!origin && typeof host === 'string' && new URL(origin).host === host && (!process.env.VERCEL_ENV || process.env.VERCEL_ENV === 'production')
   response.setHeader?.('X-Robots-Tag', indexable && kind === 'product' ? 'index, follow' : 'noindex, nofollow')
